@@ -6,7 +6,7 @@ export const registerOTPTemplate = (name, otp) => {
   <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Verify Your Registration - Dellcube</title>
+      <title>JAI MATA DI - Verify Your Registration</title>
       <style>
           body, html {
               margin: 0;
@@ -66,14 +66,12 @@ export const registerOTPTemplate = (name, otp) => {
   <body>
       <div class="wrapper">
           <div class="container">
-              <img src="${
-                process.env.APP_URL
-              }/media/images/common/logo.png" alt="Dellcube" class="logo">
+            
               <h2>Welcome to Dellcube, ${name}!</h2>
               <p class="message">Thank you for registering. Please use the OTP below to verify your email address and complete your registration.</p>
               <div class="otp-box">${otp}</div>
               <p class="message">If you did not request this, please ignore this email.</p>
-              <div class="footer">&copy; ${new Date().getFullYear()} Dellcube. All rights reserved.</div>
+              <div class="footer">&copy; ${new Date().getFullYear()} JMD Stitching. All rights reserved.</div>
           </div>
       </div>
   </body>
