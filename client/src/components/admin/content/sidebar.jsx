@@ -1,12 +1,29 @@
 import { useState } from "react";
 import { Link, Outlet } from "react-router-dom";
 import {
-  ChartNoAxesColumn,
-  LucideHeadset,
-  Pointer,
+  BadgeAlert,
+  BadgeCheck,
+  ContactRound,
+  FileText,
+  HandCoins,
+  Landmark,
+  LayoutDashboard,
+  MailWarning,
+  Package,
+  Package2,
+  PackageCheck,
+  Plus,
+  Quote,
+  Receipt,
+  ReceiptIndianRupee,
+  ReceiptText,
+  Shirt,
   SquareLibrary,
-  Tags,
-  Trophy,
+  StarHalf,
+  Truck,
+  TruckIcon,
+  User,
+  Warehouse,
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import { selectUserRole } from "@/features/authSlice";
@@ -52,426 +69,257 @@ const Sidebar = () => {
       >
         <div className="space-y-4 ">
           <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="item-13">
+            <AccordionItem value="item-1">
               <Link
                 to="dashboard"
-                className="flex items-center gap-2 hover:text-[#FFCA00] py-4 px-0"
+                className="flex items-center gap-2 hover:text-[#EB811F] py-4 px-0"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                <ChartNoAxesColumn size={22} />
+                <LayoutDashboard size={22} />
                 <h2 className="text-sm">Dashboard</h2>
               </Link>
             </AccordionItem>
-            <AccordionItem value="item-17">
-              <AccordionTrigger className="hover:no-underline">
-                SiteIdentity
-              </AccordionTrigger>
-              <AccordionContent>
-                <Link
-                  to="create-site-identity"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <ChartNoAxesColumn size={22} />
-                  <h2>Create Site Identity</h2>
-                </Link>
-              </AccordionContent>
-              <AccordionContent>
-                <Link
-                  to="site-identity"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <ChartNoAxesColumn size={22} />
-                  <h2>Update Site Identity</h2>
-                </Link>
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="item-1">
-              <AccordionTrigger className="hover:no-underline">
-                Herosection
-              </AccordionTrigger>
-              <AccordionContent>
-                <Link
-                  to="herosection"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <ChartNoAxesColumn size={22} />
-                  <h2>All HeroSection</h2>
-                </Link>
-              </AccordionContent>
-              <AccordionContent>
-                <Link
-                  to="create-herosection"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <ChartNoAxesColumn size={22} />
-                  <h2> Add HeroSection</h2>
-                </Link>
-              </AccordionContent>
-            </AccordionItem>
+
             <AccordionItem value="item-2">
               <AccordionTrigger className="hover:no-underline">
-                About
+                <div className="flex items-center gap-2">
+                  <FileText size={22} />
+                  <span>Bill/Invoice</span>
+                </div>{" "}
               </AccordionTrigger>
               <AccordionContent>
                 <Link
-                  to="create-about"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <ChartNoAxesColumn size={22} />
-                  <h2>Create About</h2>
+                  <Landmark size={22} />
+                  <h2>All Invoice</h2>
                 </Link>
               </AccordionContent>
               <AccordionContent>
                 <Link
-                  to="about"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <ChartNoAxesColumn size={22} />
-                  <h2>Update About</h2>
+                  <ReceiptIndianRupee size={22} />
+                  <h2>Fabric Invoice</h2>
+                </Link>
+              </AccordionContent>
+              <AccordionContent>
+                <Link
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <ReceiptText size={22} />
+                  <h2>Stitching Invoice</h2>
+                </Link>
+              </AccordionContent>
+              <AccordionContent>
+                <Link
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Quote size={22} />
+                  <h2>Quotation</h2>
                 </Link>
               </AccordionContent>
             </AccordionItem>
+
             <AccordionItem value="item-3">
               <AccordionTrigger className="hover:no-underline">
-                Why Choose Us
+                <div className="flex items-center gap-2">
+                  <ReceiptText size={22} />
+                  <span>Measurement Slip</span>
+                </div>{" "}
               </AccordionTrigger>
               <AccordionContent>
                 <Link
-                  to="whychooseus"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <ChartNoAxesColumn size={22} />
-                  <h2>All Why Choose Us</h2>
+                  <Receipt size={22} />
+                  <h2>Slip for Billing</h2>
                 </Link>
               </AccordionContent>
               <AccordionContent>
                 <Link
-                  to="create-whychooseus"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <ChartNoAxesColumn size={22} />
-                  <h2> Add Why Choose Us</h2>
+                  <BadgeAlert size={22} />
+                  <h2>Pending Slip</h2>
+                </Link>
+              </AccordionContent>
+              <AccordionContent>
+                <Link
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <BadgeCheck size={22} />
+                  <h2>Printed Slip</h2>
                 </Link>
               </AccordionContent>
             </AccordionItem>
+
             <AccordionItem value="item-4">
               <AccordionTrigger className="hover:no-underline">
-                Services
+                <div className="flex items-center gap-2">
+                  <Warehouse size={22} />
+                  <span>Stocks</span>
+                </div>{" "}
               </AccordionTrigger>
               <AccordionContent>
                 <Link
-                  to="create-service"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <ChartNoAxesColumn size={22} />
-                  <h2>Add Services</h2>
+                  <Shirt size={22} />
+                  <h2>Full Ready</h2>
                 </Link>
               </AccordionContent>
               <AccordionContent>
                 <Link
-                  to="services"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <ChartNoAxesColumn size={22} />
-                  <h2>All Services</h2>
+                  <LayoutDashboard size={22} />
+                  <h2>Partial Ready</h2>
                 </Link>
               </AccordionContent>
             </AccordionItem>
+
             <AccordionItem value="item-5">
               <AccordionTrigger className="hover:no-underline">
-                Shipping
+                <div className="flex items-center gap-2">
+                  <Truck size={22} />
+                  <span>Delivery</span>
+                </div>{" "}
               </AccordionTrigger>
               <AccordionContent>
                 <Link
-                  to="shipping"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <ChartNoAxesColumn size={22} />
-                  <h2>Video</h2>
+                  <PackageCheck size={22} />
+                  <h2>Full Delivery</h2>
                 </Link>
               </AccordionContent>
               <AccordionContent>
                 <Link
-                  to="create-shipping"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <ChartNoAxesColumn size={22} />
-                  <h2> Add Video Section</h2>
+                  <StarHalf size={22} />
+                  <h2>Partial Delivery</h2>
+                </Link>
+              </AccordionContent>
+               <AccordionContent>
+                <Link
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Package2 size={22} />
+                  <h2>All Delivery</h2>
                 </Link>
               </AccordionContent>
             </AccordionItem>
-            <AccordionItem value="item-6">
-              <AccordionTrigger className="hover:no-underline">
-                Features
-              </AccordionTrigger>
-              <AccordionContent>
-                <Link
-                  to="features"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <ChartNoAxesColumn size={22} />
-                  <h2>All Features</h2>
-                </Link>
-              </AccordionContent>
-              <AccordionContent>
-                <Link
-                  to="create-feature"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <ChartNoAxesColumn size={22} />
-                  <h2> Add Feature</h2>
-                </Link>
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="item-7">
-              <AccordionTrigger className="hover:no-underline">
-                Clients
-              </AccordionTrigger>
-              <AccordionContent>
-                <Link
-                  to="clients"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <ChartNoAxesColumn size={22} />
-                  <h2>All Clients</h2>
-                </Link>
-              </AccordionContent>
-              <AccordionContent>
-                <Link
-                  to="create-client"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <ChartNoAxesColumn size={22} />
-                  <h2> Add Clients</h2>
-                </Link>
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="item-8">
-              <AccordionTrigger className="hover:no-underline">
-                Testimonials
-              </AccordionTrigger>
-              <AccordionContent>
-                <Link
-                  to="testimonials"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <ChartNoAxesColumn size={22} />
-                  <h2>All Testimonials</h2>
-                </Link>
-              </AccordionContent>
-              <AccordionContent>
-                <Link
-                  to="create-testimonial"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <ChartNoAxesColumn size={22} />
-                  <h2> Add Testimonials</h2>
-                </Link>
-              </AccordionContent>
-            </AccordionItem>
-             <AccordionItem value="item-16">
-              <AccordionTrigger className="hover:no-underline">
-                CTA
-              </AccordionTrigger>
-              <AccordionContent>
-                <Link
-                  to="create-cta"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <ChartNoAxesColumn size={22} />
-                  <h2>Add CTA</h2>
-                </Link>
-              </AccordionContent>
-              <AccordionContent>
-                <Link
-                  to="cta"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <ChartNoAxesColumn size={22} />
-                  <h2>Update CTA</h2>
-                </Link>
-              </AccordionContent>
-            </AccordionItem>
-              <AccordionItem value="item-18">
-              <AccordionTrigger className="hover:no-underline">
-                Awards
-              </AccordionTrigger>
-              <AccordionContent>
-                <Link
-                  to="create-award"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <ChartNoAxesColumn size={22} />
-                  <h2>Add Award</h2>
-                </Link>
-              </AccordionContent>
-              <AccordionContent>
-                <Link
-                  to="awards"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <ChartNoAxesColumn size={22} />
-                  <h2>All Awards</h2>
-                </Link>
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="item-14">
-              <AccordionTrigger className="hover:no-underline">
-                About Us Page
-              </AccordionTrigger>
-              <AccordionContent>
-                <Link
-                  to="create-about-us"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <ChartNoAxesColumn size={22} />
-                  <h2>Add About Page</h2>
-                </Link>
-              </AccordionContent>
-              <AccordionContent>
-                <Link
-                  to="about-us"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <ChartNoAxesColumn size={22} />
-                  <h2>Update About Page</h2>
-                </Link>
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="item-15">
-              <AccordionTrigger className="hover:no-underline">
-                Team 
-              </AccordionTrigger>
-              <AccordionContent>
-                <Link
-                  to="create-team"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <ChartNoAxesColumn size={22} />
-                  <h2>Add Team Member</h2>
-                </Link>
-              </AccordionContent>
-              <AccordionContent>
-                <Link
-                  to="team"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <ChartNoAxesColumn size={22} />
-                  <h2>All Team Member</h2>
-                </Link>
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="item-9">
-              <AccordionTrigger className="hover:no-underline">
-                Contact Page
-              </AccordionTrigger>
-              <AccordionContent>
-                <Link
-                  to="create-contact"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <ChartNoAxesColumn size={22} />
-                  <h2>Add Contact Page</h2>
-                </Link>
-              </AccordionContent>
-              <AccordionContent>
-                <Link
-                  to="contact"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <ChartNoAxesColumn size={22} />
-                  <h2>Update Contact Page</h2>
-                </Link>
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="item-10">
-              <AccordionTrigger className="hover:no-underline">
-                Faq Page
-              </AccordionTrigger>
-              <AccordionContent>
-                <Link
-                  to="faqs"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <FaQuestionCircle size={22} />
-                  <h2>All Faqs</h2>
-                </Link>
-              </AccordionContent>
-              <AccordionContent>
-                <Link
-                  to="create-faq"
-                  className="flex items-center gap-2 hover:text-[#FFCA00] "
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <CiCircleList size={22} />
-                  <h2> Add Faqs</h2>
-                </Link>
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="item-11">
-              <AccordionTrigger className="hover:no-underline">
-                Blogs
-              </AccordionTrigger>
-              <AccordionContent>
-                <Link
-                  to="dashboard"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <ChartNoAxesColumn size={22} />
-                  <h2>All BLogs</h2>
-                </Link>
-              </AccordionContent>
-              <AccordionContent>
-                <Link
-                  to="dashboard"
-                  className="flex items-center gap-2 hover:text-[#FFCA00]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <ChartNoAxesColumn size={22} />
-                  <h2> Add Blogs</h2>
-                </Link>
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="item-12">
+
+             <AccordionItem value="item-6">
               <Link
-                to="enquiry"
-                className="flex items-center gap-2 py-4 px-0 hover:text-[#FFCA00]"
+                to="dashboard"
+                className="flex items-center gap-2 hover:text-[#EB811F] py-4 px-0"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                <h2 className="text-sm">Enquiry</h2>
+                <Package size={22} />
+                <h2 className="text-sm">Order Details</h2>
+              </Link>
+            </AccordionItem>
+
+            <AccordionItem value="item-7">
+              <AccordionTrigger className="hover:no-underline">
+                <div className="flex items-center gap-2">
+                  <ContactRound size={22} />
+                  <span>Employee</span>
+                </div>{" "}
+              </AccordionTrigger>
+              <AccordionContent>
+                <Link
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Plus size={22} />
+                  <h2>Employee Registraion</h2>
+                </Link>
+              </AccordionContent>
+              <AccordionContent>
+                <Link
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <HandCoins size={22} />
+                  <h2>Employee Salary Slip</h2>
+                </Link>
+              </AccordionContent>
+               <AccordionContent>
+                <Link
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <HandCoins size={22} />
+                  <h2>Employee Income</h2>
+                </Link>
+              </AccordionContent>
+            </AccordionItem>
+
+               <AccordionItem value="item-8">
+              <Link
+                to="#"
+                className="flex items-center gap-2 hover:text-[#EB811F] py-4 px-0"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <ReceiptIndianRupee size={22} />
+                <h2 className="text-sm">Fabric Invoice</h2>
+              </Link>
+            </AccordionItem>
+
+            <AccordionItem value="item-9">
+              <Link
+                to="#"
+                className="flex items-center gap-2 hover:text-[#EB811F] py-4 px-0"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <ReceiptText size={22} />
+                <h2 className="text-sm">Stitching Invoice</h2>
+              </Link>
+            </AccordionItem>
+
+              <AccordionItem value="item-10">
+              <Link
+                to="#"
+                className="flex items-center gap-2 hover:text-[#EB811F] py-4 px-0"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <User size={22} />
+                <h2 className="text-sm">Add Employee</h2>
               </Link>
             </AccordionItem>
           </Accordion>
+
           <HoverCard>
             <HoverCardTrigger asChild>
               <Button variant="link" className="px-0">
@@ -488,7 +336,7 @@ const Sidebar = () => {
                 Profile
               </Button>
             </HoverCardTrigger>
-            <HoverCardContent className="w-50">
+            <HoverCardContent className="w-50 ml-4">
               <div className="flex justify-between space-x-4">
                 <Avatar>
                   <AvatarImage
