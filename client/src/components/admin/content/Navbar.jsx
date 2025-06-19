@@ -27,18 +27,18 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   useLoadUserQuery,
   useLogoutUserMutation,
-} from "../../../features/api/common/authApi";
+} from "../../../features/api/authApi";
 import { toast } from "sonner";
 import { useSelector } from "react-redux";
 import { Dialog, DialogContent, DialogTrigger } from "@radix-ui/react-dialog";
 import SimpleCalculator from "../SimpleCalculator";
- import { format } from "date-fns";
+import { format } from "date-fns";
 
 const Navbar = () => {
   const { user } = useSelector((store) => store.auth);
   const [logoutUser, { data, isLoading, isSuccess }] = useLogoutUserMutation();
   const navigate = useNavigate();
- 
+
   const logoutHandler = async () => {
     await logoutUser();
   };
@@ -49,108 +49,103 @@ const Navbar = () => {
     }
   }, [isSuccess]);
 
- const [currentTime, setCurrentTime] = useState("");
+  const [currentTime, setCurrentTime] = useState("");
 
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
-      setCurrentTime(format(now, "hh:mm:ss a")); 
+      setCurrentTime(format(now, "hh:mm:ss a"));
     };
 
-    updateTime();  
+    updateTime();
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
   }, []);
   return (
- <div className="dark:bg-gray-900 bg-white border-b dark:border-b-gray-800 border-b-gray-200 fixed top-0 left-0 right-0 duration-300 z-10">
-  <div className="container mx-auto px-4 md:px-10 py-0 hidden md:flex justify-between items-center">
-    <div className="flex gap-4 items-center text-gray-700 dark:text-white">
-       <div className="font-medium text-sm flex items-center"><Clock className="mr-1"/>{currentTime}</div>
-      <Dialog>
-        <DialogTrigger asChild>
-          <button className="hover:opacity-75">
-            <Calculator size={20} />
-          </button>
-        </DialogTrigger>
-        <DialogContent className="max-w-sm w-full">
-          {/* <SimpleCalculator /> */}
-        </DialogContent>
-      </Dialog>
-    </div>
-
-    <Link to="/" className="flex items-center justify-center">
-      <img
-        src="/images/jmd_logo.jpeg"
-        alt="Jai Mata Di Logo"
-        className="w-28 h-auto object-contain"
-      />
-    </Link>
-
-    <div className="flex items-center gap-4 cursor-pointer">
-      {user ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Avatar>
-              <AvatarImage
-                src={
-                  user?.photoUrl
-                    ? `/uploads/profile/${user?.photoUrl}`
-                    : "https://github.com/shadcn.png"
-                }
-                alt={user?.name}
-              />
-              <AvatarFallback>
-                {user?.name?.charAt(0).toUpperCase() || "U"}
-              </AvatarFallback>
-            </Avatar>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Link to="profile">Edit Profile</Link>
-            </DropdownMenuItem>
-            {user.role === "superAdmin" && (
-              <DropdownMenuItem>
-                <Link to="/admin/dashboard">Dashboard</Link>
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logoutHandler}>
-              <LogOut />
-              <span>Log out</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ) : (
-        <div className="flex gap-2 items-center">
-          <Link to="/auth/login">
-            <Button variant="outline">Login</Button>
-          </Link>
+    <div className="dark:bg-gray-900 bg-white border-b dark:border-b-gray-800 border-b-gray-200 fixed top-0 left-0 right-0 duration-300 z-10">
+      <div className="container mx-auto px-4 md:px-10 py-0 hidden md:flex justify-between items-center">
+        <div className="flex gap-4 items-center text-gray-700 dark:text-white">
+          <div className="font-medium text-sm flex items-center">
+            <Clock className="mr-1" />
+            {currentTime}
+          </div>
+          <Dialog>
+            <DialogTrigger asChild>
+              <button className="hover:opacity-75">
+                <Calculator size={20} />
+              </button>
+            </DialogTrigger>
+            <DialogContent className="max-w-sm w-full">
+              {/* <SimpleCalculator /> */}
+            </DialogContent>
+          </Dialog>
         </div>
-      )}
-      <DarkMode />
+
+        <Link to="/" className="flex items-center justify-center">
+          <img
+            src="/images/jmd_logo.jpeg"
+            alt="Jai Mata Di Logo"
+            className="w-28 h-auto object-contain"
+          />
+        </Link>
+
+        <div className="flex items-center gap-4 cursor-pointer">
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Avatar>
+                  <AvatarImage src={user?.photoUrl} alt={user?.name} />
+                  <AvatarFallback>
+                    {user?.name?.charAt(0).toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <Link to="profile">Edit Profile</Link>
+                </DropdownMenuItem>
+                {user.role === "superAdmin" && (
+                  <DropdownMenuItem>
+                    <Link to="/admin/dashboard">Dashboard</Link>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={logoutHandler}>
+                  <LogOut />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <div className="flex gap-2 items-center">
+              <Link to="/auth/login">
+                <Button variant="outline">Login</Button>
+              </Link>
+            </div>
+          )}
+          <DarkMode />
+        </div>
+      </div>
+
+      <div className="flex md:hidden justify-between items-center px-4 py-2">
+        <div className="flex gap-2 text-gray-700 dark:text-white">
+          <Clock size={20} />
+          <Calculator size={20} />
+        </div>
+
+        <Link to="/" className="flex justify-center">
+          <img
+            src="/images/jmd_logo.jpeg"
+            alt="JMD Logo"
+            className="w-24 h-auto object-contain"
+          />
+        </Link>
+
+        <MobileNavbar />
+      </div>
     </div>
-  </div>
-
-  <div className="flex md:hidden justify-between items-center px-4 py-2">
-    <div className="flex gap-2 text-gray-700 dark:text-white">
-      <Clock size={20} />
-      <Calculator size={20} />
-    </div>
-
-    <Link to="/" className="flex justify-center">
-      <img
-        src="/images/jmd_logo.jpeg"
-        alt="JMD Logo"
-        className="w-24 h-auto object-contain"
-      />
-    </Link>
-
-    <MobileNavbar />
-  </div>
-</div>
-
   );
 };
 

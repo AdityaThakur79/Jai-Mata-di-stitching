@@ -1,14 +1,7 @@
 import express from "express";
-import {
-  getUserProfileController,
-  loginController,
-  logoutController,
-  registerController,
-  updateProfileController,
-  verifyOTPController,
-} from "../../controllers/common/user.js";
-import isAuthenticated from "../../middlewares/common/isAuthenticated.js";
-import upload from "../../utils/common/Uploads.js";
+import isAuthenticated from "../middlewares/isAuthenticated.js";
+import upload from "../utils/common/Uploads.js";
+import { getUserProfileController, loginController, logoutController, registerController, updateProfileController, verifyOTPController } from "../controllers/user.js";
 
 const router = express.Router();
 

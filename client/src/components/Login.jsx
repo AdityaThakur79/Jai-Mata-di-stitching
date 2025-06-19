@@ -19,7 +19,7 @@ import { useEffect, useState } from "react";
 import {
   useRegisterUserMutation,
   useLoginUserMutation,
-} from "@/features/api/common/authApi";
+} from "@/features/api/authApi";
 import { Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -69,23 +69,23 @@ function Login() {
 
   useEffect(() => {
     if (registerIsSucess && registerData) {
-      toast.success(registerData.message || "Signup successful.");
+      toast.success(registerData?.message || "Signup successful.");
       navigate("/auth/verify-otp", { state: { email: signupInput.email } });
     }
     if (registerError) {
       // toast.error(registerError.data.details[0].message || "Signup Failed");
-      toast.error(registerError.data.message || "Signup Failed");
+      toast.error(registerError?.data?.message || "Signup Failed");
     }
     if (loginIsSucess && loginData) {
       // toast.success(loginData.message || "Login successful.")
-      toast.success(loginData.message || "Login successful.");
+      toast.success(loginData?.message || "Login successful.");
       localStorage.setItem("token", loginData.token);
 
       navigate("/admin/dashboard");
     }
     if (loginError) {
       // toast.error(loginError.data.details[0].message || "login Failed");
-      toast.error(loginError.data.message || "login Failed");
+      toast.error(loginError?.data?.message || "Login Failed");
     }
   }, [
     loginIsLoading,

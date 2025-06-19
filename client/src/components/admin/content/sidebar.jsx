@@ -12,6 +12,7 @@ import {
   Package,
   Package2,
   PackageCheck,
+  PersonStandingIcon,
   Plus,
   Quote,
   Receipt,
@@ -40,7 +41,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { useLoadUserQuery } from "@/features/api/common/authApi";
+import { useLoadUserQuery } from "@/features/api/authApi";
 import { FaQuestionCircle } from "react-icons/fa";
 import { CiCircleList } from "react-icons/ci";
 
@@ -224,7 +225,7 @@ const Sidebar = () => {
                   <h2>Partial Delivery</h2>
                 </Link>
               </AccordionContent>
-               <AccordionContent>
+              <AccordionContent>
                 <Link
                   to="#"
                   className="flex items-center gap-2 hover:text-[#EB811F]"
@@ -236,7 +237,7 @@ const Sidebar = () => {
               </AccordionContent>
             </AccordionItem>
 
-             <AccordionItem value="item-6">
+            <AccordionItem value="item-6">
               <Link
                 to="dashboard"
                 className="flex items-center gap-2 hover:text-[#EB811F] py-4 px-0"
@@ -274,7 +275,7 @@ const Sidebar = () => {
                   <h2>Employee Salary Slip</h2>
                 </Link>
               </AccordionContent>
-               <AccordionContent>
+              <AccordionContent>
                 <Link
                   to="#"
                   className="flex items-center gap-2 hover:text-[#EB811F]"
@@ -286,7 +287,7 @@ const Sidebar = () => {
               </AccordionContent>
             </AccordionItem>
 
-               <AccordionItem value="item-8">
+            <AccordionItem value="item-8">
               <Link
                 to="#"
                 className="flex items-center gap-2 hover:text-[#EB811F] py-4 px-0"
@@ -308,7 +309,7 @@ const Sidebar = () => {
               </Link>
             </AccordionItem>
 
-              <AccordionItem value="item-10">
+            <AccordionItem value="item-10">
               <Link
                 to="#"
                 className="flex items-center gap-2 hover:text-[#EB811F] py-4 px-0"
@@ -318,6 +319,45 @@ const Sidebar = () => {
                 <h2 className="text-sm">Add Employee</h2>
               </Link>
             </AccordionItem>
+
+            <AccordionItem value="item-11">
+              <AccordionTrigger className="hover:no-underline">
+                <div className="flex items-center gap-2">
+                  <ContactRound size={22} />
+                  <span>Masters</span>
+                </div>{" "}
+              </AccordionTrigger>
+              <AccordionContent>
+                <Link
+                  to="/admin/customers"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <PersonStandingIcon size={22} />
+                  <h2>Customer Master</h2>
+                </Link>
+              </AccordionContent>
+              {/* <AccordionContent>
+                <Link
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <HandCoins size={22} />
+                  <h2>Employee Salary Slip</h2>
+                </Link>
+              </AccordionContent>
+               <AccordionContent>
+                <Link
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <HandCoins size={22} />
+                  <h2>Employee Income</h2>
+                </Link>
+              </AccordionContent> */}
+            </AccordionItem>
           </Accordion>
 
           <HoverCard>
@@ -325,10 +365,7 @@ const Sidebar = () => {
               <Button variant="link" className="px-0">
                 {" "}
                 <Avatar>
-                  <AvatarImage
-                    src={`/uploads/profile/${user?.photoUrl}` || ""}
-                    alt={user?.name}
-                  />
+                  <AvatarImage src={user?.photoUrl} alt={user?.name} />
                   <AvatarFallback>
                     {user?.name?.charAt(0).toUpperCase() || "U"}
                   </AvatarFallback>
@@ -339,13 +376,7 @@ const Sidebar = () => {
             <HoverCardContent className="w-50 ml-4">
               <div className="flex justify-between space-x-4">
                 <Avatar>
-                  <AvatarImage
-                    src={
-                      `/uploads/profile/${user?.photoUrl}` ||
-                      "https://github.com/shadcn.png"
-                    }
-                    alt={user?.name}
-                  />
+                  <AvatarImage src={user?.photoUrl} alt={user?.name} />
                   <AvatarFallback>VC</AvatarFallback>
                 </Avatar>
                 <div className="space-y-1">
