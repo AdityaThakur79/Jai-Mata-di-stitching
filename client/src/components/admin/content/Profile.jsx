@@ -12,7 +12,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import React, { useState, useEffect } from 'react'
-import { useLoadUserQuery, useUpdateUserMutation } from "../../../features/api/common/authApi";
+import { useLoadUserQuery, useUpdateUserMutation } from "../../../features/api/authApi";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';

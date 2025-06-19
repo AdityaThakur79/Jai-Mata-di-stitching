@@ -12,6 +12,9 @@ import Profile from "./components/admin/content/Profile.jsx";
 import RoleProtectedRoute from "./utils/RoleProtectedRoute.jsx";
 import UnAuthorized from "./utils/UnAuthorized.jsx";
 import NotFound from "./utils/NotFound.jsx";
+import CreateCustomer from "./components/admin/content/Customer/CreateCustomer.jsx";
+import UpdateCustomer from "./components/admin/content/Customer/UpdateCustomer.jsx";
+import Customers from "./components/admin/content/Customer/Customers.jsx";
 
 const appRouter = createBrowserRouter([
   //Homepage Routes
@@ -82,6 +85,20 @@ const appRouter = createBrowserRouter([
       {
         path: "profile",
         element: <Profile />,
+      },
+
+      //Customer master
+      {
+        path: "create-customer",
+        element: <CreateCustomer />,
+      },
+      {
+        path: "update-customer",
+        element: <UpdateCustomer />,
+      },
+      {
+        path: "customers",
+        element: <Customers />,
       },
     ],
   },

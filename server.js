@@ -39,9 +39,14 @@ app.use(cookieParser());
 // app.use(sessionMiddleware);
 
 //User Auth routes
-import userRoutes from "./routes/common/user.js";
+import userRoutes from "./routes/user.js";
 
 app.use("/api/user", userRoutes);
+
+//Master routes
+import customerRoutes from "./routes/customer.js"
+
+app.use("/api/customer", customerRoutes)
 
 // Get the current file path
 const __filename = fileURLToPath(import.meta.url);

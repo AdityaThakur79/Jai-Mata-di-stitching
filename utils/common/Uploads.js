@@ -13,7 +13,8 @@ cloudinary.config({
 
 const imageFields = [
   "profilePhoto",
-  "bannerImage",  
+  "bannerImage",
+  "customerProfilePhoto"
 ];
 
 const videoFields = ["videoUpload", "tourVideoUpload", "serviceVideo"];
@@ -22,7 +23,7 @@ const videoFields = ["videoUpload", "tourVideoUpload", "serviceVideo"];
 const storage = new CloudinaryStorage({
   cloudinary,
   params: (req, file) => {
-    
+
     const isVideo = file.mimetype.startsWith("video/");
     let folder = "uploads";
 
@@ -37,10 +38,10 @@ const storage = new CloudinaryStorage({
   },
 });
 
-const upload = multer({ 
+const upload = multer({
   storage,
   limits: {
-    fileSize: 10 * 1024 * 1024,  
+    fileSize: 10 * 1024 * 1024,
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
@@ -51,7 +52,8 @@ const upload = multer({
   }
 }).fields([
   { name: "profilePhoto", maxCount: 1 },
-  { name: "bannerImage", maxCount: 1 },  
+  { name: "bannerImage", maxCount: 1 },
+  { name: "customerProfilePhoto", maxCount: 1 },
   { name: "videoUpload", maxCount: 1 },
   { name: "tourVideoUpload", maxCount: 1 },
   { name: "serviceVideo", maxCount: 1 },

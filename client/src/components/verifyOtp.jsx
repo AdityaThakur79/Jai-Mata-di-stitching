@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useVerifyOTPMutation } from "@/features/api/common/authApi";
+import { useVerifyOTPMutation } from "@/features/api/authApi";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { Button } from "../components/ui/button";

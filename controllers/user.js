@@ -1,7 +1,7 @@
-import { User } from "../../models/common/user.js";
-import { generateOTP, sendOTPEmail } from "../../utils/common/registerOTP.js";
+import { User } from "../models/user.js";
+import { generateOTP, sendOTPEmail } from "../utils/common/registerOTP.js";
 import bcrypt from "bcryptjs";
-import { generateToken } from "../../utils/common/generateToken.js";
+import { generateToken } from "../utils/common/generateToken.js";
 import { v2 as cloudinary } from "cloudinary";
 
 const pendingUsers = new Map();
