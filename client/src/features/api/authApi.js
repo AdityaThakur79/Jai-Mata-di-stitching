@@ -3,6 +3,7 @@ import { userLoggedIn, userLoggedOut } from "../authSlice";
 
 const USER_API = "https://jai-mata-di-stitching.onrender.com/api/user";
 // const USER_API = "http://localhost:8080/api/user";
+
 export const authApi = createApi({
   reducerPath: "authApi",
   baseQuery: fetchBaseQuery({

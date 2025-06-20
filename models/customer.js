@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const measurementSchema = new mongoose.Schema({
-  itemType: { type: String, required: true },  
+  itemType: { type: String  },  
   values: {
     length: Number,
     shoulder: Number,

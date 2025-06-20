@@ -32,7 +32,7 @@ export const customerApi = createApi({
         getCustomerById: builder.mutation({
             query: (customerId) => ({
                 url: "/view",
-                method: "POSt",
+                method: "POST",
                 body: { customerId },
             }),
             providesTags: ["Customer"],
