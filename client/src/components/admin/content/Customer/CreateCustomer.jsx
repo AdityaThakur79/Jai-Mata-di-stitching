@@ -61,7 +61,7 @@ const CreateCustomer = () => {
     formData.append("mobile", mobile);
     if (email) formData.append("email", email);
     if (profilePhoto) formData.append("customerProfilePhoto", profilePhoto);
-    formData.append("measurements", JSON.stringify(measurements));
+    formData.append("measurements", JSON.stringify(measurements || {}));
 
     await createCustomer(formData);
   };

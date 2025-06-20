@@ -33,7 +33,7 @@ export const createCustomer = async (req, res) => {
       email,
       profileImage,
       profileImagePublicId,
-      measurements: measurements ? JSON.parse(measurements) : [],  
+      measurements: measurements ? JSON.parse(measurements) : [],
     });
 
     res.status(201).json({
@@ -127,10 +127,8 @@ export const getCustomerById = async (req, res) => {
 //Update Customer
 export const updateCustomer = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { name, mobile, email } = req.body;
-
-    const existingCustomer = await Customer.findById(id);
+    const { customerId, name, mobile, email, measurements } = req.body;
+    const existingCustomer = await Customer.findById(customerId);
     if (!existingCustomer) {
       return res.status(404).json({
         success: false,
@@ -141,6 +139,10 @@ export const updateCustomer = async (req, res) => {
     let profileImage = existingCustomer.profileImage;
     let profileImagePublicId = existingCustomer.profileImagePublicId;
 
+    if (measurements) {
+      existingCustomer.measurements = JSON.parse(measurements);
+    }
+
     if (req.files && req.files.customerProfilePhoto) {
       profileImage = req.files.customerProfilePhoto[0].path;
       profileImagePublicId = req.files.customerProfilePhoto[0].filename;
@@ -149,6 +151,9 @@ export const updateCustomer = async (req, res) => {
     existingCustomer.name = name || existingCustomer.name;
     existingCustomer.mobile = mobile || existingCustomer.mobile;
     existingCustomer.email = email || existingCustomer.email;
+    existingCustomer.measurements = measurements
+      ? JSON.parse(measurements)
+      : existingCustomer.measurements;
     existingCustomer.profileImage = profileImage;
     existingCustomer.profileImagePublicId = profileImagePublicId;
 

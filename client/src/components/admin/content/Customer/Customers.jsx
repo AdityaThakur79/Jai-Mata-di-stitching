@@ -40,16 +40,19 @@ import {
 import { ContactRound, EyeIcon } from "lucide-react";
 import { Drawer } from "antd";
 import { Loader2 } from "lucide-react";
+import { useDebounce } from "@/hooks/Debounce";
 
 const Customers = () => {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [limit, setLimit] = useState(5);
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+
   const { data, isLoading, refetch } = useGetAllCustomersQuery({
     page: currentPage,
     limit,
-    search: searchQuery,
+    search: debouncedSearchQuery,
   });
   const [deleteCustomer, { isSuccess, isError }] = useDeleteCustomerMutation();
 
@@ -72,7 +75,7 @@ const Customers = () => {
     try {
       const { data } = await getCustomerById(customerId);
       if (data?.success) {
-        setSelectedCustomer(data.customer);
+        setSelectedCustomer(data?.customer);
       }
     } catch (error) {
       console.error("Error fetching customer:", error);
@@ -104,12 +107,6 @@ const Customers = () => {
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   };
 
-  const filteredCustomers = data?.customers?.filter((cust) =>
-    `${cust.name} ${cust.mobile} ${cust.email}`
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase())
-  );
-
   useEffect(() => {
     if (isSuccess) {
       toast.success("Customer Deleted Successfully");
@@ -132,6 +129,7 @@ const Customers = () => {
             <input
               type="text"
               placeholder="Search by name, mobile, email"
+              value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm w-full sm:w-64 bg-white dark:bg-gray-800 text-gray-800 dark:text-white placeholder:text-gray-500"
             />
@@ -195,18 +193,27 @@ const Customers = () => {
                     Loading...
                   </td>
                 </tr>
-              ) : filteredCustomers?.length > 0 ? (
-                filteredCustomers.map((customer, i) => (
+              ) : data?.customers?.length > 0 ? (
+                data?.customers?.map((customer, i) => (
                   <tr key={customer._id} className="text-left">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                       {data.limit * (data.page - 1) + (i + 1)}
                     </td>
                     <td className="px-6 py-3 text-sm text-gray-900 dark:text-white">
-                      <img
-                        src={customer?.profileImage || "/placeholder.png"}
-                        alt={customer?.name}
-                        className="w-10 h-10 rounded-full "
-                      />
+                      {customer?.profileImage ? (
+                        <img
+                          src={customer.profileImage}
+                          alt={customer.name}
+                          className="w-10 h-10 rounded-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = "/placeholder.png";
+                          }}
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-orange-400 flex items-center justify-center text-white font-semibold">
+                          {customer?.name?.[0]?.toUpperCase() || "U"}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
                       {customer.name}
@@ -243,6 +250,7 @@ const Customers = () => {
                             setSelectedCustomer(null);
                           }}
                           open={open}
+                          mask={false}
                         >
                           {isLoading || !selectedCustomer ? (
                             <div className="flex justify-center items-center h-40">
@@ -251,43 +259,49 @@ const Customers = () => {
                           ) : (
                             <div className="space-y-3 text-sm">
                               <p>
-                                <strong>Name:</strong> {selectedCustomer.name}
+                                <strong>Name:</strong> {selectedCustomer?.name}
                               </p>
                               <p>
                                 <strong>Mobile:</strong>{" "}
-                                {selectedCustomer.mobile}
+                                {selectedCustomer?.mobile}
                               </p>
                               <p>
                                 <strong>Email:</strong>{" "}
-                                {selectedCustomer.email || "N/A"}
+                                {selectedCustomer?.email || "N/A"}
                               </p>
                               {selectedCustomer?.measurements?.length > 0 && (
                                 <div>
                                   <p className="font-semibold mt-4">
                                     Measurements:
                                   </p>
-                                  {selectedCustomer.measurements.map((m, i) => (
-                                    <div
-                                      key={i}
-                                      className="mt-2 border p-2 rounded bg-gray-50"
-                                    >
-                                      <p>
-                                        <strong>Item:</strong> {m.itemType}
-                                      </p>
-                                      {Object.entries(m.values).map(
-                                        ([key, value]) =>
-                                          value && (
-                                            <p key={key}>
-                                              {key}: {value}
-                                            </p>
-                                          )
-                                      )}
-                                      {m.style && <p>Style: {m.style}</p>}
-                                      {m.designNumber && (
-                                        <p>Design #: {m.designNumber}</p>
-                                      )}
-                                    </div>
-                                  ))}
+                                  {selectedCustomer?.measurements.map(
+                                    (m, i) => (
+                                      <div
+                                        key={i}
+                                        className="mt-2 border p-2 rounded bg-gray-50"
+                                      >
+                                        <p>
+                                          <strong>Item:</strong> {m.itemType}
+                                        </p>
+
+                                        {m?.values &&
+                                          typeof m.values === "object" &&
+                                          Object.entries(m.values).map(
+                                            ([key, value]) =>
+                                              value && (
+                                                <p key={key}>
+                                                  {key}: {value}
+                                                </p>
+                                              )
+                                          )}
+
+                                        {m?.style && <p>Style: {m?.style}</p>}
+                                        {m?.designNumber && (
+                                          <p>Design #: {m?.designNumber}</p>
+                                        )}
+                                      </div>
+                                    )
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -295,7 +309,7 @@ const Customers = () => {
                         </Drawer>
 
                         <Button
-                          className="p-2 bg-blue-100 text-blue-600 hover:bg-blue-200"
+                          className="p-2 bg-orange-100 text-orange-600 hover:bg-orange-200"
                           onClick={() =>
                             navigate("/admin/update-customer", {
                               state: { customerId: customer._id },
