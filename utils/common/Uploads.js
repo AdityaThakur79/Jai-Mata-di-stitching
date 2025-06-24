@@ -14,10 +14,11 @@ cloudinary.config({
 const imageFields = [
   "profilePhoto",
   "bannerImage",
-  "customerProfilePhoto"
+  "customerProfilePhoto",
+  "fabricImage"
 ];
 
-const videoFields = ["videoUpload", "tourVideoUpload", "serviceVideo"];
+const videoFields = ["videoUpload"];
 
 // Multer Cloudinary Storage
 const storage = new CloudinaryStorage({
@@ -54,9 +55,8 @@ const upload = multer({
   { name: "profilePhoto", maxCount: 1 },
   { name: "bannerImage", maxCount: 1 },
   { name: "customerProfilePhoto", maxCount: 1 },
+   { name: "fabricImage", maxCount: 1 },
   { name: "videoUpload", maxCount: 1 },
-  { name: "tourVideoUpload", maxCount: 1 },
-  { name: "serviceVideo", maxCount: 1 },
 ]);
 
 export default upload;

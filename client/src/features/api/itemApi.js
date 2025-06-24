@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-const ITEM_MASTER_API = "https://jai-mata-di-stitching.onrender.com/api/item";
-// const ITEM_MASTER_API = "http://localhost:8080/api/item";
+// const ITEM_MASTER_API = "https://jai-mata-di-stitching.onrender.com/api/item";
+const ITEM_MASTER_API = "http://localhost:8080/api/item";
 
 export const itemMasterApi = createApi({
   reducerPath: "itemMasterApi",

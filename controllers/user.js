@@ -180,11 +180,6 @@ export const updateProfileController = async (req, res) => {
     let bannerUrl;
     let bannerUrlPublicId;
 
-    console.log("Request body:", req.body);
-    console.log("Request files:", req.profilePhoto);
-    console.log("Request files Banner:", req.bannerImage);
-    console.log("User ID:", req.id);
-
     if (req.files && req.files.profilePhoto) {
       if (user.photoUrlPublicId) {
         await cloudinary.uploader.destroy(user.photoUrlPublicId)
