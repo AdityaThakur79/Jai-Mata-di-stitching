@@ -4,6 +4,7 @@ import {
   BadgeAlert,
   BadgeCheck,
   ContactRound,
+  FilePlus,
   FileText,
   HandCoins,
   Landmark,
@@ -337,17 +338,17 @@ const Sidebar = () => {
                   <h2>Customer Master</h2>
                 </Link>
               </AccordionContent>
-              {/* <AccordionContent>
+             <AccordionContent>
                 <Link
-                  to="#"
+                  to="items"
                   className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <HandCoins size={22} />
-                  <h2>Employee Salary Slip</h2>
+                  <FilePlus size={22} />
+                  <h2>Item Master</h2>
                 </Link>
               </AccordionContent>
-               <AccordionContent>
+                {/*  <AccordionContent>
                 <Link
                   to="#"
                   className="flex items-center gap-2 hover:text-[#EB811F]"

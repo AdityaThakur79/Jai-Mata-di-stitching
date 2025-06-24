@@ -72,7 +72,7 @@ const Navbar = () => {
           <Dialog>
             <DialogTrigger asChild>
               <button className="hover:opacity-75">
-                <Calculator size={20} />
+                {/* <Calculator size={20} /> */}
               </button>
             </DialogTrigger>
             <DialogContent className="max-w-sm w-full">

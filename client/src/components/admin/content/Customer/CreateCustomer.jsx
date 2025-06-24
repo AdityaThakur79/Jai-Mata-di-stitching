@@ -16,6 +16,7 @@ import { useCreateCustomerMutation } from "@/features/api/customerApi";
 import { Separator } from "@/components/ui/separator";
 import { itemMeasurementFields } from "@/utils/itemsMeasurement";
 import { PlusCircle, Trash } from "lucide-react";
+import { useGetAllItemMastersQuery } from "@/features/api/itemApi";
 
 const CreateCustomer = () => {
   const navigate = useNavigate();
@@ -27,6 +28,16 @@ const CreateCustomer = () => {
   const [measurements, setMeasurements] = useState([
     { itemType: "", values: {} },
   ]);
+
+  const {
+    data: itemData,
+    isLoading: itemLoading,
+    refetch,
+  } = useGetAllItemMastersQuery({
+    page: 1,
+    limit: 100,
+    search: "",
+  });
 
   const [createCustomer, { isLoading, isSuccess, isError, error, data }] =
     useCreateCustomerMutation();
@@ -127,7 +138,6 @@ const CreateCustomer = () => {
 
       <Separator className="my-6" />
 
-      {/* --- Section 2: Measurement Info --- */}
       <div className="grid gap-6">
         {measurements.map((item, index) => (
           <div
@@ -157,32 +167,46 @@ const CreateCustomer = () => {
                   <SelectValue placeholder="Select item type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.keys(itemMeasurementFields).map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
+                  {itemData?.items?.map((item) => {
+                    const isSelected = measurements.some(
+                      (m) => m.itemType === item.name
+                    );
+                    return (
+                      <SelectItem
+                        key={item._id}
+                        value={item.name}
+                        disabled={isSelected}
+                        className={
+                          isSelected ? "opacity-50 cursor-not-allowed" : ""
+                        }
+                      >
+                        {item.name}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
 
-            {item.itemType && (
+            {item.itemType && itemData?.items && (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {itemMeasurementFields[item.itemType].map((field) => (
-                  <div key={field}>
-                    <Label className="capitalize">
-                      {field.replace(/([A-Z])/g, " $1")}
-                    </Label>
-                    <Input
-                      type="number"
-                      placeholder={`Enter ${field}`}
-                      value={item.values[field] || ""}
-                      onChange={(e) =>
-                        handleValueChange(index, field, e.target.value)
-                      }
-                    />
-                  </div>
-                ))}
+                {itemData.items
+                  .find((i) => i.name === item.itemType)
+                  ?.fields.map((field) => (
+                    <div key={field}>
+                      <Label className="capitalize">
+                        {field.replace(/([A-Z])/g, " $1")}
+                      </Label>
+                      <Input
+                        type="number"
+                        placeholder={`Enter ${field}`}
+                        value={item.values[field] || ""}
+                        onChange={(e) =>
+                          handleValueChange(index, field, e.target.value)
+                        }
+                      />
+                    </div>
+                  ))}
               </div>
             )}
           </div>
