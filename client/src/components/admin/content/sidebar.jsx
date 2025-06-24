@@ -13,6 +13,7 @@ import {
   Package,
   Package2,
   PackageCheck,
+  PaletteIcon,
   PersonStandingIcon,
   Plus,
   Quote,
@@ -25,6 +26,7 @@ import {
   Truck,
   TruckIcon,
   User,
+  User2Icon,
   Warehouse,
 } from "lucide-react";
 import { useSelector } from "react-redux";
@@ -340,7 +342,7 @@ const Sidebar = () => {
               </AccordionContent>
              <AccordionContent>
                 <Link
-                  to="items"
+                  to="/admin/items"
                   className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -348,16 +350,46 @@ const Sidebar = () => {
                   <h2>Item Master</h2>
                 </Link>
               </AccordionContent>
-                {/*  <AccordionContent>
+                 <AccordionContent>
+                <Link
+                  to="/admin/fabrics"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Shirt size={22} />
+                  <h2>Fabric Master</h2>
+                </Link>
+              </AccordionContent>
+               <AccordionContent>
                 <Link
                   to="#"
                   className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <HandCoins size={22} />
-                  <h2>Employee Income</h2>
+                  <User2Icon size={22} />
+                  <h2>Master Master</h2>
                 </Link>
-              </AccordionContent> */}
+              </AccordionContent>
+               <AccordionContent>
+                <Link
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <PersonStandingIcon size={22} />
+                  <h2>Salesman Master</h2>
+                </Link>
+              </AccordionContent>
+               <AccordionContent>
+                <Link
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <PaletteIcon size={22} />
+                  <h2>Style Master</h2>
+                </Link>
+              </AccordionContent>
             </AccordionItem>
           </Accordion>
 

@@ -135,14 +135,12 @@ export const updateCustomer = async (req, res) => {
         message: "Customer not found",
       });
     }
-
-    let profileImage = existingCustomer.profileImage;
-    let profileImagePublicId = existingCustomer.profileImagePublicId;
-
     if (measurements) {
       existingCustomer.measurements = JSON.parse(measurements);
     }
-
+    
+    let profileImage = existingCustomer.profileImage;
+    let profileImagePublicId = existingCustomer.profileImagePublicId;
     if (req.files && req.files.customerProfilePhoto) {
       profileImage = req.files.customerProfilePhoto[0].path;
       profileImagePublicId = req.files.customerProfilePhoto[0].filename;

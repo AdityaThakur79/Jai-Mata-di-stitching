@@ -7,12 +7,11 @@ const Navbar = () => {
       <nav className="m-0 p-0">
         {/* Announcement Bar */}
         <div className="announcement-bar bg-[#f77f2f] text-white">
-        <div className="container mx-auto px-4 md:px-10 py-2 flex items-center justify-center text-sm md:text-base">
-  <p className="font-semibold text-lg md:text-xl text-center text-white">
-    JAI MATA DI STITCHING – Your satisfaction is our first priority
-  </p>
-</div>
-
+          <div className="container mx-auto px-4 md:px-10 py-2 flex items-center justify-center text-sm md:text-base">
+            <p className="font-semibold text-lg md:text-xl text-center text-white">
+              JAI MATA DI STITCHING – Your satisfaction is our first priority
+            </p>
+          </div>
         </div>
 
         {/* Logo & CTA only */}

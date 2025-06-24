@@ -34,9 +34,11 @@ app.use("/api/user", userRoutes);
 //Master routes
 import customerRoutes from "./routes/customer.js"
 import itemRoutes from "./routes/item.js"
+import fabricRoutes from "./routes/fabric.js"
 
 app.use("/api/customer", customerRoutes)
 app.use("/api/item", itemRoutes)
+app.use("/api/fabric", fabricRoutes)
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

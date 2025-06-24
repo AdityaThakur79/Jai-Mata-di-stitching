@@ -18,6 +18,9 @@ import Customers from "./components/admin/content/Customer/Customers.jsx";
 import Items from "./components/admin/content/Item/Items.jsx";
 import CreateItem from "./components/admin/content/Item/CreateItem.jsx";
 import UpdateItem from "./components/admin/content/Item/UpdateItem.jsx";
+import CreateFabric from "./components/admin/content/Fabric/CreateFabric.jsx";
+import UpdateFabric from "./components/admin/content/Fabric/UpdateFabrics.jsx";
+import Fabrics from "./components/admin/content/Fabric/Fabrics.jsx";
 
 const appRouter = createBrowserRouter([
   //Homepage Routes
@@ -104,7 +107,7 @@ const appRouter = createBrowserRouter([
         element: <Customers />,
       },
 
-          //Item master
+      //Item master
       {
         path: "create-item",
         element: <CreateItem />,
@@ -116,6 +119,20 @@ const appRouter = createBrowserRouter([
       {
         path: "items",
         element: <Items />,
+      },
+
+        //Fabric master
+      {
+        path: "create-fabric",
+        element: <CreateFabric />,
+      },
+      {
+        path: "update-fabric",
+        element: <UpdateFabric />,
+      },
+      {
+        path: "fabrics",
+        element: <Fabrics />,
       },
     ],
   },

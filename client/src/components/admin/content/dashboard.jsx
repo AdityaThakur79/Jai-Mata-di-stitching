@@ -18,14 +18,12 @@ import {
   FaFilter,
   FaPlus,
 } from "react-icons/fa";
+import { useSelector } from "react-redux";
 
 const Dashboard = () => {
-  // Mock user data
-  const [user] = useState({
-    name: "Dinesh Kumar",
-    role: "Shop Owner",
-    photoUrl: null,
-  });
+ 
+
+    const { user } = useSelector((store) => store.auth);
 
   // Statistics data for tailor management
   const statsData = [
@@ -220,7 +218,11 @@ const Dashboard = () => {
               </div>
               <div className="text-right">
                 <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center text-3xl font-bold mb-2">
-                  {user?.name?.charAt(0).toUpperCase() || "U"}
+                
+                   <img
+           src={user?.photoUrl} alt={user?.name} 
+              className="w-20 h-20   object-cover rounded-full"
+            />
                 </div>
                 <p className="text-sm text-orange-100">{user?.role}</p>
               </div>
@@ -242,11 +244,19 @@ const Dashboard = () => {
             className="flex items-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
           >
             <FaPlus className="mr-2" />
-            Add New Customer
+            Add Customer
           </a>
           <a href="/admin/create-item" className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
             <FaShoppingBag className="mr-2" />
             Add New item
+          </a>
+            <a href="/admin/create-master" className="flex items-center px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">
+            <FaShoppingBag className="mr-2" />
+            Add Master
+          </a>
+             <a href="/admin/create-item" className="flex items-center px-4 py-2 bg-orange-700 text-white rounded-lg hover:bg-orange-800 transition-colors">
+            <FaShoppingBag className="mr-2" />
+            Add Salesman
           </a>
           <button className="flex items-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
             <FaUserTie className="mr-2" />
