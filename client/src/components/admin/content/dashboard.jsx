@@ -195,7 +195,6 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-white">
-
       {/* Main Content */}
       <main className="container mx-auto md:px-4 ">
         {/* Welcome Section */}
@@ -210,11 +209,12 @@ const Dashboard = () => {
                   Ready to create beautiful garments today?
                 </p>
                 <div className="mt-4 text-sm text-orange-100">
-                  Today: {new Date().toLocaleDateString("en-IN", {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
+                  Today:{" "}
+                  {new Date().toLocaleDateString("en-IN", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
                   })}
                 </div>
               </div>
@@ -237,13 +237,16 @@ const Dashboard = () => {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-4 mb-8">
-          <a href="/admin/create-customer" className="flex items-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors">
+          <a
+            href="/admin/create-customer"
+            className="flex items-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+          >
             <FaPlus className="mr-2" />
-           Add New Customer
+            Add New Customer
           </a>
           <button className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
             <FaShoppingBag className="mr-2" />
-            Create Order
+            Add New item
           </button>
           <button className="flex items-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
             <FaUserTie className="mr-2" />
@@ -357,15 +360,33 @@ const Dashboard = () => {
             <table className="min-w-full divide-y divide-gray-200 text-sm">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Item</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Tailor</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Completed</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Payment</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Rating</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
+                    Order ID
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
+                    Customer
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
+                    Item
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
+                    Tailor
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
+                    Completed
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
+                    Amount
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
+                    Payment
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
+                    Rating
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">

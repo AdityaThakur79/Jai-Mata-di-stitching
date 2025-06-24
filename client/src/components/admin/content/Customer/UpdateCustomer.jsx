@@ -5,9 +5,18 @@ import { Loader2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { itemMeasurementFields } from "@/utils/itemsMeasurement";
-import { useGetCustomerByIdMutation, useUpdateCustomerMutation } from "@/features/api/customerApi";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import {
+  useGetCustomerByIdMutation,
+  useUpdateCustomerMutation,
+} from "@/features/api/customerApi";
+import { useGetAllItemMastersQuery } from "@/features/api/itemApi";
 
 const UpdateCustomer = () => {
   const [name, setName] = useState("");
@@ -16,18 +25,29 @@ const UpdateCustomer = () => {
   const [profileImage, setProfileImage] = useState(null);
   const [previewImage, setPreviewImage] = useState("");
   const [itemType, setItemType] = useState("");
-  const [measurementList, setMeasurementList] = useState([]); 
+  const [measurementList, setMeasurementList] = useState([]);
   const [currentValues, setCurrentValues] = useState({});
 
   const location = useLocation();
   const customerId = location.state?.customerId;
   const navigate = useNavigate();
 
+  const {
+    data: itemData,
+    isLoading: itemLoading,
+    refetch,
+  } = useGetAllItemMastersQuery({
+    page: 1,
+    limit: 100,
+    search: "",
+  });
+
   const [getCustomerById, { data, isSuccess }] = useGetCustomerByIdMutation();
-  const [updateCustomer, { isLoading, isSuccess: isUpdated, error }] = useUpdateCustomerMutation();
+  const [updateCustomer, { isLoading, isSuccess: isUpdated, error }] =
+    useUpdateCustomerMutation();
 
   useEffect(() => {
-    if (customerId) getCustomerById(customerId );
+    if (customerId) getCustomerById(customerId);
   }, [customerId]);
 
   useEffect(() => {
@@ -50,7 +70,7 @@ const UpdateCustomer = () => {
   const handleAddMeasurement = () => {
     if (!itemType || !Object.keys(currentValues).length) return;
 
-    const updated = measurementList.filter((m) => m.itemType !== itemType);  
+    const updated = measurementList.filter((m) => m.itemType !== itemType);
     updated.push({ itemType, values: currentValues });
 
     setMeasurementList(updated);
@@ -86,27 +106,45 @@ const UpdateCustomer = () => {
     <div className="flex-1 mx-4 md:mx-10 min-h-[100vh]">
       <div className="mb-4">
         <h1 className="font-bold text-xl">Edit Customer</h1>
-        <p className="text-sm">Update customer details and measurements below.</p>
+        <p className="text-sm">
+          Update customer details and measurements below.
+        </p>
       </div>
 
       <div className="space-y-4">
         <div>
           <Label>Name</Label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter customer name" />
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter customer name"
+          />
         </div>
         <div>
           <Label>Mobile</Label>
-          <Input value={mobile} onChange={(e) => setMobile(e.target.value)} placeholder="Enter mobile number" />
+          <Input
+            value={mobile}
+            onChange={(e) => setMobile(e.target.value)}
+            placeholder="Enter mobile number"
+          />
         </div>
         <div>
           <Label>Email</Label>
-          <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter email" />
+          <Input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter email"
+          />
         </div>
         <div>
           <Label>Profile Photo</Label>
           <Input type="file" accept="image/*" onChange={handleFileChange} />
           {previewImage && (
-            <img src={previewImage} className="w-24 h-24 mt-2 rounded-full border object-cover" alt="Preview" />
+            <img
+              src={previewImage}
+              className="w-24 h-24 mt-2 rounded-full border object-cover"
+              alt="Preview"
+            />
           )}
         </div>
 
@@ -116,18 +154,23 @@ const UpdateCustomer = () => {
           <div className="grid gap-3">
             <div>
               <Label>Select Item Type</Label>
-              <Select onValueChange={(val) => {
-                setItemType(val);
-                setCurrentValues(
-                  measurementList.find((m) => m.itemType === val)?.values || {}
-                );
-              }}>
+              <Select
+                onValueChange={(val) => {
+                  setItemType(val);
+                  setCurrentValues(
+                    measurementList.find((m) => m.itemType === val)?.values ||
+                      {}
+                  );
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select item" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.keys(itemMeasurementFields).map((item) => (
-                    <SelectItem key={item} value={item}>{item}</SelectItem>
+                  {itemData?.items?.map((item) => (
+                    <SelectItem key={item._id} value={item.name}>
+                      {item.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -135,19 +178,26 @@ const UpdateCustomer = () => {
 
             {itemType && (
               <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {itemMeasurementFields[itemType].map((field) => (
-                  <div key={field}>
-                    <Label className="capitalize">{field.replace(/([A-Z])/g, " $1")}</Label>
-                    <Input
-                      type="number"
-                      placeholder={`Enter ${field}`}
-                      value={currentValues[field] || ""}
-                      onChange={(e) =>
-                        setCurrentValues((prev) => ({ ...prev, [field]: e.target.value }))
-                      }
-                    />
-                  </div>
-                ))}
+                {itemData?.items
+                  ?.find((i) => i.name === itemType)
+                  ?.fields?.map((field) => (
+                    <div key={field}>
+                      <Label className="capitalize">
+                        {field.replace(/([A-Z])/g, " $1")}
+                      </Label>
+                      <Input
+                        type="number"
+                        placeholder={`Enter ${field}`}
+                        value={currentValues[field] || ""}
+                        onChange={(e) =>
+                          setCurrentValues((prev) => ({
+                            ...prev,
+                            [field]: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                  ))}
               </div>
             )}
 
@@ -159,17 +209,19 @@ const UpdateCustomer = () => {
 
             {measurementList.length > 0 && (
               <div className="mt-4 space-y-2">
-               {measurementList.map((m) => (
-  <div key={m?.itemType} className="text-sm bg-muted p-2 rounded">
-    <strong>{m?.itemType}</strong>:{" "}
-    {m?.values
-      ? Object.entries(m.values)
-          .map(([k, v]) => `${k}: ${v} In`)
-          .join(", ")
-      : "No Measuremnts Found"}
-  </div>
-))}
-
+                {measurementList.map((m) => (
+                  <div
+                    key={m?.itemType}
+                    className="text-sm bg-muted p-2 rounded"
+                  >
+                    <strong>{m?.itemType}</strong>:{" "}
+                    {m?.values
+                      ? Object.entries(m.values)
+                          .map(([k, v]) => `${k}: ${v} In`)
+                          .join(", ")
+                      : "No Measuremnts Found"}
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -177,7 +229,12 @@ const UpdateCustomer = () => {
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2 mt-6">
-          <Button variant="outline" onClick={() => navigate("/admin/customers")}>Back</Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate("/admin/customers")}
+          >
+            Back
+          </Button>
           <Button onClick={handleUpdate} disabled={isLoading}>
             {isLoading ? (
               <>

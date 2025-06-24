@@ -3,14 +3,8 @@ import { MdOutlineEdit } from "react-icons/md";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { Button } from "@/components/ui/button";
 import { GrPowerCycle } from "react-icons/gr";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import {
-  useGetAllCustomersQuery,
-  useDeleteCustomerMutation,
-  useGetCustomerByIdMutation,
-} from "@/features/api/customerApi";
-import { RiCustomerServiceLine } from "react-icons/ri";
 import {
   Pagination,
   PaginationContent,
@@ -19,6 +13,12 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { useDebounce } from "@/hooks/Debounce";
+import {
+  useDeleteItemMasterMutation,
+  useGetAllItemMastersQuery,
+  useGetItemMasterByIdMutation,
+} from "@/features/api/itemApi";
 import {
   Select,
   SelectContent,
@@ -26,6 +26,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { EyeIcon } from "lucide-react";
+import { Drawer } from "antd";
+import { Loader2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,53 +40,24 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ContactRound, EyeIcon } from "lucide-react";
-import { Drawer } from "antd";
-import { Loader2 } from "lucide-react";
-import { useDebounce } from "@/hooks/Debounce";
 
-const Customers = () => {
+const Items = () => {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
-  const [limit, setLimit] = useState(5);
+  const [limit, setLimit] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
-
-  const { data, isLoading, refetch } = useGetAllCustomersQuery({
+  const { data, isLoading, refetch } = useGetAllItemMastersQuery({
     page: currentPage,
     limit,
     search: debouncedSearchQuery,
   });
-  const [deleteCustomer, { isSuccess, isError }] = useDeleteCustomerMutation();
 
-  //Drawer ANTD
-  const [open, setOpen] =  useState(false);
-  const [loading, setLoading] =  useState(true);
-  const showLoading = () => {
-    setOpen(true);
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-    }, 2000);
-  };
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [getCustomerById, { isLoading: getCustomerLoading }] =
-    useGetCustomerByIdMutation();
+  const [deleteItemMaster, { isSuccess, isError }] =
+    useDeleteItemMasterMutation();
 
-  const handleViewCustomer = async (customerId) => {
-    setOpen(true);
-    try {
-      const { data } = await getCustomerById(customerId);
-      if (data?.success) {
-        setSelectedCustomer(data?.customer);
-      }
-    } catch (error) {
-      console.error("Error fetching customer:", error);
-    }
-  };
-
-  const handleDelete = async (customerId) => {
-    await deleteCustomer(customerId);
+  const handleDelete = async (itemId) => {
+    await deleteItemMaster(itemId);
   };
 
   const handlePageChange = (newPage) => {
@@ -95,6 +69,33 @@ const Customers = () => {
   const handleLimitChange = (value) => {
     setLimit(Number(value));
     setCurrentPage(1);
+  };
+
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [selectedItem, setSelectedItem] = useState();
+
+  // const showLoading = () => {
+  //   setOpen(true);
+  //   setLoading(true);
+  //   setTimeout(() => {
+  //     setLoading(false);
+  //   }, 2000);
+  // };
+
+  const [getItemMasterById, { isLoading: getItemMasterByIdLoading }] =
+    useGetItemMasterByIdMutation();
+
+  const handleViewItem = async (itemId) => {
+    setOpen(true);
+    try {
+      const { data } = await getItemMasterById(itemId);
+      if (data?.success) {
+        setSelectedItem(data?.item);
+      }
+    } catch (error) {
+      console.error("Error fetching customer:", error);
+    }
   };
 
   const getPageNumbers = () => {
@@ -109,10 +110,10 @@ const Customers = () => {
 
   useEffect(() => {
     if (isSuccess) {
-      toast.success("Customer Deleted Successfully");
+      toast.success("Item deleted successfully");
       refetch();
     } else if (isError) {
-      toast.error("Failed to delete customer");
+      toast.error("Failed to delete item");
     }
   }, [isSuccess, isError]);
 
@@ -120,21 +121,20 @@ const Customers = () => {
     <section className="bg-gray-50 dark:bg-gray-900 min-h-[100vh] rounded-md">
       <div className="md:p-6 p-2">
         <div className="mb-6 flex flex-col md:flex-row md:justify-between md:items-center space-y-2 md:space-y-0">
-          <h2 className="md:text-xl font-semibold text-gray-700 text-center dark:text-white">
-            All Customers
+          <h2 className="md:text-xl font-semibold text-gray-700 dark:text-white">
+            All Item Masters
           </h2>
 
-          <div className="flex flex-col sm:flex-row items-center sm:items-center space-y-3 sm:space-y-0 sm:space-x-3">
-            {/* Search Input */}
+          <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-3">
             <input
               type="text"
-              placeholder="Search by name, mobile, email"
+              placeholder="Search by item type"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm w-full sm:w-64 bg-white dark:bg-gray-800 text-gray-800 dark:text-white placeholder:text-gray-500"
             />
 
-            <div className="flex gap-4 justify-center items-center">
+            <div className="flex gap-2 items-center">
               <Select
                 value={limit.toString()}
                 onValueChange={handleLimitChange}
@@ -150,11 +150,9 @@ const Customers = () => {
                   ))}
                 </SelectContent>
               </Select>
-
-              <Button onClick={() => navigate("/admin/create-customer")}>
-                Add Customer
+              <Button onClick={() => navigate("/admin/create-item")}>
+                Add Item
               </Button>
-
               <Button className="p-2" onClick={() => refetch()}>
                 <GrPowerCycle />
               </Button>
@@ -166,78 +164,67 @@ const Customers = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50 dark:bg-gray-900 text-left">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
                   No
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
-                  Profile
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
+                  Item Type
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
-                  Name
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
+                  Fields
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
-                  Mobile
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
-                  Action
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
+                  Actions
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200">
               {isLoading ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-10 text-center">
+                  <td colSpan="4" className="px-6 py-10 text-center">
                     Loading...
                   </td>
                 </tr>
-              ) : data?.customers?.length > 0 ? (
-                data?.customers?.map((customer, i) => (
-                  <tr key={customer._id} className="text-left">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+              ) : data?.items?.length > 0 ? (
+                data.items.map((item, i) => (
+                  <tr key={item._id}>
+                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
                       {data.limit * (data.page - 1) + (i + 1)}
                     </td>
-                    <td className="px-6 py-3 text-sm text-gray-900 dark:text-white">
-                      {customer?.profileImage ? (
-                        <img
-                          src={customer.profileImage}
-                          alt={customer.name}
-                          className="w-10 h-10 rounded-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.src = "/placeholder.png";
-                          }}
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-orange-400 flex items-center justify-center text-white font-semibold">
-                          {customer?.name?.[0]?.toUpperCase() || "U"}
-                        </div>
-                      )}
+                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-white capitalize">
+                      {item.name}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                      {customer.name}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                      {customer.mobile}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                      {customer.email}
+                      <div className="flex flex-wrap gap-2">
+                        {item.fields.slice(0, 3).map((field, idx) => (
+                          <span
+                            key={idx}
+                            className="bg-gray-200 text-xs px-2 py-1 rounded dark:bg-gray-700 dark:text-white"
+                          >
+                            {field}
+                          </span>
+                        ))}
+                        {item.fields.length > 3 && (
+                          <span className="bg-blue-200 text-xs px-2 py-1 rounded dark:bg-blue-600 dark:text-white">
+                            +{item.fields.length - 3} more
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex space-x-2 justify-center">
                         <Button
                           className="p-2 bg-blue-100 text-blue-600 hover:bg-blue-200"
-                          onClick={() => handleViewCustomer(customer._id)}
+                          onClick={() => handleViewItem(item._id)}
                         >
                           <EyeIcon className="w-5 h-5" />
                         </Button>
 
                         <Drawer
                           title={
-                            selectedCustomer ? (
+                            selectedItem ? (
                               <span className="text-lg font-semibold">
-                                {selectedCustomer?.name}
+                                {selectedItem?.name}
                               </span>
                             ) : (
                               "Loading..."
@@ -247,58 +234,39 @@ const Customers = () => {
                           width={400}
                           onClose={() => {
                             setOpen(false);
-                            setSelectedCustomer(null);
+                            setSelectedItem(null);
                           }}
                           open={open}
                           mask={false}
                         >
-                          {isLoading || !selectedCustomer ? (
+                          {isLoading || !selectedItem ? (
                             <div className="flex justify-center items-center h-40">
                               <Loader2 className="w-6 h-6 animate-spin" />
                             </div>
                           ) : (
                             <div className="space-y-3 text-sm">
                               <p>
-                                <strong>Name:</strong> {selectedCustomer?.name}
+                                <strong>Item Type:</strong> {selectedItem?.name}
                               </p>
                               <p>
-                                <strong>Mobile:</strong>{" "}
-                                {selectedCustomer?.mobile}
+                                <strong>Item Description:</strong>{" "}
+                                {selectedItem?.description}
                               </p>
-                              <p>
-                                <strong>Email:</strong>{" "}
-                                {selectedCustomer?.email || "N/A"}
-                              </p>
-                              {selectedCustomer?.measurements?.length > 0 && (
+                             
+                              {selectedItem?.fields?.length > 0 && (
                                 <div>
                                   <p className="font-semibold mt-4">
-                                    Measurements:
+                                    Measurement Fields:
                                   </p>
-                                  {selectedCustomer?.measurements.map(
+                                  {selectedItem?.fields.map(
                                     (m, i) => (
                                       <div
                                         key={i}
-                                        className="mt-2 border p-2 rounded bg-gray-50"
+                                        className="mt-2 flex border p-2 rounded bg-gray-50"
                                       >
                                         <p>
-                                          <strong>Item:</strong> {m.itemType}
-                                        </p>
-
-                                        {m?.values &&
-                                          typeof m.values === "object" &&
-                                          Object.entries(m.values).map(
-                                            ([key, value]) =>
-                                              value && (
-                                                <p key={key}>
-                                                  {key}: {value}
-                                                </p>
-                                              )
-                                          )}
-
-                                        {m?.style && <p>Style: {m?.style}</p>}
-                                        {m?.designNumber && (
-                                          <p>Design #: {m?.designNumber}</p>
-                                        )}
+                                            {m}
+                                        </p>             
                                       </div>
                                     )
                                   )}
@@ -311,14 +279,16 @@ const Customers = () => {
                         <Button
                           className="p-2 bg-orange-100 text-orange-600 hover:bg-orange-200"
                           onClick={() =>
-                            navigate("/admin/update-customer", {
-                              state: { customerId: customer._id },
+                            navigate("/admin/update-item", {
+                              state: { itemId: item._id },
                             })
                           }
                         >
                           <MdOutlineEdit className="w-5 h-5" />
                         </Button>
-                        <AlertDialog>
+                      
+
+                          <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button className="p-2 bg-red-100 text-red-600 hover:bg-red-200">
                               <FaRegTrashCan />
@@ -327,7 +297,7 @@ const Customers = () => {
                           <AlertDialogContent>
                             <AlertDialogHeader>
                               <AlertDialogTitle>
-                                Delete Customer?
+                                Delete Item?
                               </AlertDialogTitle>
                               <AlertDialogDescription>
                                 This action cannot be undone.
@@ -336,7 +306,7 @@ const Customers = () => {
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
                               <AlertDialogAction
-                                onClick={() => handleDelete(customer._id)}
+                                onClick={() => handleDelete(item._id)}
                               >
                                 Delete
                               </AlertDialogAction>
@@ -349,50 +319,38 @@ const Customers = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="px-6 py-10 text-center">
-                    <ContactRound className="w-10 h-10 mx-auto text-gray-400" />
-                    <p className="text-lg font-medium text-gray-500">
-                      No Customers Available
-                    </p>
-                    <p className="text-sm text-gray-400">
-                      Add a new customer to get started
-                    </p>
+                  <td
+                    colSpan="4"
+                    className="px-6 py-10 text-center text-gray-500 dark:text-white"
+                  >
+                    No item masters found. Add one to get started.
                   </td>
                 </tr>
               )}
             </tbody>
-            <thead className="bg-gray-50 dark:bg-gray-900">
+            <thead className="bg-gray-50 dark:bg-gray-900 text-left">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
                   No
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
-                  Profile
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
+                  Item Type
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
-                  Name
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
+                  Fields
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
-                  Mobile
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
-                  Action
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
+                  Actions
                 </th>
               </tr>
             </thead>
           </table>
 
-          {/* Pagination */}
           <div className="border-t border-gray-200 px-4 py-3 flex flex-col lg:flex-row lg:items-center lg:justify-between">
             <div className="mb-4 lg:mb-0">
               <p className="text-sm text-gray-700 dark:text-white">
                 Showing{" "}
-                {data?.customers?.length
-                  ? (data?.page - 1) * data?.limit + 1
-                  : 0}{" "}
+                {data?.items?.length ? (data?.page - 1) * data?.limit + 1 : 0}{" "}
                 to {Math.min(data?.page * data?.limit, data?.total || 0)} of{" "}
                 <span className="font-medium">{data?.total || 0}</span> entries
               </p>
@@ -443,4 +401,4 @@ const Customers = () => {
   );
 };
 
-export default Customers;
+export default Items;

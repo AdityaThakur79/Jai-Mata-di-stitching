@@ -15,6 +15,9 @@ import NotFound from "./utils/NotFound.jsx";
 import CreateCustomer from "./components/admin/content/Customer/CreateCustomer.jsx";
 import UpdateCustomer from "./components/admin/content/Customer/UpdateCustomer.jsx";
 import Customers from "./components/admin/content/Customer/Customers.jsx";
+import Items from "./components/admin/content/Item/Items.jsx";
+import CreateItem from "./components/admin/content/Item/CreateItem.jsx";
+import UpdateItem from "./components/admin/content/Item/UpdateItem.jsx";
 
 const appRouter = createBrowserRouter([
   //Homepage Routes
@@ -99,6 +102,20 @@ const appRouter = createBrowserRouter([
       {
         path: "customers",
         element: <Customers />,
+      },
+
+          //Item master
+      {
+        path: "create-item",
+        element: <CreateItem />,
+      },
+      {
+        path: "update-item",
+        element: <UpdateItem />,
+      },
+      {
+        path: "items",
+        element: <Items />,
       },
     ],
   },
