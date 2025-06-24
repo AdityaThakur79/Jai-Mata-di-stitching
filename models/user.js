@@ -16,7 +16,7 @@ const user = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["superAdmin", ""],
+      enum: ["superAdmin", "master", "billing"],
       default: "superAdmin",
     },
     photoUrl: {
@@ -27,7 +27,7 @@ const user = new mongoose.Schema(
       type: String,
       default: "",
     },
-      photoUrlPublicId: {
+    photoUrlPublicId: {
       type: String,
       default: "",
     },

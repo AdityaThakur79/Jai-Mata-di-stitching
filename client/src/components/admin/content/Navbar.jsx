@@ -120,7 +120,7 @@ const Navbar = () => {
             </DropdownMenu>
           ) : (
             <div className="flex gap-2 items-center">
-              <Link to="/auth/login">
+              <Link to="/login">
                 <Button variant="outline">Login</Button>
               </Link>
             </div>

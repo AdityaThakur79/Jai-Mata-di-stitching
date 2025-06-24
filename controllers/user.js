@@ -66,95 +66,6 @@ export const registerController = async (req, res) => {
   }
 };
 
-// Verify OTP Controller
-export const verifyOTPController = async (req, res) => {
-  try {
-    const { email, otp } = req.body;
-    // Check if the email exists in pending users
-    if (!pendingUsers.has(email)) {
-      return res
-        .status(400)
-        .json({ message: "No registration found for this email" });
-    }
-
-    const pendingUser = pendingUsers.get(email);
-
-    // Validate OTP
-    if (pendingUser.otp !== otp || Date.now() > pendingUser.otpExpiry) {
-      return res.status(400).json({ message: "Invalid or expired OTP" });
-    }
-
-    // Create the user in the database
-    const newUser = await User.create({
-      name: pendingUser.name,
-      email: pendingUser.email,
-      password: pendingUser.hashedPassword,
-      status: true,
-    });
-
-    // Remove the user from pending list
-    pendingUsers.delete(email);
-
-    return res.status(200).json({
-      success: true,
-      message: "OTP verified successfully. User registered!",
-      user: newUser,
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Server error" });
-  }
-};
-
-export const loginController = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res
-        .status(400)
-        .json({ sucess: false, messsage: "All fields are required" });
-    }
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Incorrect email or password" });
-    }
-
-    const isPasswordMatched = await bcrypt.compare(password, user.password);
-    if (!isPasswordMatched) {
-      return res.status(400).json({
-        success: false,
-        message: "Incorrect email or password",
-      });
-    }
-    generateToken(res, user, `Welcome back ${user.name}`);
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to login",
-    });
-  }
-};
-
-export const logoutController = async (req, res) => {
-  try {
-    return res.status(200).cookie("token", "", { maxAge: 0 }).json({
-      message: "Logged Out Successfully",
-      success: true,
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to Log out",
-    });
-  }
-};
-
 //update profile
 export const updateProfileController = async (req, res) => {
   try {
@@ -239,6 +150,95 @@ export const getUserProfileController = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to load user",
+    });
+  }
+};
+
+export const loginController = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ sucess: false, messsage: "All fields are required" });
+    }
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Incorrect email or password" });
+    }
+
+    const isPasswordMatched = await bcrypt.compare(password, user.password);
+    if (!isPasswordMatched) {
+      return res.status(400).json({
+        success: false,
+        message: "Incorrect email or password",
+      });
+    }
+    generateToken(res, user, `Welcome back ${user.name}`);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to login",
+    });
+  }
+};
+
+// Verify OTP Controller
+export const verifyOTPController = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    // Check if the email exists in pending users
+    if (!pendingUsers.has(email)) {
+      return res
+        .status(400)
+        .json({ message: "No registration found for this email" });
+    }
+
+    const pendingUser = pendingUsers.get(email);
+
+    // Validate OTP
+    if (pendingUser.otp !== otp || Date.now() > pendingUser.otpExpiry) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    // Create the user in the database
+    const newUser = await User.create({
+      name: pendingUser.name,
+      email: pendingUser.email,
+      password: pendingUser.hashedPassword,
+      status: true,
+    });
+
+    // Remove the user from pending list
+    pendingUsers.delete(email);
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP verified successfully. User registered!",
+      user: newUser,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+ 
+export const logoutController = async (req, res) => {
+  try {
+    return res.status(200).cookie("token", "", { maxAge: 0 }).json({
+      message: "Logged Out Successfully",
+      success: true,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to Log out",
     });
   }
 };

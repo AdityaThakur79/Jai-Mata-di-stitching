@@ -97,7 +97,7 @@ function Login() {
   ]);
 
   return (
-    <section className="flex items-center w-full justify-center my-24 md:px-10 px-4 min-h-[80vh]">
+    <section className="flex items-center w-full justify-center my-24 md:px-10 px-4 min-h-[75vh]">
       <Tabs defaultValue="login" className="w-[450px]">
         {/* <TabsList className="grid w-full grid-cols-2 ">
           <TabsTrigger value="signup">Signup</TabsTrigger>
