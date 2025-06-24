@@ -362,7 +362,7 @@ const Sidebar = () => {
               </AccordionContent>
                <AccordionContent>
                 <Link
-                  to="#"
+                  to="/admin/masters"
                   className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >

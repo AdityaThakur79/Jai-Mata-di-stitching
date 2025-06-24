@@ -21,6 +21,9 @@ import UpdateItem from "./components/admin/content/Item/UpdateItem.jsx";
 import CreateFabric from "./components/admin/content/Fabric/CreateFabric.jsx";
 import UpdateFabric from "./components/admin/content/Fabric/UpdateFabrics.jsx";
 import Fabrics from "./components/admin/content/Fabric/Fabrics.jsx";
+import CreateMaster from "./components/admin/content/Master/CreateMaster.jsx";
+import UpdateMaster from "./components/admin/content/Master/UpdateMaster.jsx";
+import Masters from "./components/admin/content/Master/Masters.jsx";
 
 const appRouter = createBrowserRouter([
   //Homepage Routes
@@ -71,7 +74,7 @@ const appRouter = createBrowserRouter([
   //     },
   //   ],
   // },
-  //Content Dashboard Routes
+
   {
     path: "admin",
     element: (
@@ -133,6 +136,19 @@ const appRouter = createBrowserRouter([
       {
         path: "fabrics",
         element: <Fabrics />,
+      },
+         //Master master
+      {
+        path: "create-master",
+        element: <CreateMaster />,
+      },
+      {
+        path: "update-master",
+        element: <UpdateMaster />,
+      },
+      {
+        path: "masters",
+        element: <Masters />,
       },
     ],
   },
