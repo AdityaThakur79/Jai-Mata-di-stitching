@@ -244,10 +244,10 @@ const Dashboard = () => {
             <FaPlus className="mr-2" />
             Add New Customer
           </a>
-          <button className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+          <a href="/admin/create-item" className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
             <FaShoppingBag className="mr-2" />
             Add New item
-          </button>
+          </a>
           <button className="flex items-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
             <FaUserTie className="mr-2" />
             Add Employee
