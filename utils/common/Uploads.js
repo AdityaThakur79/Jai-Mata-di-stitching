@@ -15,7 +15,8 @@ const imageFields = [
   "profilePhoto",
   "bannerImage",
   "customerProfilePhoto",
-  "fabricImage"
+  "fabricImage",
+  "styleImage"
 ];
 
 const videoFields = ["videoUpload"];
@@ -56,6 +57,7 @@ const upload = multer({
   { name: "bannerImage", maxCount: 1 },
   { name: "customerProfilePhoto", maxCount: 1 },
    { name: "fabricImage", maxCount: 1 },
+    { name: "styleImage", maxCount: 1 },
   { name: "videoUpload", maxCount: 1 },
 ]);
 

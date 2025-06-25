@@ -5,6 +5,8 @@ import { customerApi } from "@/features/api/customerApi.js";
 import { itemMasterApi } from "@/features/api/itemApi.js";
 import { fabricApi } from "@/features/api/fabricApi.js";
 import { masterApi } from "@/features/api/masterApi.js";
+import { salesmanApi } from "@/features/api/salesmanApi.js";
+import { styleApi } from "@/features/api/styleApi.js";
 
 const rootReducer = combineReducers({
   [authApi.reducerPath]: authApi.reducer,
@@ -12,6 +14,8 @@ const rootReducer = combineReducers({
   [itemMasterApi.reducerPath]: itemMasterApi.reducer,
   [fabricApi.reducerPath]: fabricApi.reducer,
   [masterApi.reducerPath]: masterApi.reducer,
+  [salesmanApi.reducerPath]:salesmanApi.reducer,
+  [styleApi.reducerPath]:styleApi.reducer,
   auth: authReducer,
 });
 
