@@ -24,6 +24,12 @@ import Fabrics from "./components/admin/content/Fabric/Fabrics.jsx";
 import CreateMaster from "./components/admin/content/Master/CreateMaster.jsx";
 import UpdateMaster from "./components/admin/content/Master/UpdateMaster.jsx";
 import Masters from "./components/admin/content/Master/Masters.jsx";
+import CreateSalesman from "./components/admin/content/Salesman/CreateSalesman.jsx";
+import UpdateSalesman from "./components/admin/content/Salesman/UpdateSalesman.jsx";
+import Salesmans from "./components/admin/content/Salesman/Salesmans.jsx";
+import CreateStyle from "./components/admin/content/Style/CreateStyle.jsx";
+import UpdateStyle from "./components/admin/content/Style/UpdateStyle.jsx";
+import Styles from "./components/admin/content/Style/Styles.jsx";
 
 const appRouter = createBrowserRouter([
   //Homepage Routes
@@ -149,6 +155,32 @@ const appRouter = createBrowserRouter([
       {
         path: "masters",
         element: <Masters />,
+      },
+          //Salesman master
+      {
+        path: "create-salesman",
+        element: <CreateSalesman />,
+      },
+      {
+        path: "update-salesman",
+        element: <UpdateSalesman />,
+      },
+      {
+        path: "salesmans",
+        element: <Salesmans />,
+      },
+           //Salesman master
+      {
+        path: "create-style",
+        element: <CreateStyle />,
+      },
+      {
+        path: "update-style",
+        element: <UpdateStyle />,
+      },
+      {
+        path: "styles",
+        element: <Styles />,
       },
     ],
   },

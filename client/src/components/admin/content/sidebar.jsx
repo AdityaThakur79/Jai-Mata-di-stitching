@@ -372,7 +372,7 @@ const Sidebar = () => {
               </AccordionContent>
                <AccordionContent>
                 <Link
-                  to="#"
+                  to="/admin/salesmans"
                   className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -382,7 +382,7 @@ const Sidebar = () => {
               </AccordionContent>
                <AccordionContent>
                 <Link
-                  to="#"
+                  to="/admin/styles"
                   className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
