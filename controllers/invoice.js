@@ -1,5 +1,5 @@
 import Invoice from "../models/Invoice.js";
-import PendingOrder from "../models/PendingOrder.js";
+import PendingOrder from "../models/pendingOrder.js";
 import Customer from "../models/customer.js";
 import puppeteer from "puppeteer";
 import path from "path";
