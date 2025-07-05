@@ -17,7 +17,8 @@ app.use(
       "http://localhost:8080",
       "http://localhost:5174",
       "http://localhost:5173",
-      "https://jai-mata-di-stitching.onrender.com"
+      "https://jai-mata-di-stitching.onrender.com",
+      "https://jmdstitching.com"
     ],
     credentials: true,
   })
