@@ -100,7 +100,7 @@ const Invoices = () => {
 //   useEffect(() => {
 //     const testAPI = async () => {
 //       try {
-//         const response = await fetch('http://localhost:8080/api/invoice/all?page=1&limit=10&status=all', {
+//         const response = await fetch('https://jai-mata-di-stitching.onrender.com/api/invoice/all?page=1&limit=10&status=all', {
 //           credentials: 'include'
 //         });
 //         const result = await response.json();
@@ -151,7 +151,7 @@ const Invoices = () => {
     setPdfUrl(null);
     
     try {
-      const response = await fetch(`http://localhost:8080/api/invoice/${invoice._id}/pdf`, {
+      const response = await fetch(`https://jai-mata-di-stitching.onrender.com/api/invoice/${invoice._id}/pdf`, {
         credentials: 'include'
       });
       
@@ -164,7 +164,7 @@ const Invoices = () => {
         // Use the saved PDF URL directly
         const fullUrl = invoice.pdfUrl.startsWith('http') 
           ? invoice.pdfUrl 
-          : `http://localhost:8080${invoice.pdfUrl}`;
+          : `https://jai-mata-di-stitching.onrender.com${invoice.pdfUrl}`;
         console.log('Using saved PDF URL:', fullUrl);
         setPdfUrl(fullUrl);
       } else {
@@ -185,7 +185,7 @@ const Invoices = () => {
   const handleDownloadPDF = async (invoiceId) => {
     try {
       // First try to get the invoice to check if PDF already exists
-      const invoiceResponse = await fetch(`http://localhost:8080/api/invoice/${invoiceId}`, {
+      const invoiceResponse = await fetch(`https://jai-mata-di-stitching.onrender.com/api/invoice/${invoiceId}`, {
         credentials: 'include'
       });
       
@@ -195,7 +195,7 @@ const Invoices = () => {
         
         if (invoice.pdfUrl) {
           // PDF already exists, download directly
-          const downloadUrl = `http://localhost:8080${invoice.pdfUrl}`;
+          const downloadUrl = `https://jai-mata-di-stitching.onrender.com${invoice.pdfUrl}`;
           const link = document.createElement('a');
           link.href = downloadUrl;
           link.download = `invoice-${invoice.invoiceNumber}.pdf`;
@@ -209,7 +209,7 @@ const Invoices = () => {
       }
       
       // Generate new PDF if it doesn't exist
-      const response = await fetch(`http://localhost:8080/api/invoice/${invoiceId}/pdf`, {
+      const response = await fetch(`https://jai-mata-di-stitching.onrender.com/api/invoice/${invoiceId}/pdf`, {
         credentials: 'include'
       });
       
