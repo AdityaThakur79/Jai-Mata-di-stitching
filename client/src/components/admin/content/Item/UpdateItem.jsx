@@ -18,6 +18,7 @@ const UpdateItem = () => {
 
   const [itemType, setItemType] = useState("");
   const [description, setDescription] = useState("");
+  const [stitchingCharge, setStitchingCharge] = useState("");
   const [fields, setFields] = useState([""]);
 
   const [getItemById, { isLoading: loadingItem }] =
@@ -32,6 +33,7 @@ const UpdateItem = () => {
           const item = data.item;
           setItemType(item.name || "");
           setDescription(item.description || "");
+          setStitchingCharge(item.stitchingCharge || "");
           setFields(item.fields?.length ? item.fields : [""]);
         } else {
           toast.error("Failed to load item data");
@@ -67,6 +69,7 @@ const UpdateItem = () => {
       itemId,
       name: itemType.trim(),
       description : description.trim(),
+      stitchingCharge : stitchingCharge.trim(),
       fields: fields.map((f) => f.trim().toLowerCase()),
     });
   };
@@ -103,6 +106,15 @@ const UpdateItem = () => {
             placeholder="Enter item desc in short"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+          />
+        </div>
+
+        <div>
+          <Label>StitchingCharge</Label>
+          <Input
+            placeholder="Enter item charge"
+            value={stitchingCharge}
+            onChange={(e) => setStitchingCharge(e.target.value)}
           />
         </div>
 

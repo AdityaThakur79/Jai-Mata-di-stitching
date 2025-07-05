@@ -54,6 +54,7 @@ const Customers = () => {
     limit,
     search: debouncedSearchQuery,
   });
+
   const [deleteCustomer, { isSuccess, isError }] = useDeleteCustomerMutation();
 
   //Drawer ANTD

@@ -9,6 +9,7 @@ import {
   HandCoins,
   Landmark,
   LayoutDashboard,
+  ListOrdered,
   MailWarning,
   Package,
   Package2,
@@ -93,7 +94,7 @@ const Sidebar = () => {
               </AccordionTrigger>
               <AccordionContent>
                 <Link
-                  to="#"
+                  to="/admin/invoices"
                   className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -142,7 +143,7 @@ const Sidebar = () => {
               </AccordionTrigger>
               <AccordionContent>
                 <Link
-                  to="#"
+                  to="/admin/pending-orders"
                   className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -391,6 +392,18 @@ const Sidebar = () => {
                 </Link>
               </AccordionContent>
             </AccordionItem>
+
+             <AccordionItem value="item-12">
+              <Link
+                to="/admin/create-pending-order"
+                className="flex items-center gap-2 hover:text-[#EB811F] py-4 px-0"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Plus size={22} />
+                <h2 className="text-sm">Create Order</h2>
+              </Link>
+            </AccordionItem>
+
           </Accordion>
 
           <HoverCard>

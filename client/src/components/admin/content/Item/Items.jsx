@@ -171,6 +171,9 @@ const Items = () => {
                   Item Type
                 </th>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
+                  Charge
+                </th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
                   Fields
                 </th>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
@@ -194,6 +197,9 @@ const Items = () => {
                     <td className="px-6 py-4 text-sm text-gray-900 dark:text-white capitalize">
                       {item.name}
                     </td>
+                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-white capitalize">
+                      {item.stitchingCharge}
+                    </td>
                     <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
                       <div className="flex flex-wrap gap-2">
                         {item.fields.slice(0, 3).map((field, idx) => (
@@ -212,7 +218,7 @@ const Items = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex space-x-2 justify-center">
+                      <div className="flex space-x-2 justify-left">
                         <Button
                           className="p-2 bg-blue-100 text-blue-600 hover:bg-blue-200"
                           onClick={() => handleViewItem(item._id)}
@@ -252,24 +258,24 @@ const Items = () => {
                                 <strong>Item Description:</strong>{" "}
                                 {selectedItem?.description}
                               </p>
-                             
+                              <p>
+                                <strong>Item Charge:</strong>{" "}
+                                {selectedItem?.stitchingCharge}
+                              </p>
+
                               {selectedItem?.fields?.length > 0 && (
                                 <div>
                                   <p className="font-semibold mt-4">
                                     Measurement Fields:
                                   </p>
-                                  {selectedItem?.fields.map(
-                                    (m, i) => (
-                                      <div
-                                        key={i}
-                                        className="mt-2 flex border p-2 rounded bg-gray-50"
-                                      >
-                                        <p>
-                                            {m}
-                                        </p>             
-                                      </div>
-                                    )
-                                  )}
+                                  {selectedItem?.fields.map((m, i) => (
+                                    <div
+                                      key={i}
+                                      className="mt-2 flex border p-2 rounded bg-gray-50"
+                                    >
+                                      <p>{m}</p>
+                                    </div>
+                                  ))}
                                 </div>
                               )}
                             </div>
@@ -286,9 +292,8 @@ const Items = () => {
                         >
                           <MdOutlineEdit className="w-5 h-5" />
                         </Button>
-                      
 
-                          <AlertDialog>
+                        <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button className="p-2 bg-red-100 text-red-600 hover:bg-red-200">
                               <FaRegTrashCan />
@@ -296,9 +301,7 @@ const Items = () => {
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                Delete Item?
-                              </AlertDialogTitle>
+                              <AlertDialogTitle>Delete Item?</AlertDialogTitle>
                               <AlertDialogDescription>
                                 This action cannot be undone.
                               </AlertDialogDescription>
@@ -335,6 +338,9 @@ const Items = () => {
                 </th>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
                   Item Type
+                </th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
+              Charge
                 </th>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
                   Fields
