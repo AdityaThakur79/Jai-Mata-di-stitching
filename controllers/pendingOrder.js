@@ -1,5 +1,5 @@
 import Customer from "../models/customer.js";
-import PendingOrder from "../models/PendingOrder.js";
+import PendingOrder from "../models/pendingOrder.js";
 import { generateItemToken, generateTokenNumber } from "../utils/common/generateItemToken.js";
 
 export const createPendingOrder = async (req, res) => {
