@@ -13,6 +13,7 @@ const CreateItem = () => {
   const [itemType, setItemType] = useState("");
   const [fields, setFields] = useState([""]);
   const [description, setDescription] = useState("");
+  const [stitchingCharge, setStitchingCharge] = useState("");
 
   const [createItemMaster, { isLoading, isSuccess, isError, data, error }] =
     useCreateItemMasterMutation();
@@ -43,6 +44,7 @@ const CreateItem = () => {
       name: itemType.trim(),
       description,
       fields: fields.map((f) => f.trim()  ),
+      stitchingCharge: stitchingCharge,
     });
   };
 
@@ -78,6 +80,14 @@ const CreateItem = () => {
             placeholder="Enter item desc in short"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+          />
+        </div>
+         <div>
+          <Label>StitchingCharge</Label>
+          <Input
+            placeholder="Enter item stitchingCharge"
+            value={stitchingCharge}
+            onChange={(e) => setStitchingCharge(e.target.value)}
           />
         </div>
 

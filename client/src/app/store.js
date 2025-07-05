@@ -7,6 +7,8 @@ import { fabricApi } from "@/features/api/fabricApi.js";
 import { masterApi } from "@/features/api/masterApi.js";
 import { salesmanApi } from "@/features/api/salesmanApi.js";
 import { styleApi } from "@/features/api/styleApi.js";
+import { pendingOrderApi } from "@/features/api/pendingOrderApi.js";
+import { invoiceApi } from "@/features/api/invoiceApi.js";
 
 export const appStore = configureStore({
   reducer: rootReducer,
@@ -19,6 +21,8 @@ export const appStore = configureStore({
       masterApi.middleware,
       salesmanApi.middleware,
       styleApi.middleware,
+      pendingOrderApi.middleware,
+      invoiceApi.middleware,
     ),
 });
 

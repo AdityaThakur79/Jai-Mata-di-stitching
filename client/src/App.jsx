@@ -30,6 +30,12 @@ import Salesmans from "./components/admin/content/Salesman/Salesmans.jsx";
 import CreateStyle from "./components/admin/content/Style/CreateStyle.jsx";
 import UpdateStyle from "./components/admin/content/Style/UpdateStyle.jsx";
 import Styles from "./components/admin/content/Style/Styles.jsx";
+import CreatePendingOrder from "./components/admin/content/PendingOrder/CreatePendingOrder.jsx";
+import UpdatePendingOrder from "./components/admin/content/PendingOrder/UpdatePendingOrder.jsx";
+import RecentPendingOrders from "./components/admin/content/PendingOrder/RecentPendingOrders.jsx";
+import PendingOrders from "./components/admin/content/PendingOrder/PendingOrders.jsx";
+import GenerateBill from "./components/admin/content/Invoice/GenerateBill.jsx";
+import Invoices from "./components/admin/content/Invoice/Invoices.jsx";
 
 const appRouter = createBrowserRouter([
   //Homepage Routes
@@ -130,7 +136,7 @@ const appRouter = createBrowserRouter([
         element: <Items />,
       },
 
-        //Fabric master
+      //Fabric master
       {
         path: "create-fabric",
         element: <CreateFabric />,
@@ -143,7 +149,7 @@ const appRouter = createBrowserRouter([
         path: "fabrics",
         element: <Fabrics />,
       },
-         //Master master
+      //Master master
       {
         path: "create-master",
         element: <CreateMaster />,
@@ -156,7 +162,7 @@ const appRouter = createBrowserRouter([
         path: "masters",
         element: <Masters />,
       },
-          //Salesman master
+      //Salesman master
       {
         path: "create-salesman",
         element: <CreateSalesman />,
@@ -169,7 +175,7 @@ const appRouter = createBrowserRouter([
         path: "salesmans",
         element: <Salesmans />,
       },
-           //Salesman master
+      //Style master
       {
         path: "create-style",
         element: <CreateStyle />,
@@ -181,6 +187,34 @@ const appRouter = createBrowserRouter([
       {
         path: "styles",
         element: <Styles />,
+      },
+
+      //Pendingorder master
+      {
+        path: "create-pending-order",
+        element: <CreatePendingOrder />,
+      },
+      {
+        path: "update-pending-order",
+        element: <UpdatePendingOrder />,
+      },
+      {
+        path: "recent-pending-order",
+        element: <RecentPendingOrders />,
+      },
+      {
+        path: "pending-orders",
+        element: <PendingOrders />,
+      },
+
+      //Invoice
+      {
+        path: "generate-bill",
+        element: <GenerateBill/>,
+      },
+      {
+        path: "invoices",
+        element: <Invoices/>,
       },
     ],
   },
