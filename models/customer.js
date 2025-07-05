@@ -20,11 +20,6 @@ const measurementSchema = new mongoose.Schema({
     bicep: Number,
     cuff: Number,
   },
-  style: { type: String },  
-  master: { type: mongoose.Schema.Types.ObjectId, ref: 'Master' },
-  salesman: { type: mongoose.Schema.Types.ObjectId, ref: 'Salesman' },
-  designNumber: { type: String },  
-  imageUrl: { type: String },
   date: { type: Date, default: Date.now }
 });
 
