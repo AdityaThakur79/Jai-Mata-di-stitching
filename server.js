@@ -38,6 +38,8 @@ import fabricRoutes from "./routes/fabric.js"
 import masterRoutes from "./routes/master.js"
 import salesmanRoutes from "./routes/salesman.js"
 import styleRoutes from "./routes/style.js";
+import pendingOrderRoutes from "./routes/pendingOrder.js"
+import invoiceRoutes from "./routes/invoice.js"
 
 app.use("/api/customer", customerRoutes)
 app.use("/api/item", itemRoutes)
@@ -45,9 +47,14 @@ app.use("/api/fabric", fabricRoutes)
 app.use("/api/master", masterRoutes)
 app.use("/api/salesman",salesmanRoutes);
 app.use("/api/style", styleRoutes);
+app.use("/api/pending-order",pendingOrderRoutes)
+app.use("/api/invoice", invoiceRoutes)
+
+// Serve static files from uploads directory
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(express.static(path.join(__dirname, "./client/dist")));
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "./client/dist/index.html"));

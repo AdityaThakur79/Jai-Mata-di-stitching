@@ -2,7 +2,7 @@ import ItemMaster from "../models/item.js";
 
 export const createItemMaster = async (req, res) => {
   try {
-    const { name, description, fields } = req.body;
+    const { name, description, fields,stitchingCharge } = req.body;
 
     if (!name || !Array.isArray(fields)) {
       return res.status(400).json({
@@ -23,6 +23,7 @@ export const createItemMaster = async (req, res) => {
       name: name.trim().toLowerCase(),
       description,
       fields,
+      stitchingCharge
     });
 
     res.status(201).json({
@@ -114,7 +115,7 @@ export const getItemMasterById = async (req, res) => {
 
 export const updateItemMaster = async (req, res) => {
   try {
-    const { itemId, itemType, description, fields } = req.body;
+    const { itemId, itemType, description, fields,stitchingCharge } = req.body;
 
     const existingItem = await ItemMaster.findById(itemId);
     if (!existingItem) {
@@ -127,6 +128,7 @@ export const updateItemMaster = async (req, res) => {
     existingItem.itemType = itemType || existingItem.itemType;
      existingItem.description = description || existingItem.description;
     existingItem.fields = fields || existingItem.fields;
+    existingItem.stitchingCharge = stitchingCharge || existingItem.stitchingCharge;
 
     await existingItem.save();
 
