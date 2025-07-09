@@ -1,4 +1,4 @@
-import Employee from "../models/Employee.js";
+import Employee from "../models/employee.js";
 import moment from "moment";
 import puppeteer from "puppeteer";
 import bwipjs from "bwip-js";
