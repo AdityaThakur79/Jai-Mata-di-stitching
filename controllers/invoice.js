@@ -274,9 +274,26 @@ export const generateInvoicePDF = async (req, res) => {
     // Generate HTML content for PDF
     const htmlContent = generateInvoiceHTML(invoice);
 
-    // Launch puppeteer with macOS compatible settings
+    // Check if PDF already exists and is recent (within 1 hour)
+    if (invoice.pdfUrl && invoice.pdfGeneratedAt) {
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      if (invoice.pdfGeneratedAt > oneHourAgo) {
+        console.log('Using existing PDF:', invoice.pdfUrl);
+        const pdfPath = path.join(process.cwd(), invoice.pdfUrl.replace('/uploads', 'uploads'));
+        if (fs.existsSync(pdfPath)) {
+          const pdfBuffer = fs.readFileSync(pdfPath);
+          res.setHeader('Content-Type', 'application/pdf');
+          res.setHeader('Content-Disposition', `inline; filename="invoice-${invoice.invoiceNumber}.pdf"`);
+          res.setHeader('Content-Length', pdfBuffer.length);
+          return res.send(pdfBuffer);
+        }
+      }
+    }
+
+    // Launch puppeteer with Render deployment compatible settings
     const browser = await puppeteer.launch({
       headless: true,
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -285,30 +302,44 @@ export const generateInvoicePDF = async (req, res) => {
         '--no-first-run',
         '--no-zygote',
         '--single-process',
-        '--disable-gpu'
+        '--disable-gpu',
+        '--disable-web-security',
+        '--disable-features=VizDisplayCompositor'
       ]
     });
 
-    console.log('Launching browser...');
-    const page = await browser.newPage();
-    console.log('Setting content...');
-    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+    let pdfBuffer;
+    try {
+      console.log('Launching browser...');
+      const page = await browser.newPage();
+      console.log('Setting content...');
+      await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
 
-    console.log('Generating PDF...');
-    // Generate PDF
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: {
-        top: '20mm',
-        right: '20mm',
-        bottom: '20mm',
-        left: '20mm'
-      }
-    });
+      console.log('Generating PDF...');
+      // Generate PDF
+      pdfBuffer = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: {
+          top: '20mm',
+          right: '20mm',
+          bottom: '20mm',
+          left: '20mm'
+        }
+      });
 
-    console.log('PDF generated, size:', pdfBuffer.length);
-    await browser.close();
+      console.log('PDF generated, size:', pdfBuffer.length);
+      await browser.close();
+    } catch (puppeteerError) {
+      console.error('Puppeteer error:', puppeteerError);
+      await browser.close();
+      
+      // Fallback: Return HTML content instead of PDF
+      console.log('Falling back to HTML response...');
+      res.setHeader('Content-Type', 'text/html');
+      res.setHeader('Content-Disposition', `inline; filename="invoice-${invoice.invoiceNumber}.html"`);
+      return res.send(htmlContent);
+    }
 
     // Save PDF to file system (optional)
     const pdfFileName = `invoice-${invoice.invoiceNumber}.pdf`;
@@ -375,6 +406,35 @@ export const generateInvoicePDF = async (req, res) => {
       message: "Error generating PDF",
       error: error.message 
     });
+  }
+};
+
+// Get invoice HTML (fallback when PDF generation fails)
+export const getInvoiceHTML = async (req, res) => {
+  try {
+    const { invoiceId } = req.params;
+    console.log('Generating HTML for invoice:', invoiceId);
+
+    const invoice = await Invoice.findById(invoiceId)
+      .populate("pendingOrder", "tokenNumber orderType")
+      .populate("customer", "name mobile email address")
+      .populate("biller", "name")
+      .populate("items.itemType", "name stitchingCharge")
+      .populate("items.fabric", "name pricePerMeter")
+      .populate("items.style", "name");
+
+    if (!invoice) {
+      return res.status(404).json({ message: "Invoice not found." });
+    }
+
+    const htmlContent = generateInvoiceHTML(invoice);
+    
+    res.setHeader('Content-Type', 'text/html');
+    res.setHeader('Content-Disposition', `inline; filename="invoice-${invoice.invoiceNumber}.html"`);
+    res.send(htmlContent);
+  } catch (error) {
+    console.error("Error generating HTML:", error);
+    res.status(500).json({ message: "Error generating HTML" });
   }
 };
 

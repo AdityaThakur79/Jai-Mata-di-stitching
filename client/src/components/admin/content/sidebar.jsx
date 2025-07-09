@@ -261,12 +261,12 @@ const Sidebar = () => {
               </AccordionTrigger>
               <AccordionContent>
                 <Link
-                  to="#"
+                  to="/admin/employees"
                   className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <Plus size={22} />
-                  <h2>Employee Registraion</h2>
+                  <User size={22} />
+                  <h2>Employees</h2>
                 </Link>
               </AccordionContent>
               <AccordionContent>
@@ -315,11 +315,11 @@ const Sidebar = () => {
 
             <AccordionItem value="item-10">
               <Link
-                to="#"
+                to="/admin/create-employee"
                 className="flex items-center gap-2 hover:text-[#EB811F] py-4 px-0"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                <User size={22} />
+                <Plus size={22} />
                 <h2 className="text-sm">Add Employee</h2>
               </Link>
             </AccordionItem>
@@ -446,7 +446,7 @@ const Sidebar = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-4 lg:p-10 transition-all ">
+      <div className="flex-1  transition-all ">
         <Outlet />
       </div>
     </div>

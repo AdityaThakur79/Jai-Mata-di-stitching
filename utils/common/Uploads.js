@@ -13,6 +13,7 @@ cloudinary.config({
 
 const imageFields = [
   "profilePhoto",
+  "profileImage",
   "bannerImage",
   "customerProfilePhoto",
   "fabricImage",
@@ -54,6 +55,7 @@ const upload = multer({
   }
 }).fields([
   { name: "profilePhoto", maxCount: 1 },
+  { name: "profileImage", maxCount: 1 },
   { name: "bannerImage", maxCount: 1 },
   { name: "customerProfilePhoto", maxCount: 1 },
    { name: "fabricImage", maxCount: 1 },
