@@ -36,6 +36,9 @@ import RecentPendingOrders from "./components/admin/content/PendingOrder/RecentP
 import PendingOrders from "./components/admin/content/PendingOrder/PendingOrders.jsx";
 import GenerateBill from "./components/admin/content/Invoice/GenerateBill.jsx";
 import Invoices from "./components/admin/content/Invoice/Invoices.jsx";
+import CreateEmployee from "./components/admin/content/Employee/CreateEmployee.jsx";
+import UpdateEmployee from "./components/admin/content/Employee/UpdateEmployee.jsx";
+import Employee from "./components/admin/content/Employee/Employee.jsx";
 
 const appRouter = createBrowserRouter([
   //Homepage Routes
@@ -206,8 +209,7 @@ const appRouter = createBrowserRouter([
         path: "pending-orders",
         element: <PendingOrders />,
       },
-
-      //Invoice
+      //Invoices
       {
         path: "generate-bill",
         element: <GenerateBill/>,
@@ -215,6 +217,19 @@ const appRouter = createBrowserRouter([
       {
         path: "invoices",
         element: <Invoices/>,
+      },
+      //Employee
+      {
+        path: "create-employee",
+        element: <CreateEmployee/>,
+      },
+      {
+        path: "update-employee",
+        element: <UpdateEmployee/>,
+      },
+      {
+        path: "employees",
+        element: <Employee/>,
       },
     ],
   },

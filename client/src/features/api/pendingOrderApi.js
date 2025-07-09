@@ -1,8 +1,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { BASE_URL } from "@/utils/BaseUrl";
 
-// const PENDING_ORDER_API = "http://localhost:8080/api/pending-order";
-const PENDING_ORDER_API = "https://jai-mata-di-stitching.onrender.com/api/pending-order"
-
+const PENDING_ORDER_API = `${BASE_URL}/pending-order`;
 
 export const pendingOrderApi = createApi({
   reducerPath: "pendingOrderApi",

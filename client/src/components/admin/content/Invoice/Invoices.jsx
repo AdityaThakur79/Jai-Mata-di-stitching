@@ -174,6 +174,18 @@ const Invoices = () => {
         console.log('Created blob URL for PDF');
         setPdfUrl(url);
       }
+      
+      // Check if response is HTML (fallback from server)
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('text/html')) {
+        console.log('Received HTML response (PDF generation failed)');
+        // For HTML responses, we'll show it in a new tab
+        const htmlBlob = await response.blob();
+        const htmlUrl = URL.createObjectURL(htmlBlob);
+        window.open(htmlUrl, '_blank');
+        setPdfUrl(null);
+        toast.info("PDF generation failed, showing HTML version in new tab");
+      }
     } catch (error) {
       console.error('PDF generation error:', error);
       toast.error("Failed to generate PDF for viewing");
@@ -597,6 +609,15 @@ const Invoices = () => {
                   >
                     <Eye className="w-4 h-4" />
                     Open in New Tab
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(`https://jai-mata-di-stitching.onrender.com/api/invoice/${selectedInvoice._id}/html`, '_blank')}
+                    className="flex items-center gap-2"
+                  >
+                    <FileText className="w-4 h-4" />
+                    View HTML
                   </Button>
                 </div>
                 <div className="flex-1 border rounded-lg overflow-hidden">

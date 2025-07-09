@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { BASE_URL } from "@/utils/BaseUrl";
 
-const STYLE_API = "https://jai-mata-di-stitching.onrender.com/api/style";
-// const STYLE_API = "http://localhost:8080/api/style";
+const STYLE_API = `${BASE_URL}/style`;
 
 export const styleApi = createApi({
   reducerPath: "styleApi",

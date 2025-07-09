@@ -5,6 +5,7 @@ import {
   getAllInvoices,
   updateInvoice,
   generateInvoicePDF,
+  getInvoiceHTML,
   updatePaymentStatus,
   deleteInvoice,
 } from "../controllers/invoice.js";
@@ -27,6 +28,9 @@ router.put("/:invoiceId", isAuthenticated, updateInvoice);
 
 // Generate PDF invoice
 router.get("/:invoiceId/pdf", isAuthenticated, generateInvoicePDF);
+
+// Get HTML invoice (fallback)
+router.get("/:invoiceId/html", isAuthenticated, getInvoiceHTML);
 
 // Update payment status
 router.patch("/:invoiceId/payment", isAuthenticated, updatePaymentStatus);

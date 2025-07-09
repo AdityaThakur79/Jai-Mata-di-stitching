@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { BASE_URL } from "@/utils/BaseUrl";
 
-const MASTER_API = "https://jai-mata-di-stitching.onrender.com/api/master"
-// const MASTER_API = "http://localhost:8080/api/master";
+const MASTER_API = `${BASE_URL}/master`;
 
 export const masterApi = createApi({
   reducerPath: "masterApi",
