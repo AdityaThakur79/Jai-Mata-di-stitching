@@ -59,17 +59,19 @@ const employeeSchema = new mongoose.Schema(
     address: String,
     aadhaarNumber: String,
 
-    // Employment Info
     joiningDate: {
       type: Date,
       default: Date.now,
     },
+    
     role: {
       type: String,
       enum: ["tailor", "manager", "biller", "director", "admin", "other"],
       required: true,
     },
-    designation: String, // e.g., "Senior Tailor", "Account Manager"
+
+    designation: String, 
+
     employeeId: {
       type: String,
       unique: true,
@@ -80,28 +82,27 @@ const employeeSchema = new mongoose.Schema(
       enum: ["active", "inactive"],
       default: "active",
     },
-
-    // Payroll Info
+    baseSalary: {
+      type: Number,
+      required: true,
+      default: 15000,
+    },
     advancePayments: [advanceSchema],
     salarySlips: [salarySlipSchema],
 
-    // Profile Image & Documents
-    profileImage: String, // URL or filename
+    profileImage: String, 
     documents: [
       {
-        name: String, // e.g., "Aadhaar Card", "PAN Card"
-        url: String,  // file path or public URL
+        name: String,  
+        url: String,  
       },
     ],
 
-    // Banking Info
     bankDetails: {
       bankName: String,
       accountNumber: String,
       ifsc: String,
     },
-
-    // Emergency Contact
     emergencyContact: {
       name: String,
       mobile: String,
@@ -110,7 +111,7 @@ const employeeSchema = new mongoose.Schema(
     barcode: String,
   },
   {
-    timestamps: true, // adds createdAt and updatedAt
+    timestamps: true, 
   }
 );
 
