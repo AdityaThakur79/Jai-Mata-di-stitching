@@ -7,7 +7,7 @@ import fs from "fs";
 
 // Helper to generate next Employee ID for the month
 async function generateEmployeeId() {
-  const prefix = "EMP";
+  const prefix = "JMD";
   const now = moment();
   const yearMonth = now.format("YYYYMM");
   // Find the latest employee for this month
@@ -267,12 +267,15 @@ export const generateEmployeeIdCardPdf = async (req, res) => {
       name = "—",
       role = "—",
       email = "—",
+      grade="A",
       mobile = "—",
       address = "—",
       employeeId: empId = "—",
       joiningDate,
       gender = "—",
       emergencyContact = {},
+      bloodGroup = "B+",
+      validityDate = "—",
     } = employee;
 
     const joinDate = joiningDate ? new Date(joiningDate).toLocaleDateString() : "—";
@@ -292,102 +295,115 @@ export const generateEmployeeIdCardPdf = async (req, res) => {
         <div style="display:flex;flex-direction:row;align-items:center;justify-content:center;padding:15mm;gap:15mm;width:100%;height:100%;box-sizing:border-box;">
     
           <!-- FRONT SIDE -->
-          <div style="width:85mm;height:125mm;background:linear-gradient(135deg,#ffffff 0%,#fefefe 100%); border-radius:15px;overflow:hidden;position:relative;box-shadow:0 4mm 8mm rgba(255,111,0,0.15),0 2mm 4mm rgba(0,0,0,0.1);display:flex;flex-direction:column;justify-content:space-between;padding:0;transition:all 0.3s ease;">
+          <div style="width:85mm;height:125mm;background:linear-gradient(135deg,#ffffff 0%,#fefefe 100%);border-radius:18px;overflow:hidden;position:relative;box-shadow:0 6mm 12mm rgba(255,111,0,0.15),0 3mm 6mm rgba(0,0,0,0.1);display:flex;flex-direction:column;justify-content:space-between;padding:0;transition:all 0.3s ease;">
             <!-- Enhanced Polygon Accent Top -->
-            <div style="width:100%;height:25mm;background:linear-gradient(135deg,#ff6f00 0%,#ff8f00 50%,#ffb74d 100%);clip-path:polygon(0 0, 100% 0, 100% 70%, 0 100%);position:absolute;top:0;left:0;box-shadow:0 1mm 2mm rgba(255,111,0,0.2);"></div>
+            <div style="width:100%;height:28mm;background:linear-gradient(135deg,#ff6f00 0%,#ff8f00 50%,#ffb74d 100%);clip-path:polygon(0 0, 100% 0, 100% 65%, 0 100%);position:absolute;top:0;left:0;box-shadow:0 2mm 4mm rgba(255,111,0,0.25);"></div>
             
             <!-- Decorative Elements -->
-            <div style="position:absolute;top:4mm;right:4mm;width:8mm;height:8mm;background:rgba(255,255,255,0.2);border-radius:50%;z-index:1;"></div>
-            <div style="position:absolute;top:7mm;right:7mm;width:4mm;height:4mm;background:rgba(255,255,255,0.15);border-radius:50%;z-index:1;"></div>
+            <div style="position:absolute;top:5mm;right:5mm;width:10mm;height:10mm;background:rgba(255,255,255,0.2);border-radius:50%;z-index:1;"></div>
+            <div style="position:absolute;top:8mm;right:8mm;width:5mm;height:5mm;background:rgba(255,255,255,0.15);border-radius:50%;z-index:1;"></div>
+            <div style="position:absolute;top:3mm;right:15mm;width:3mm;height:3mm;background:rgba(255,255,255,0.1);border-radius:50%;z-index:1;"></div>
             
-            <div style="text-align:center;z-index:2;margin-top:5mm;padding:0 4mm;">
-              <div style="background:white;border-radius:3mm;padding:1mm;display:inline-block;box-shadow:0 1mm 3mm rgba(255,111,0,0.2);margin-bottom:2mm;">
-                <img src="${logoDataUrl}" style="width:12mm;height:12mm;border-radius:2mm;" />
-              </div>
-              <div style="background:white;border-radius:50%;padding:1mm;display:inline-block;box-shadow:0 2mm 4mm rgba(255,111,0,0.25);margin-bottom:3mm;">
-                <img src="${photoDataUrl}" style="width:22mm;height:22mm;border-radius:50%;border:1mm solid #ff6f00;" />
-              </div>
-              <div style="font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:1mm;letter-spacing:-0.3px;">${name}</div>
-              <div style="font-size:10px;color:#ff6f00;font-weight:600;margin-bottom:4mm;text-transform:uppercase;letter-spacing:0.3px;">${role}</div>
-            </div>
-    
-            <div style="font-size:10px;color:#333;margin-top:2mm;padding:0 4mm;z-index:2;flex-grow:1;">
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:1mm 0;border-bottom:0.5px solid #f0f0f0;">
-                <span style="font-weight:600;color:#666;text-transform:uppercase;font-size:7px;letter-spacing:0.3px;">ID:</span>
-                <span style="font-weight:600;color:#1a1a1a;font-size:8px;">${empId}</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:1mm 0;border-bottom:0.5px solid #f0f0f0;">
-                <span style="font-weight:600;color:#666;text-transform:uppercase;font-size:7px;letter-spacing:0.3px;">Phone:</span>
-                <span style="font-weight:500;color:#1a1a1a;font-size:8px;">${mobile}</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:1mm 0;border-bottom:0.5px solid #f0f0f0;">
-                <span style="font-weight:600;color:#666;text-transform:uppercase;font-size:7px;letter-spacing:0.3px;">Email:</span>
-                <span style="font-weight:500;color:#1a1a1a;font-size:7px;">${email}</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:1mm 0;border-bottom:0.5px solid #f0f0f0;">
-                <span style="font-weight:600;color:#666;text-transform:uppercase;font-size:7px;letter-spacing:0.3px;">Joined:</span>
-                <span style="font-weight:500;color:#1a1a1a;font-size:8px;">${joinDate}</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:1mm 0;border-bottom:0.5px solid #f0f0f0;">
-                <span style="font-weight:600;color:#666;text-transform:uppercase;font-size:7px;letter-spacing:0.3px;">Address:</span>
-                <span style="font-weight:500;color:#1a1a1a;font-size:7px;text-align:right;max-width:60%;">${address}</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:1mm 0;border-bottom:0.5px solid #f0f0f0;">
-                <span style="font-weight:600;color:#666;text-transform:uppercase;font-size:7px;letter-spacing:0.3px;">Gender:</span>
-                <span style="font-weight:500;color:#1a1a1a;font-size:8px;">${gender}</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:1mm 0;">
-                <span style="font-weight:600;color:#666;text-transform:uppercase;font-size:7px;letter-spacing:0.3px;">Emergency:</span>
-                <span style="font-weight:500;color:#1a1a1a;font-size:7px;text-align:right;">${emergencyName} (${emergencyMobile})</span>
-              </div>
-              
-              <!-- BARCODE - Positioned at bottom of data section -->
-              <div style="text-align:center;margin-top:3mm;">
-                <div style="background:white;border-radius:2mm;padding:2mm;display:inline-block;box-shadow:0 1mm 3mm rgba(255,111,0,0.15);">
-                  <img src="${barcodeDataUrl}" style="width:35mm;height:9mm;border-radius:1mm;" />
-                </div>
+            <!-- Header with Logo and Company Name -->
+            <div style="display:flex;align-items:center;justify-content:center;padding:3mm 5mm;z-index:2;position:relative;">
+              <div style="background:rgba(255,255,255,0.95);border-radius:2mm;padding:1.5mm;display:flex;align-items:center;box-shadow:0 2mm 4mm rgba(255,111,0,0.2);backdrop-filter:blur(10px);">
+                <img src="${logoDataUrl}" style="width:10mm;height:10mm;border-radius:2mm;margin-right:3mm;" />
+                <div style="font-size:8px;font-weight:700;color:#1a1a1a;letter-spacing:0.2px;line-height:1.1;">JMD STITCHING <span style="font-size:6px;color:#ff6f00;">PVT LTD</span></div>
               </div>
             </div>
     
-            <!-- Enhanced Polygon Accent Bottom -->
- <div style="position:absolute;bottom:0;left:0;width:100%;height:15mm;background:linear-gradient(135deg,#ff6f00 0%,#ff8f00 50%,#ffb74d 100%);clip-path:polygon(0 30%, 100% 0, 100% 100%, 0 100%);display:flex;align-items:center;justify-content:center;z-index:1;box-shadow:0 -1mm 2mm rgba(255,111,0,0.2);">
-              <div style="font-size:9px;font-weight:700;color:white;text-align:center;margin-top:3mm;letter-spacing:0.2px;text-shadow:0 0.5mm 1mm rgba(0,0,0,0.2);">Your satisfaction is our first priority</div>
-            </div>          </div>
+            <!-- Profile Section -->
+            <div style="text-align:center;z-index:2;margin-top:0mm;padding:0 5mm;">
+              <div style="background:white;border-radius:6mm;padding:2mm;display:inline-block;box-shadow:0 3mm 6mm rgba(255,111,0,0.25);margin-bottom:3mm;">
+                <img src="${photoDataUrl}" style="width:24mm;height:24mm;object-fit:cover;border-radius:4mm;border:2px solid #ff6f00;" />
+              </div>
+              <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:1mm;letter-spacing:-0.2px;">${name}</div>
+              <div style="font-size:9px;color:#ff6f00;font-weight:600;margin-bottom:4mm;text-transform:uppercase;letter-spacing:0.4px;background:rgba(255,111,0,0.1);padding:1mm 3mm;border-radius:3mm;display:inline-block;">${role}</div>
+            </div>
+    
+            <!-- Information Section -->
+          <div style="font-size:7px;color:#333;margin-top:2mm;padding:0 4mm;z-index:2;flex-grow:1;">
+  ${[
+    ['ID', empId],
+    ['Phone', mobile],
+    ['Email', email, 'font-size:6.5px'],
+    ['Grade', grade, 'color:#ff6f00;font-weight:700;background:rgba(255,111,0,0.1);padding:1mm 2mm;border-radius:2mm;'],
+    ['Joined', joinDate],
+    ['Valid Till', validityDate],
+    ['Gender', gender],
+    ['Blood Group', bloodGroup, 'color:#ff6f00;font-weight:700;background:rgba(255,111,0,0.1);padding:1mm 2mm;border-radius:2mm;']
+  ].map(([label, value, valueStyle = '']) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:1mm 0;border-bottom:1px solid #eee;">
+      <span style="font-weight:600;color:#666;text-transform:uppercase;letter-spacing:0.3px;">${label}:</span>
+      <span style="${valueStyle}">${value}</span>
+    </div>
+  `).join('')}
+  
+  <!-- QR CODE -->
+  <div style="text-align:center;margin-top:4mm;">
+    <div style="background:white;border-radius:3mm;padding:2mm;display:inline-block;box-shadow:0 2mm 4mm rgba(255,111,0,0.2);">
+      <img src="${barcodeDataUrl}" style="width:28mm;height:7mm;border-radius:2mm;" />
+    </div>
+  </div>
+</div>
+
+    
+            <!-- Enhanced Bottom Section -->
+            <div style="position:absolute;bottom:0;left:0;width:100%;height:18mm;background:linear-gradient(135deg,#ff6f00 0%,#ff8f00 50%,#ffb74d 100%);clip-path:polygon(0 35%, 100% 0, 100% 100%, 0 100%);display:flex;align-items:center;justify-content:center;z-index:1;box-shadow:0 -2mm 4mm rgba(255,111,0,0.25);">
+              <div style="font-size:8px;font-weight:700;color:white;text-align:center;margin-top:4mm;letter-spacing:0.3px;text-shadow:0 1mm 2mm rgba(0,0,0,0.3);line-height:1.2;">Excellence in Every Stitch<br><span style="font-size:6px;opacity:0.9;">Quality • Innovation • Trust</span></div>
+            </div>
+          </div>
     
           <!-- BACK SIDE -->
-          <div style="width:85mm;height:125mm;background:linear-gradient(135deg,#ffffff 0%,#fefefe 100%);border-radius:15px;overflow:hidden;position:relative;box-shadow:0 4mm 8mm rgba(255,111,0,0.15),0 2mm 4mm rgba(0,0,0,0.1);padding:0;display:flex;flex-direction:column;justify-content:space-between;transition:all 0.3s ease;">
+          <div style="width:85mm;height:125mm;background:linear-gradient(135deg,#ffffff 0%,#fefefe 100%);border-radius:18px;overflow:hidden;position:relative;box-shadow:0 6mm 12mm rgba(255,111,0,0.15),0 3mm 6mm rgba(0,0,0,0.1);padding:0;display:flex;flex-direction:column;justify-content:space-between;transition:all 0.3s ease;">
             <!-- Enhanced Polygon Accent Top -->
-            <div style="width:100%;height:25mm;background:linear-gradient(135deg,#ff6f00 0%,#ff8f00 50%,#ffb74d 100%);clip-path:polygon(0 0, 100% 0, 100% 70%, 0 100%);position:absolute;top:0;left:0;box-shadow:0 1mm 2mm rgba(255,111,0,0.2);"></div>
+            <div style="width:100%;height:28mm;background:linear-gradient(135deg,#ff6f00 0%,#ff8f00 50%,#ffb74d 100%);clip-path:polygon(0 0, 100% 0, 100% 65%, 0 100%);position:absolute;top:0;left:0;box-shadow:0 2mm 4mm rgba(255,111,0,0.25);"></div>
     
             <!-- Decorative Elements -->
-            <div style="position:absolute;top:4mm;right:4mm;width:8mm;height:8mm;background:rgba(255,255,255,0.2);border-radius:50%;z-index:1;"></div>
-            <div style="position:absolute;top:7mm;right:7mm;width:4mm;height:4mm;background:rgba(255,255,255,0.15);border-radius:50%;z-index:1;"></div>
+            <div style="position:absolute;top:5mm;right:5mm;width:10mm;height:10mm;background:rgba(255,255,255,0.2);border-radius:50%;z-index:1;"></div>
+            <div style="position:absolute;top:8mm;right:8mm;width:5mm;height:5mm;background:rgba(255,255,255,0.15);border-radius:50%;z-index:1;"></div>
+            <div style="position:absolute;top:3mm;right:15mm;width:3mm;height:3mm;background:rgba(255,255,255,0.1);border-radius:50%;z-index:1;"></div>
     
-            <div style="z-index:2;text-align:center;margin-top:10mm;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0 5mm;">
-              <div style="background:white;border-radius:3mm;padding:2mm;display:inline-block;box-shadow:0 1mm 3mm rgba(255,111,0,0.2);margin-bottom:3mm;">
-                <img src="${logoDataUrl}" style="width:14mm;height:14mm;border-radius:2mm;" />
+            <!-- Company Header -->
+            <div style="z-index:2;text-align:center;margin-top:8mm;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0 5mm;">
+              <div style="background:white;border-radius:4mm;padding:2mm;display:inline-block;box-shadow:0 2mm 4mm rgba(255,111,0,0.2);margin-bottom:3mm;">
+                <img src="${logoDataUrl}" style="width:16mm;height:16mm;border-radius:3mm;" />
               </div>
-              <div style="font-size:14px;font-weight:700;color:#1a1a1a;text-align:center;margin-bottom:4mm;letter-spacing:-0.3px;">${companyName}</div>
-              <div style="font-size:8px;color:#555;margin-bottom:1mm;line-height:1.2;"><span style="font-weight:600;color:#ff6f00;">Address:</span> ${companyAddress}</div>
-              <div style="font-size:8px;color:#555;margin-bottom:4mm;line-height:1.2;"><span style="font-weight:600;color:#ff6f00;">Contact:</span> ${companyEmail}</div>
+              <div style="font-size:12px;font-weight:700;color:#1a1a1a;text-align:center;margin-bottom:1mm;letter-spacing:-0.2px;">JMD STITCHING</div>
+              <div style="font-size:9px;font-weight:600;color:#ff6f00;text-align:center;margin-bottom:4mm;letter-spacing:0.3px;">PVT LTD</div>
               
-              <div style="width:15mm;height:0.5mm;background:linear-gradient(90deg,#ff6f00,#ff8f00);margin:0 auto 4mm;border-radius:0.25mm;"></div>
+              <!-- Company Information -->
+              <div style="background:rgba(255,111,0,0.05);border-radius:4mm;padding:3mm;margin-bottom:3mm;border:1px solid rgba(255,111,0,0.1);">
+                <div style="font-size:7px;color:#555;margin-bottom:1mm;line-height:1.3;"><span style="font-weight:600;color:#ff6f00;">Address:</span> ${companyAddress}</div>
+                <div style="font-size:7px;color:#555;margin-bottom:1mm;line-height:1.3;"><span style="font-weight:600;color:#ff6f00;">Email:</span> ${companyEmail}</div>
+                <div style="font-size:7px;color:#555;line-height:1.3;"><span style="font-weight:600;color:#ff6f00;">Customer Care:</span> 9082150556</div>
+              </div>
               
-              <div style="font-size:9px;color:#ff6f00;font-weight:700;margin-bottom:3mm;text-transform:uppercase;letter-spacing:0.3px;">Terms & Conditions</div>
-              <ul style="font-size:7px;color:#555;line-height:1.3;padding-left:4mm;margin:0;text-align:left;">
-                <li style="margin-bottom:1mm;">ID card must be visible at all times during work hours</li>
-                <li style="margin-bottom:1mm;">Report lost or damaged cards immediately to HR</li>
-                <li style="margin-bottom:1mm;">This card remains property of the company</li>
-                <li style="margin-bottom:1mm;">Must be returned upon resignation or termination</li>
-                <li style="margin-bottom:1mm;">If found, please return to company address above</li>
-              </ul>
+              <!-- Employee Details -->
+              <div style="background:rgba(255,111,0,0.05);border-radius:4mm;padding:3mm;margin-bottom:3mm;border:1px solid rgba(255,111,0,0.1);width:100%;box-sizing:border-box;">
+                <div style="font-size:8px;color:#ff6f00;font-weight:700;margin-bottom:2mm;text-transform:uppercase;letter-spacing:0.3px;text-align:center;">Employee Details</div>
+                <div style="font-size:7px;color:#555;margin-bottom:1mm;line-height:1.3;"><span style="font-weight:600;color:#333;">Address:</span> ${address}</div>
+                <div style="font-size:7px;color:#555;line-height:1.3;"><span style="font-weight:600;color:#333;">Emergency Contact:</span> ${emergencyName} (${emergencyMobile})</div>
+              </div>
+              
+              <!-- Terms & Conditions -->
+              <div style="width:100%;text-align:center;">
+                <div style="font-size:8px;color:#ff6f00;font-weight:700;margin-bottom:2mm;text-transform:uppercase;letter-spacing:0.3px;">Terms & Conditions</div>
+                <ul style="font-size:6px;color:#555;line-height:1.2;padding-left:3mm;margin:0;text-align:left;">
+                  <li style="margin-bottom:1mm;">ID card must be visible during work hours</li>
+                  <li style="margin-bottom:1mm;">Report lost/damaged cards to HR immediately</li>
+                  <li style="margin-bottom:1mm;">Card remains company property</li>
+                  <li style="margin-bottom:1mm;">Return upon resignation/termination</li>
+                  <li style="margin-bottom:1mm;">If found, return to company address</li>
+                </ul>
+              </div>
             </div>
             
-            <div style="text-align:center;font-size:6px;color:#999;margin-bottom:18mm;font-weight:400;">© ${new Date().getFullYear()} ${companyName}. All rights reserved.</div>
+            <div style="text-align:center;font-size:5px;color:#999;margin-bottom:20mm;font-weight:400;">© ${new Date().getFullYear()} JMD Stitching PVT LTD. All rights reserved.</div>
             
-            <!-- Enhanced Tagline Banner -->
-            <div style="position:absolute;bottom:0;left:0;width:100%;height:15mm;background:linear-gradient(135deg,#ff6f00 0%,#ff8f00 50%,#ffb74d 100%);clip-path:polygon(0 30%, 100% 0, 100% 100%, 0 100%);display:flex;align-items:center;justify-content:center;z-index:1;box-shadow:0 -1mm 2mm rgba(255,111,0,0.2);">
-              <div style="font-size:9px;font-weight:700;color:white;text-align:center;margin-top:3mm;letter-spacing:0.2px;text-shadow:0 0.5mm 1mm rgba(0,0,0,0.2);">Your satisfaction is our first priority</div>
+            <!-- Enhanced Bottom Section -->
+            <div style="position:absolute;bottom:0;left:0;width:100%;height:18mm;background:linear-gradient(135deg,#ff6f00 0%,#ff8f00 50%,#ffb74d 100%);clip-path:polygon(0 35%, 100% 0, 100% 100%, 0 100%);display:flex;align-items:center;justify-content:center;z-index:1;box-shadow:0 -2mm 4mm rgba(255,111,0,0.25);">
+              <div style="font-size:8px;font-weight:700;color:white;text-align:center;margin-top:4mm;letter-spacing:0.3px;text-shadow:0 1mm 2mm rgba(0,0,0,0.3);line-height:1.2;">Excellence in Every Stitch<br><span style="font-size:6px;opacity:0.9;">Quality • Innovation • Trust</span></div>
             </div>
           </div>
         </div>
@@ -400,7 +416,7 @@ export const generateEmployeeIdCardPdf = async (req, res) => {
     const pdfBuffer = await page.pdf({
       printBackground: true,
       width: '210mm',
-      height: '297mm', // Portrait A4
+      height: '297mm', 
       landscape: false,
       pageRanges: '1',
     });

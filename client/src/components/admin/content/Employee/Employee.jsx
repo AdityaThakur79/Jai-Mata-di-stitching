@@ -712,7 +712,7 @@ const Employee = () => {
     try {
       console.log("Downloading ID card for:", selectedEmployee.employeeId);
       const blob = await downloadEmployeeIdCard(
-        selectedEmployee.employeeId
+        selectedEmployee?.employeeId
       ).unwrap();
       console.log("Received blob:", blob);
 
