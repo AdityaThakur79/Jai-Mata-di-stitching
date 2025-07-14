@@ -49,23 +49,42 @@ import EmployeeSidebar from "./components/employee/EmployeeSidebar";
 import EmployeeDashboard from "@/components/employee/EmployeeDashboard";
 import EmployeeProfile from "@/components/employee/EmployeeProfile";
 import EmployeeSalary from "@/components/employee/EmployeeSalary";
+import HeroSection from "@/components/user/herosection";
+import AuthLayout from "@/layout/AuthLayout";
 
 const appRouter = createBrowserRouter([
   //Homepage Routes
   {
-    path: "/",
+    path: "",
     element: <MainLayout />,
     children: [
       {
-        path: "",
+        path: "/",
+        element: (
+          <>
+            <HeroSection />
+            <HeroSection />
+          </>
+        ),
+      },
+      // { path: "/about", element: <About /> },
+      // { path: "/services", element: <Services /> },
+      // { path: "/men", element: <Men /> },
+      // { path: "/women", element: <Women /> },
+      // { path: "/contact", element: <Contact /> },
+      { path: "*", element: <NotFound /> },
+    ],
+  },
+  {
+    path: "",
+    element: <AuthLayout />,
+    children: [
+      {
+        path: "/login",
         element: <Login />,
       },
       {
-        path: "",
-        element: <Login />,
-      },
-      {
-        path: "verify-otp",
+        path: "/verify-otp",
         element: <VerifyOTP />,
       },
 
@@ -235,32 +254,32 @@ const appRouter = createBrowserRouter([
       //Invoices
       {
         path: "generate-bill",
-        element: <GenerateBill/>,
+        element: <GenerateBill />,
       },
       {
         path: "invoices",
-        element: <Invoices/>,
+        element: <Invoices />,
       },
       //Employee
       {
         path: "create-employee",
-        element: <CreateEmployee/>,
+        element: <CreateEmployee />,
       },
       {
         path: "update-employee",
-        element: <UpdateEmployee/>,
+        element: <UpdateEmployee />,
       },
       {
         path: "employees",
-        element: <Employee/>,
+        element: <Employee />,
       },
       {
         path: "employee-advance",
-        element: <EmployeeAdvance/>,
+        element: <EmployeeAdvance />,
       },
       {
         path: "employee-detail",
-        element: <EmployeeDetail/>,
+        element: <EmployeeDetail />,
       },
     ],
   },
