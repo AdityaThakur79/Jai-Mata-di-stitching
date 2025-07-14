@@ -1,32 +1,33 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import MainLayout from "./layout/MainLayout.jsx";
-import { ThemeProvider } from "./components/ThemeProvider";
-import Login from "./components/Login.jsx";
-import Dashboard from "./components/admin/content/dashboard.jsx";
-import VerifyOTP from "./components/verifyOtp.jsx";
-import ContentLayout from "./layout/ContentLayout.jsx";
-import Sidebar from "./components/admin/content/sidebar.jsx";
-import Footer from "@/components/admin/content/Footer";
-import Navbar from "@/components/admin/content/Navbar.jsx";
-import Profile from "./components/admin/content/Profile.jsx";
-import RoleProtectedRoute from "./utils/RoleProtectedRoute.jsx";
-import UnAuthorized from "./utils/UnAuthorized.jsx";
-import NotFound from "./utils/NotFound.jsx";
-import CreateCustomer from "./components/admin/content/Customer/CreateCustomer.jsx";
-import UpdateCustomer from "./components/admin/content/Customer/UpdateCustomer.jsx";
-import Customers from "./components/admin/content/Customer/Customers.jsx";
-import Items from "./components/admin/content/Item/Items.jsx";
-import CreateItem from "./components/admin/content/Item/CreateItem.jsx";
-import UpdateItem from "./components/admin/content/Item/UpdateItem.jsx";
-import CreateFabric from "./components/admin/content/Fabric/CreateFabric.jsx";
-import UpdateFabric from "./components/admin/content/Fabric/UpdateFabrics.jsx";
-import Fabrics from "./components/admin/content/Fabric/Fabrics.jsx";
-import CreateMaster from "./components/admin/content/Master/CreateMaster.jsx";
-import UpdateMaster from "./components/admin/content/Master/UpdateMaster.jsx";
-import Masters from "./components/admin/content/Master/Masters.jsx";
-import CreateSalesman from "./components/admin/content/Salesman/CreateSalesman.jsx";
-import UpdateSalesman from "./components/admin/content/Salesman/UpdateSalesman.jsx";
-import Salesmans from "./components/admin/content/Salesman/Salesmans.jsx";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import MainLayout from "@/layout/MainLayout";
+import ContentLayout from "@/layout/ContentLayout";
+import Login from "@/components/Login";
+import VerifyOTP from "@/components/verifyOtp";
+import NotFound from "@/utils/NotFound";
+import UnAuthorized from "@/utils/UnAuthorized";
+import RoleProtectedRoute from "@/utils/RoleProtectedRoute";
+import EmployeeProtectedRoute from "@/utils/EmployeeProtectedRoute";
+import Navbar from "@/components/Navbar";
+import Sidebar from "@/components/admin/content/sidebar";
+import Footer from "@/components/Footer";
+import Dashboard from "@/components/admin/content/dashboard";
+import Profile from "@/components/admin/content/Profile";
+import CreateCustomer from "@/components/admin/content/Customer/CreateCustomer";
+import UpdateCustomer from "@/components/admin/content/Customer/UpdateCustomer";
+import Customers from "@/components/admin/content/Customer/Customers";
+import CreateItem from "@/components/admin/content/Item/CreateItem";
+import UpdateItem from "@/components/admin/content/Item/UpdateItem";
+import Items from "@/components/admin/content/Item/Items";
+import CreateFabric from "@/components/admin/content/Fabric/CreateFabric";
+import UpdateFabrics from "@/components/admin/content/Fabric/UpdateFabrics";
+import Fabrics from "@/components/admin/content/Fabric/Fabrics";
+import CreateMaster from "@/components/admin/content/Master/CreateMaster";
+import UpdateMaster from "@/components/admin/content/Master/UpdateMaster";
+import Masters from "@/components/admin/content/Master/Masters";
+import CreateSalesman from "@/components/admin/content/Salesman/CreateSalesman";
+import UpdateSalesman from "@/components/admin/content/Salesman/UpdateSalesman";
+import Salesmans from "@/components/admin/content/Salesman/Salesmans";
 import CreateStyle from "./components/admin/content/Style/CreateStyle.jsx";
 import UpdateStyle from "./components/admin/content/Style/UpdateStyle.jsx";
 import Styles from "./components/admin/content/Style/Styles.jsx";
@@ -39,6 +40,15 @@ import Invoices from "./components/admin/content/Invoice/Invoices.jsx";
 import CreateEmployee from "./components/admin/content/Employee/CreateEmployee.jsx";
 import UpdateEmployee from "./components/admin/content/Employee/UpdateEmployee.jsx";
 import Employee from "./components/admin/content/Employee/Employee.jsx";
+import EmployeeAdvance from "./components/admin/content/Employee/EmployeeAdvance.jsx";
+import EmployeeDetail from "./components/admin/content/Employee/EmployeeDetail.jsx";
+
+// Employee Components
+import EmployeeLogin from "./components/EmployeeLogin.jsx";
+import EmployeeSidebar from "./components/employee/EmployeeSidebar";
+import EmployeeDashboard from "@/components/employee/EmployeeDashboard";
+import EmployeeProfile from "@/components/employee/EmployeeProfile";
+import EmployeeSalary from "@/components/employee/EmployeeSalary";
 
 const appRouter = createBrowserRouter([
   //Homepage Routes
@@ -70,25 +80,35 @@ const appRouter = createBrowserRouter([
     ],
   },
 
-  //Auth Routes
-  // {
-  //   path: "/auth",
-  //   element: <ContentLayout />,
-  //   children: [
-  //     {
-  //       path: "login",
-  //       element: <Login />,
-  //     },
-  //     {
-  //       path: "signup",
-  //       element: <Login />,
-  //     },
-  //     {
-  //       path: "verify-otp",
-  //       element: <VerifyOTP />,
-  //     },
-  //   ],
-  // },
+  // Employee Login Route
+  {
+    path: "/employee/login",
+    element: <EmployeeLogin />,
+  },
+
+  // Employee Routes
+  {
+    path: "employee",
+    element: (
+      <EmployeeProtectedRoute>
+        <EmployeeSidebar />
+      </EmployeeProtectedRoute>
+    ),
+    children: [
+      {
+        path: "dashboard",
+        element: <EmployeeDashboard />,
+      },
+      {
+        path: "profile",
+        element: <EmployeeProfile />,
+      },
+      {
+        path: "salary",
+        element: <EmployeeSalary />,
+      },
+    ],
+  },
 
   {
     path: "admin",
@@ -146,12 +166,13 @@ const appRouter = createBrowserRouter([
       },
       {
         path: "update-fabric",
-        element: <UpdateFabric />,
+        element: <UpdateFabrics />,
       },
       {
         path: "fabrics",
         element: <Fabrics />,
       },
+
       //Master master
       {
         path: "create-master",
@@ -165,6 +186,7 @@ const appRouter = createBrowserRouter([
         path: "masters",
         element: <Masters />,
       },
+
       //Salesman master
       {
         path: "create-salesman",
@@ -178,6 +200,7 @@ const appRouter = createBrowserRouter([
         path: "salesmans",
         element: <Salesmans />,
       },
+
       //Style master
       {
         path: "create-style",
@@ -230,6 +253,14 @@ const appRouter = createBrowserRouter([
       {
         path: "employees",
         element: <Employee/>,
+      },
+      {
+        path: "employee-advance",
+        element: <EmployeeAdvance/>,
+      },
+      {
+        path: "employee-detail",
+        element: <EmployeeDetail/>,
       },
     ],
   },

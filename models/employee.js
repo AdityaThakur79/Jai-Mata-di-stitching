@@ -52,12 +52,39 @@ const employeeSchema = new mongoose.Schema(
       unique: true,
     },
     email: String,
+    password: {
+      type: String,
+      required: true,
+    },
     gender: {
       type: String,
       enum: ["male", "female", "other"],
     },
     address: String,
     aadhaarNumber: String,
+    aadhaarImage: String, // URL for Aadhaar card image
+    aadhaarPublicId: String, // Cloudinary public ID for deletion
+    bloodGroup: {
+      type: String,
+      enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
+    },
+    grade: {
+      type: String,
+      enum: ["A", "B", "C", "D"],
+    },
+    dob: Date,
+    baseSalary: {
+      type: Number,
+      default: 0,
+    },
+    validityDate: {
+      type: Date,
+      default: function() {
+        const date = new Date();
+        date.setFullYear(date.getFullYear() + 1);
+        return date;
+      },
+    },
 
     joiningDate: {
       type: Date,

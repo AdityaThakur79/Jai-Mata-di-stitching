@@ -5,28 +5,61 @@ import dotenv from "dotenv";
 // configing the dotenv file
 dotenv.config();
 
-// console.log(process.env.SMTP_PORT)
-
 export const generateOTP = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
+
+// Create transporter with better error handling
+const createTransporter = () => {
+  // Check if email credentials are configured
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    throw new Error("Email credentials not configured. Please set EMAIL_USER and EMAIL_PASS environment variables.");
+  }
+
+  // For Gmail, you need to use an App Password if 2FA is enabled
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS, // This should be an App Password, not your regular password
+    },
+    // Add additional options for better reliability
+    secure: true, // Use SSL
+    port: 465, // Gmail SMTP port
+    tls: {
+      rejectUnauthorized: false // For development, remove in production
+    }
+  });
+
+  return transporter;
+};
+
+// Verify transporter connection
+const verifyTransporter = async (transporter) => {
+  try {
+    await transporter.verify();
+    console.log("Email transporter verified successfully");
+    return true;
+  } catch (error) {
+    console.error("Email transporter verification failed:", error);
+    return false;
+  }
+};
 
 // Function to send OTP via email
 export const sendOTPEmail = async (name, email, otp) => {
   try {
-    let transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: process.env.SECURE,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
+    const transporter = createTransporter();
+    
+    // Verify connection before sending
+    const isVerified = await verifyTransporter(transporter);
+    if (!isVerified) {
+      throw new Error("Email service not available");
+    }
 
     let mailOptions = {
-      from: process.env.SMTP_FROM,
+      from: process.env.EMAIL_USER,
       to: email,
-      subject: "Your Registeration OTP Code",
+      subject: "Your Registration OTP Code",
       html: registerOTPTemplate(name, otp),
     };
 
