@@ -446,7 +446,7 @@ const Sidebar = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1  transition-all ">
+      <div className="flex-1 mt-16 transition-all ">
         <Outlet />
       </div>
     </div>

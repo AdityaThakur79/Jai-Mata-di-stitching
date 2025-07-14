@@ -31,7 +31,7 @@ import {
 import { toast } from "sonner";
 import { useSelector } from "react-redux";
 import { Dialog, DialogContent, DialogTrigger } from "@radix-ui/react-dialog";
-import SimpleCalculator from "../SimpleCalculator";
+// import SimpleCalculator from "../SimpleCalculator";
 import { format } from "date-fns";
 
 const Navbar = () => {
