@@ -271,7 +271,7 @@ const Sidebar = () => {
               </AccordionContent>
               <AccordionContent>
                 <Link
-                  to="#"
+                  to="/admin/employee-advance"
                   className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -279,7 +279,7 @@ const Sidebar = () => {
                   <h2>Employee Salary Slip</h2>
                 </Link>
               </AccordionContent>
-              <AccordionContent>
+              {/* <AccordionContent>
                 <Link
                   to="#"
                   className="flex items-center gap-2 hover:text-[#EB811F]"
@@ -288,7 +288,7 @@ const Sidebar = () => {
                   <HandCoins size={22} />
                   <h2>Employee Income</h2>
                 </Link>
-              </AccordionContent>
+              </AccordionContent> */}
             </AccordionItem>
 
             <AccordionItem value="item-8">

@@ -37,7 +37,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Loader2, EyeIcon } from "lucide-react";
+import { Loader2, EyeIcon, DollarSign, ExternalLink } from "lucide-react";
 import { useDebounce } from "@/hooks/Debounce";
 import { Drawer } from "antd";
 import EmployeeIdCard from "./EmployeeIdCard";
@@ -48,6 +48,7 @@ const Employee = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [limit, setLimit] = useState(5);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const [downloading, setDownloading] = useState(false);
 
@@ -55,6 +56,7 @@ const Employee = () => {
     page: currentPage,
     limit,
     search: debouncedSearchQuery,
+    status: statusFilter === "all" ? "" : statusFilter,
   });
 
   const [deleteEmployee, { isSuccess, isError }] = useDeleteEmployeeMutation();
@@ -121,8 +123,6 @@ const Employee = () => {
           return "text-green-600 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700";
         case "inactive":
           return "text-red-600 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700";
-        case "pending":
-          return "text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-700";
         default:
           return "text-gray-600 bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-700";
       }
@@ -278,6 +278,11 @@ const Employee = () => {
                   label: "Aadhaar Number",
                   value: emp.aadhaarNumber,
                 },
+                { icon: "calendar", label: "Date of Birth", value: emp.dob ? new Date(emp.dob).toLocaleDateString() : null },
+                { icon: "droplet", label: "Blood Group", value: emp.bloodGroup },
+                { icon: "star", label: "Grade", value: emp.grade },
+                { icon: "dollar", label: "Base Salary", value: emp.baseSalary ? `₹${emp.baseSalary}` : null },
+                { icon: "calendar-check", label: "Validity Date", value: emp.validityDate ? new Date(emp.validityDate).toLocaleDateString() : null },
               ].map((item, idx) => (
                 <div
                   key={idx}
@@ -362,6 +367,81 @@ const Employee = () => {
                           strokeLinejoin="round"
                           strokeWidth={2}
                           d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                        />
+                      </svg>
+                    )}
+                    {item.icon === "calendar" && (
+                      <svg
+                        className="w-4 h-4 text-gray-600 dark:text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                    )}
+                    {item.icon === "droplet" && (
+                      <svg
+                        className="w-4 h-4 text-gray-600 dark:text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                        />
+                      </svg>
+                    )}
+                    {item.icon === "star" && (
+                      <svg
+                        className="w-4 h-4 text-gray-600 dark:text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                        />
+                      </svg>
+                    )}
+                    {item.icon === "dollar" && (
+                      <svg
+                        className="w-4 h-4 text-gray-600 dark:text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                        />
+                      </svg>
+                    )}
+                    {item.icon === "calendar-check" && (
+                      <svg
+                        className="w-4 h-4 text-gray-600 dark:text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
                     )}
@@ -601,6 +681,40 @@ const Employee = () => {
           )}
         </div>
 
+        {/* Aadhaar Card Image */}
+        {emp.aadhaarImage && (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900 rounded-xl flex items-center justify-center">
+                <svg
+                  className="w-5 h-5 text-purple-600 dark:text-purple-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Aadhaar Card Image
+              </h2>
+            </div>
+            <div className="flex justify-center">
+              <img
+                src={emp.aadhaarImage}
+                alt="Aadhaar Card"
+                className="max-w-full h-auto rounded-lg border-2 border-purple-200 dark:border-purple-700 shadow-lg"
+                style={{ maxHeight: "300px" }}
+              />
+            </div>
+          </div>
+        )}
+
         {/* Enhanced Emergency Contact */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
           <div className="flex items-center gap-3 mb-6">
@@ -758,6 +872,23 @@ const Employee = () => {
               className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm w-full sm:w-64 bg-white dark:bg-gray-800 text-gray-800 dark:text-white placeholder:text-gray-500"
             />
 
+            <Select
+              value={statusFilter}
+              onValueChange={(value) => {
+                setStatusFilter(value);
+                setCurrentPage(1);
+              }}
+            >
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Filter by Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+
             <div className="flex gap-4 justify-center items-center">
               <Select
                 value={limit.toString()}
@@ -775,8 +906,14 @@ const Employee = () => {
                 </SelectContent>
               </Select>
 
-              <Button onClick={() => navigate("/admin/create-employee")}>
-                Add Employee
+              <Button onClick={() => navigate("/admin/create-employee")}>Add Employee</Button>
+              <Button 
+                onClick={() => navigate("/admin/employee-advance")}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <DollarSign className="w-4 h-4" />
+                Manage Advances
               </Button>
               <Button className="p-2" onClick={() => refetch()}>
                 <GrPowerCycle />
@@ -788,7 +925,7 @@ const Employee = () => {
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50 dark:bg-gray-900 text-left">
-              <tr>
+              <tr >
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
                   No
                 </th>
@@ -810,7 +947,7 @@ const Employee = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
                   Action
                 </th>
               </tr>
@@ -852,9 +989,31 @@ const Employee = () => {
                       {employee.role}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {employee.status}
+                      <span
+                        className={
+                          employee.status?.toLowerCase() === "active"
+                            ? "inline-block px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold border border-green-300"
+                            : employee.status?.toLowerCase() === "inactive"
+                            ? "inline-block px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold border border-red-300"
+                            : "inline-block px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold border border-gray-300"
+                        }
+                      >
+                        {employee.status}
+                      </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap flex gap-2">
+                    <td className="px-4 py-4 whitespace-nowrap flex  items-center justify-end">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() =>
+                          navigate("/admin/employee-detail", {
+                            state: { employeeId: employee.employeeId },
+                          })
+                        }
+                        aria-label="View Details"
+                      >
+                        <ExternalLink className="w-5 h-5 text-blue-600" />
+                      </Button>
                       <Button
                         size="icon"
                         variant="ghost"
