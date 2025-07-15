@@ -37,8 +37,19 @@ const fabricMasterSchema = new mongoose.Schema({
   fabricImagePublicId: {
     type: String,
   },
+  secondaryFabricImage: {
+    type: String,
+  },
+  secondaryFabricImagePublicId: {
+    type: String,
+  },
   description: {
     type: String,
+  },
+  branchId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Branch",
+    required: true,
   },
   createdAt: {
     type: Date,

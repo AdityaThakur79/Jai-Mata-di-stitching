@@ -59,6 +59,7 @@ const Fabrics = () => {
   const [getFabricById] = useGetFabricByIdMutation();
   const [selectedFabric, setSelectedFabric] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [showSecondary, setShowSecondary] = useState(false);
 
   const handleViewFabric = async (id) => {
     setDrawerOpen(true);
@@ -212,72 +213,214 @@ const Fabrics = () => {
 
                         <Drawer
                           title={
-                            <span className="text-lg font-semibold">
-                              {selectedFabric?.name || "Loading..."}
-                            </span>
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                                <span className="text-white text-sm font-bold">
+                                  {selectedFabric?.name?.charAt(0) || "F"}
+                                </span>
+                              </div>
+                              <span className="text-xl font-bold text-gray-800 dark:text-white">
+                                {selectedFabric?.name || "Loading..."}
+                              </span>
+                            </div>
                           }
                           placement="right"
-                          width={400}
+                          width={450}
                           onClose={() => {
                             setDrawerOpen(false);
                             setSelectedFabric(null);
                           }}
                           open={drawerOpen}
                           mask={false}
+                          className="fabric-drawer"
                         >
                           {!selectedFabric ? (
-                            <div className="flex justify-center items-center h-40">
-                              <Loader2 className="w-6 h-6 animate-spin" />
+                            <div className="flex flex-col justify-center items-center h-96 space-y-4">
+                              <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                              <p className="text-gray-500 dark:text-gray-400">
+                                Loading fabric details...
+                              </p>
                             </div>
                           ) : (
-                            <div className="space-y-4 p-4 border rounded-md bg-white dark:bg-gray-900 shadow-md">
-                              {/* Image Section */}
+                            <div className="space-y-6">
+                              {/* Image Section with Enhanced Design */}
                               {selectedFabric?.fabricImage && (
-                                <div className="w-full h-48 md:h-64 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
-                                  <img
-                                    src={selectedFabric.fabricImage}
-                                    alt={selectedFabric.name}
-                                    className="w-full h-full object-cover object-center"
-                                    onError={(e) => {
-                                      e.currentTarget.src = "/placeholder.png"; // fallback image
-                                    }}
-                                  />
+                                <div className="relative group">
+                                  <div className="w-full h-56 md:h-72 overflow-hidden rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 shadow-lg">
+                                    {/* Primary Image */}
+                                    <img
+                                      src={selectedFabric.fabricImage}
+                                      alt={selectedFabric.name}
+                                      className={`w-full h-full object-cover object-center transition-all duration-500 ease-in-out group-hover:scale-105 ${
+                                        showSecondary &&
+                                        selectedFabric.secondaryFabricImage
+                                          ? "opacity-0"
+                                          : "opacity-100"
+                                      }`}
+                                      onError={(e) => {
+                                        e.currentTarget.src =
+                                          "/placeholder.png";
+                                      }}
+                                    />
+
+                                    {/* Secondary Image */}
+                                    {selectedFabric.secondaryFabricImage && (
+                                      <img
+                                        src={
+                                          selectedFabric.secondaryFabricImage
+                                        }
+                                        alt={`${selectedFabric.name} - alternate view`}
+                                        className={`absolute inset-0 w-full h-full object-cover object-center transition-all duration-500 ease-in-out group-hover:scale-105 ${
+                                          showSecondary
+                                            ? "opacity-100"
+                                            : "opacity-0"
+                                        }`}
+                                        onError={(e) => {
+                                          e.currentTarget.src =
+                                            "/placeholder.png";
+                                        }}
+                                      />
+                                    )}
+
+                                    {/* Hover trigger area */}
+                                    {selectedFabric.secondaryFabricImage && (
+                                      <div
+                                        className="absolute inset-0 cursor-pointer"
+                                        onMouseEnter={() =>
+                                          setShowSecondary(true)
+                                        }
+                                        onMouseLeave={() =>
+                                          setShowSecondary(false)
+                                        }
+                                      />
+                                    )}
+
+                                    {/* Overlay for secondary image hint */}
+                                    {selectedFabric.secondaryFabricImage && (
+                                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300 flex items-end justify-center pb-4">
+                                        <div className="bg-white dark:bg-gray-800 px-3 py-1 rounded-full text-xs font-medium text-gray-600 dark:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-md">
+                                          Hover to see alternate view
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Image indicators */}
+                                  {selectedFabric.secondaryFabricImage && (
+                                    <div className="absolute top-3 right-3 flex space-x-1">
+                                      <div
+                                        className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                                          !showSecondary
+                                            ? "bg-white shadow-md"
+                                            : "bg-white/50"
+                                        }`}
+                                      ></div>
+                                      <div
+                                        className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                                          showSecondary
+                                            ? "bg-white shadow-md"
+                                            : "bg-white/50"
+                                        }`}
+                                      ></div>
+                                    </div>
+                                  )}
                                 </div>
                               )}
 
-                              {/* Details Section */}
-                              <div className="space-y-2 text-sm md:text-base">
-                                <p className="text-gray-700 dark:text-gray-300">
-                                  <span className="font-medium">Name:</span>{" "}
-                                  {selectedFabric.name}
-                                </p>
-                                <p className="text-gray-700 dark:text-gray-300">
-                                  <span className="font-medium">Type:</span>{" "}
-                                  {selectedFabric.type}
-                                </p>
-                                <p className="text-gray-700 dark:text-gray-300">
-                                  <span className="font-medium">Color:</span>{" "}
-                                  {selectedFabric.color}
-                                </p>
-                                <p className="text-gray-700 dark:text-gray-300">
-                                  <span className="font-medium">Pattern:</span>{" "}
-                                  {selectedFabric.pattern || "N/A"}
-                                </p>
-                                <p className="text-gray-700 dark:text-gray-300">
-                                  <span className="font-medium">Price/m:</span>{" "}
-                                  ₹{selectedFabric.pricePerMeter}
-                                </p>
-                                <p className="text-gray-700 dark:text-gray-300">
-                                  <span className="font-medium">In Stock:</span>{" "}
-                                  {selectedFabric.inStockMeters} meters
-                                </p>
+                              {/* Details Section with Cards */}
+                              <div className="space-y-4">
+                                {/* Primary Info Card */}
+                                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-xl border border-blue-200 dark:border-blue-800">
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-3">
+                                      <div>
+                                        <p className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">
+                                          Type
+                                        </p>
+                                        <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                                          {selectedFabric.type}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">
+                                          Color
+                                        </p>
+                                        <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                                          {selectedFabric.color}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <div className="space-y-3">
+                                      <div>
+                                        <p className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">
+                                          Pattern
+                                        </p>
+                                        <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                                          {selectedFabric.pattern || "Solid"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">
+                                          Price per meter
+                                        </p>
+                                        <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                                          ₹{selectedFabric.pricePerMeter}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Stock Info Card */}
+                                <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-4 rounded-xl border border-green-200 dark:border-green-800">
+                                  <div className="flex items-center justify-between">
+                                    <div>
+                                      <p className="text-xs font-medium text-green-600 dark:text-green-400 uppercase tracking-wide">
+                                        Available Stock
+                                      </p>
+                                      <p className="text-xl font-bold text-gray-800 dark:text-gray-200">
+                                        {selectedFabric.inStockMeters} meters
+                                      </p>
+                                    </div>
+                                    <div className="flex items-center">
+                                      <div
+                                        className={`w-3 h-3 rounded-full mr-2 ${
+                                          selectedFabric.inStockMeters > 10
+                                            ? "bg-green-500"
+                                            : selectedFabric.inStockMeters > 5
+                                            ? "bg-yellow-500"
+                                            : "bg-red-500"
+                                        }`}
+                                      ></div>
+                                      <span
+                                        className={`text-xs font-medium ${
+                                          selectedFabric.inStockMeters > 10
+                                            ? "text-green-600"
+                                            : selectedFabric.inStockMeters > 5
+                                            ? "text-yellow-600"
+                                            : "text-red-600"
+                                        }`}
+                                      >
+                                        {selectedFabric.inStockMeters > 10
+                                          ? "In Stock"
+                                          : selectedFabric.inStockMeters > 5
+                                          ? "Low Stock"
+                                          : "Limited"}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Description Card */}
                                 {selectedFabric.description && (
-                                  <p className="text-gray-700 dark:text-gray-300">
-                                    <span className="font-medium">
-                                      Description:
-                                    </span>{" "}
-                                    {selectedFabric.description}
-                                  </p>
+                                  <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                                      Description
+                                    </p>
+                                    <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                                      {selectedFabric.description}
+                                    </p>
+                                  </div>
                                 )}
                               </div>
                             </div>
@@ -360,58 +503,55 @@ const Fabrics = () => {
           </table>
 
           {/* Pagination */}
-         <div className="border-t border-gray-200 px-4 py-3 flex flex-col lg:flex-row lg:items-center lg:justify-between">
-  <div className="mb-4 lg:mb-0">
-    <p className="text-sm text-gray-700 dark:text-white">
-      Showing{" "}
-      {data?.fabrics?.length
-        ? (data?.page - 1) * data?.limit + 1
-        : 0}{" "}
-      to {Math.min(data?.page * data?.limit, data?.total || 0)} of{" "}
-      <span className="font-medium">{data?.total || 0}</span> entries
-    </p>
-  </div>
-  <div>
-    {data?.totalPage > 1 && (
-      <Pagination>
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious
-              onClick={() => handlePageChange(currentPage - 1)}
-              className={
-                currentPage === 1
-                  ? "pointer-events-none opacity-50"
-                  : "cursor-pointer"
-              }
-            />
-          </PaginationItem>
-          {getPageNumbers().map((num) => (
-            <PaginationItem key={num}>
-              <PaginationLink
-                onClick={() => handlePageChange(num)}
-                isActive={num === currentPage}
-                className="cursor-pointer"
-              >
-                {num}
-              </PaginationLink>
-            </PaginationItem>
-          ))}
-          <PaginationItem>
-            <PaginationNext
-              onClick={() => handlePageChange(currentPage + 1)}
-              className={
-                currentPage === (data?.totalPage || 1)
-                  ? "pointer-events-none opacity-50"
-                  : "cursor-pointer"
-              }
-            />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
-    )}
-  </div>
-</div>
-
+          <div className="border-t border-gray-200 px-4 py-3 flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div className="mb-4 lg:mb-0">
+              <p className="text-sm text-gray-700 dark:text-white">
+                Showing{" "}
+                {data?.fabrics?.length ? (data?.page - 1) * data?.limit + 1 : 0}{" "}
+                to {Math.min(data?.page * data?.limit, data?.total || 0)} of{" "}
+                <span className="font-medium">{data?.total || 0}</span> entries
+              </p>
+            </div>
+            <div>
+              {data?.totalPage > 1 && (
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        className={
+                          currentPage === 1
+                            ? "pointer-events-none opacity-50"
+                            : "cursor-pointer"
+                        }
+                      />
+                    </PaginationItem>
+                    {getPageNumbers().map((num) => (
+                      <PaginationItem key={num}>
+                        <PaginationLink
+                          onClick={() => handlePageChange(num)}
+                          isActive={num === currentPage}
+                          className="cursor-pointer"
+                        >
+                          {num}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        className={
+                          currentPage === (data?.totalPage || 1)
+                            ? "pointer-events-none opacity-50"
+                            : "cursor-pointer"
+                        }
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </section>

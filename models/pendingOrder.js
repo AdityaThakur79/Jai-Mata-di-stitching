@@ -95,7 +95,12 @@ const pendingOrderSchema = new mongoose.Schema({
 
   expiresAt: {
     type: Date,  
-  }
+  },
+  branchId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Branch",
+    required: true,
+  },
 }, { timestamps: true });
 
 const PendingOrder = mongoose.model("PendingOrder", pendingOrderSchema);

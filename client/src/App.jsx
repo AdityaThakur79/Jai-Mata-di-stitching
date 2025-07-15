@@ -51,6 +51,7 @@ import EmployeeProfile from "@/components/employee/EmployeeProfile";
 import EmployeeSalary from "@/components/employee/EmployeeSalary";
 import HeroSection from "@/components/user/herosection";
 import AuthLayout from "@/layout/AuthLayout";
+import AdminNavbar from "@/components/admin/content/Navbar";
 
 const appRouter = createBrowserRouter([
   //Homepage Routes
@@ -62,7 +63,6 @@ const appRouter = createBrowserRouter([
         path: "/",
         element: (
           <>
-            <HeroSection />
             <HeroSection />
           </>
         ),
@@ -134,7 +134,7 @@ const appRouter = createBrowserRouter([
     element: (
       <RoleProtectedRoute allowedRoles={["superAdmin"]}>
         <>
-          <Navbar />
+          <AdminNavbar />
           <Sidebar />
           <Footer />
         </>

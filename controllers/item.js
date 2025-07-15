@@ -1,8 +1,9 @@
 import ItemMaster from "../models/item.js";
+import { v2 as cloudinary } from "cloudinary";
 
 export const createItemMaster = async (req, res) => {
   try {
-    const { name, description, fields,stitchingCharge } = req.body;
+    const { name, description, fields, stitchingCharge } = req.body;
 
     if (!name || !Array.isArray(fields)) {
       return res.status(400).json({
@@ -19,11 +20,28 @@ export const createItemMaster = async (req, res) => {
       });
     }
 
+    let itemImage = "";
+    let itemImagePublicId = "";
+    let secondaryItemImage = "";
+    let secondaryItemImagePublicId = "";
+    if (req.files && req.files.itemImage) {
+      itemImage = req.files.itemImage[0].path;
+      itemImagePublicId = req.files.itemImage[0].filename;
+    }
+    if (req.files && req.files.secondaryItemImage) {
+      secondaryItemImage = req.files.secondaryItemImage[0].path;
+      secondaryItemImagePublicId = req.files.secondaryItemImage[0].filename;
+    }
+
     const itemMaster = await ItemMaster.create({
       name: name.trim().toLowerCase(),
       description,
       fields,
-      stitchingCharge
+      stitchingCharge,
+      itemImage,
+      itemImagePublicId,
+      secondaryItemImage,
+      secondaryItemImagePublicId,
     });
 
     res.status(201).json({
@@ -44,27 +62,26 @@ export const createItemMaster = async (req, res) => {
 export const getAllItemMasters = async (req, res) => {
   try {
     let { page, limit, search } = req.query;
-
     page = parseInt(page) || 1;
     limit = parseInt(limit) || 10;
     const skip = (page - 1) * limit;
-
     const query = {};
-
+    // Branch-based filtering
+    const user = req.employee;
+    if (user && !["director", "superAdmin"].includes(user.role)) {
+      query.branchId = user.branchId;
+    }
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: "i" } },
         { description: { $regex: search, $options: "i" } },
       ];
     }
-
     const items = await ItemMaster.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
-
     const total = await ItemMaster.countDocuments(query);
-
     res.status(200).json({
       success: true,
       message: "Item masters fetched successfully",
@@ -115,7 +132,7 @@ export const getItemMasterById = async (req, res) => {
 
 export const updateItemMaster = async (req, res) => {
   try {
-    const { itemId, itemType, description, fields,stitchingCharge } = req.body;
+    const { itemId, itemType, description, fields, stitchingCharge } = req.body;
 
     const existingItem = await ItemMaster.findById(itemId);
     if (!existingItem) {
@@ -125,8 +142,23 @@ export const updateItemMaster = async (req, res) => {
       });
     }
 
+    if (req.files && req.files.itemImage) {
+      if (existingItem.itemImagePublicId) {
+        await cloudinary.uploader.destroy(existingItem.itemImagePublicId);
+      }
+      existingItem.itemImage = req.files.itemImage[0].path;
+      existingItem.itemImagePublicId = req.files.itemImage[0].filename;
+    }
+    if (req.files && req.files.secondaryItemImage) {
+      if (existingItem.secondaryItemImagePublicId) {
+        await cloudinary.uploader.destroy(existingItem.secondaryItemImagePublicId);
+      }
+      existingItem.secondaryItemImage = req.files.secondaryItemImage[0].path;
+      existingItem.secondaryItemImagePublicId = req.files.secondaryItemImage[0].filename;
+    }
+
     existingItem.itemType = itemType || existingItem.itemType;
-     existingItem.description = description || existingItem.description;
+    existingItem.description = description || existingItem.description;
     existingItem.fields = fields || existingItem.fields;
     existingItem.stitchingCharge = stitchingCharge || existingItem.stitchingCharge;
 
@@ -158,7 +190,13 @@ export const deleteItemMaster = async (req, res) => {
         message: "Item Master not found",
       });
     }
-
+    // Delete images from Cloudinary
+    if (item.itemImagePublicId) {
+      await cloudinary.uploader.destroy(item.itemImagePublicId);
+    }
+    if (item.secondaryItemImagePublicId) {
+      await cloudinary.uploader.destroy(item.secondaryItemImagePublicId);
+    }
     await item.deleteOne();
 
     res.status(200).json({

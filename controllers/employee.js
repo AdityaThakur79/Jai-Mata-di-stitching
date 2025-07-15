@@ -62,8 +62,31 @@ export const createEmployee = async (req, res) => {
       baseSalary,
       bankDetails,
       emergencyContact,
+      branchId: branchIdFromBody, // Accept branchId from body for directors
     } = req.body;
-   
+
+    // Get creator's info from req.employee (set by isAuthenticated middleware)
+    const creator = req.employee;
+    let branchId;
+    if (creator && ["director", "superAdmin"].includes(creator.role)) {
+      // Director/superAdmin can specify branchId
+      branchId = branchIdFromBody;
+    } else if (creator && creator.branchId) {
+      // Branch admin/master/billing/staff: force their own branchId
+      branchId = creator.branchId;
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Branch information is required for employee creation.",
+      });
+    }
+    if (!branchId) {
+      return res.status(400).json({
+        success: false,
+        message: "BranchId is required.",
+      });
+    }
+
     if (!name || !mobile || !role || !password) {
       return res.status(400).json({
         success: false,
@@ -123,6 +146,7 @@ export const createEmployee = async (req, res) => {
       profileImage,
       bankDetails: bankDetails ? JSON.parse(bankDetails) : undefined,
       emergencyContact: emergencyContact ? JSON.parse(emergencyContact) : undefined,
+      branchId,
     });
 
     res.status(201).json({
@@ -147,6 +171,11 @@ export const getAllEmployees = async (req, res) => {
     limit = parseInt(limit) || 10;
     const skip = (page - 1) * limit;
     const query = {};
+    // Branch-based filtering
+    const user = req.employee;
+    if (user && !["director", "superAdmin"].includes(user.role)) {
+      query.branchId = user.branchId;
+    }
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: "i" } },
@@ -1175,7 +1204,8 @@ export const employeeLogin = async (req, res) => {
         employeeId: employee._id, 
         role: employee.role,
         employeeId: employee.employeeId,
-        name: employee.name 
+        name: employee.name,
+        branchId: employee.branchId,
       },
       process.env.SECRETKEY,
       {
@@ -1205,7 +1235,8 @@ export const employeeLogin = async (req, res) => {
           profileImage: employee.profileImage,
           baseSalary: employee.baseSalary,
           joiningDate: employee.joiningDate,
-          status: employee.status
+          status: employee.status,
+          branchId: employee.branchId,
         },
         token,
       });

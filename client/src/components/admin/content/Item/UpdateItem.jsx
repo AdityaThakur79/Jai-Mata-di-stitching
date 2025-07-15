@@ -20,6 +20,10 @@ const UpdateItem = () => {
   const [description, setDescription] = useState("");
   const [stitchingCharge, setStitchingCharge] = useState("");
   const [fields, setFields] = useState([""]);
+  const [itemImage, setItemImage] = useState(null);
+  const [secondaryItemImage, setSecondaryItemImage] = useState(null);
+  const [previewItemImage, setPreviewItemImage] = useState("");
+  const [previewSecondaryItemImage, setPreviewSecondaryItemImage] = useState("");
 
   const [getItemById, { isLoading: loadingItem }] =
     useGetItemMasterByIdMutation();
@@ -35,6 +39,8 @@ const UpdateItem = () => {
           setDescription(item.description || "");
           setStitchingCharge(item.stitchingCharge || "");
           setFields(item.fields?.length ? item.fields : [""]);
+          setPreviewItemImage(item.itemImage || "");
+          setPreviewSecondaryItemImage(item.secondaryItemImage || "");
         } else {
           toast.error("Failed to load item data");
           navigate("/admin/items");
@@ -59,19 +65,37 @@ const UpdateItem = () => {
     setFields(updated);
   };
 
+  const handleItemImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setItemImage(file);
+      setPreviewItemImage(URL.createObjectURL(file));
+    }
+  };
+  const handleSecondaryItemImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSecondaryItemImage(file);
+      setPreviewSecondaryItemImage(URL.createObjectURL(file));
+    }
+  };
+
   const handleSubmit = async () => {
+ 
     if (!itemType.trim() || fields.some((f) => !f.trim())) {
       toast.error("Item type and all fields are required");
       return;
     }
 
-    await updateItemMaster({
-      itemId,
-      name: itemType.trim(),
-      description : description.trim(),
-      stitchingCharge : stitchingCharge.trim(),
-      fields: fields.map((f) => f.trim().toLowerCase()),
-    });
+    const formData = new FormData();
+    formData.append("itemId", itemId);
+    formData.append("name", itemType.trim());
+    formData.append("description", description.trim());
+    formData.append("stitchingCharge", stitchingCharge);
+    fields.forEach((f) => formData.append("fields", f.trim().toLowerCase()));
+    if (itemImage) formData.append("itemImage", itemImage);
+    if (secondaryItemImage) formData.append("secondaryItemImage", secondaryItemImage);
+    await updateItemMaster(formData);
   };
 
   useEffect(() => {
@@ -116,6 +140,29 @@ const UpdateItem = () => {
             value={stitchingCharge}
             onChange={(e) => setStitchingCharge(e.target.value)}
           />
+        </div>
+
+        <div>
+          <Label>Item Image</Label>
+          <Input type="file" accept="image/*" onChange={handleItemImageChange} />
+          {previewItemImage && (
+            <img
+              src={previewItemImage}
+              alt="Preview"
+              className="mt-2 w-16 h-16 object-cover rounded"
+            />
+          )}
+        </div>
+        <div>
+          <Label>Secondary Item Image</Label>
+          <Input type="file" accept="image/*" onChange={handleSecondaryItemImageChange} />
+          {previewSecondaryItemImage && (
+            <img
+              src={previewSecondaryItemImage}
+              alt="Preview"
+              className="mt-2 w-16 h-16 object-cover rounded"
+            />
+          )}
         </div>
 
         <div className="space-y-3">
