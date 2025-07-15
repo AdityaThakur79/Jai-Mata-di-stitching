@@ -52,6 +52,10 @@ import EmployeeSalary from "@/components/employee/EmployeeSalary";
 import HeroSection from "@/components/user/herosection";
 import AuthLayout from "@/layout/AuthLayout";
 import AdminNavbar from "@/components/admin/content/Navbar";
+import Fabric from "./components/user/Fabric.jsx";
+import UserNavbar from "./components/user/Usernavbar.jsx";
+import Feature from "./components/user/Feature.jsx";
+import Info from "./components/user/Info.jsx";
 
 const appRouter = createBrowserRouter([
   //Homepage Routes
@@ -63,7 +67,12 @@ const appRouter = createBrowserRouter([
         path: "/",
         element: (
           <>
+            <UserNavbar />
             <HeroSection />
+            <Feature/>
+          
+            <Fabric />
+            <Info/>
           </>
         ),
       },
