@@ -15,7 +15,7 @@ const router = express.Router();
 router.post("/create", isAuthenticated,upload, createFabric);
 
 // Get all fabrics
-router.get("/all", isAuthenticated, getAllFabrics);
+router.get("/all",  getAllFabrics);
 
 // View fabric by ID
 router.post("/view", isAuthenticated, getFabricById);
