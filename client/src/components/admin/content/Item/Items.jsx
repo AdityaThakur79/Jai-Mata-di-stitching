@@ -74,6 +74,7 @@ const Items = () => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState();
+  const [showSecondary, setShowSecondary] = useState(false);
 
   // const showLoading = () => {
   //   setOpen(true);
@@ -251,6 +252,30 @@ const Items = () => {
                             </div>
                           ) : (
                             <div className="space-y-3 text-sm">
+                              {/* Image Section */}
+                              {selectedItem?.itemImage && (
+                                <div className="w-full h-48 md:h-64 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 mb-4">
+                                  <img
+                                    src={
+                                      showSecondary && selectedItem.secondaryItemImage
+                                        ? selectedItem.secondaryItemImage
+                                        : selectedItem.itemImage
+                                    }
+                                    alt={selectedItem.name}
+                                    className="w-full h-full object-cover object-center transition-all duration-300"
+                                    onMouseEnter={() => setShowSecondary(true)}
+                                    onMouseLeave={() => setShowSecondary(false)}
+                                    onError={(e) => {
+                                      e.currentTarget.src = "/placeholder.png"; // fallback image
+                                    }}
+                                    style={{ cursor: selectedItem.secondaryItemImage ? 'pointer' : 'default' }}
+                                  />
+                                  {selectedItem.secondaryItemImage && (
+                                    <div className="text-xs text-center text-gray-500 mt-1">Hover to see secondary image</div>
+                                  )}
+                                </div>
+                              )}
+                              {/* Details Section */}
                               <p>
                                 <strong>Item Type:</strong> {selectedItem?.name}
                               </p>

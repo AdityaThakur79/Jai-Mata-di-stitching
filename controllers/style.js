@@ -56,25 +56,24 @@ export const getAllStyles = async (req, res) => {
     page = parseInt(page);
     limit = parseInt(limit);
     const skip = (page - 1) * limit;
-
     const query = {};
-
+    // Branch-based filtering
+    const user = req.employee;
+    if (user && !["director", "superAdmin"].includes(user.role)) {
+      query.branchId = user.branchId;
+    }
     if (search) {
       query.name = { $regex: search, $options: "i" };
     }
-
     if (category) {
       query.category = category;
     }
-
     const styles = await StyleMaster.find(query)
       .populate("category", "name")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
-
     const total = await StyleMaster.countDocuments(query);
-
     res.status(200).json({
       success: true,
       message: "Styles fetched successfully",

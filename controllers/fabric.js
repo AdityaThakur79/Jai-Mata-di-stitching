@@ -31,9 +31,15 @@ export const createFabric = async (req, res) => {
 
     let fabricImage = "";
     let fabricImagePublicId = "";
+    let secondaryFabricImage = "";
+    let secondaryFabricImagePublicId = "";
     if (req.files && req.files.fabricImage) {
       fabricImage = req.files.fabricImage[0].path;
       fabricImagePublicId = req.files.fabricImage[0].filename;
+    }
+    if (req.files && req.files.secondaryFabricImage) {
+      secondaryFabricImage = req.files.secondaryFabricImage[0].path;
+      secondaryFabricImagePublicId = req.files.secondaryFabricImage[0].filename;
     }
 
     const fabric = await FabricMaster.create({
@@ -45,6 +51,8 @@ export const createFabric = async (req, res) => {
       inStockMeters: parseFloat(inStockMeters) || 0,
       fabricImage,
       fabricImagePublicId,
+      secondaryFabricImage,
+      secondaryFabricImagePublicId,
       description,
     });
 
@@ -66,13 +74,15 @@ export const createFabric = async (req, res) => {
 export const getAllFabrics = async (req, res) => {
   try {
     let { page, limit, search } = req.query;
-
     page = parseInt(page) || 1;
     limit = parseInt(limit) || 10;
     const skip = (page - 1) * limit;
-
     const query = {};
-
+    // Branch-based filtering
+    const user = req.employee;
+    if (user && !["director", "superAdmin"].includes(user.role)) {
+      query.branchId = user.branchId;
+    }
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: "i" } },
@@ -81,14 +91,11 @@ export const getAllFabrics = async (req, res) => {
         { pattern: { $regex: search, $options: "i" } }
       ];
     }
-
     const fabrics = await FabricMaster.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
-
     const total = await FabricMaster.countDocuments(query);
-
     return res.status(200).json({
       success: true,
       message: "Fabrics fetched successfully",
@@ -162,6 +169,13 @@ export const updateFabric = async (req, res) => {
       fabric.fabricImage = req.files.fabricImage[0].path;
       fabric.fabricImagePublicId = req.files.fabricImage[0].filename;
     }
+    if (req.files && req.files.secondaryFabricImage) {
+      if (fabric.secondaryFabricImagePublicId) {
+        await cloudinary.uploader.destroy(fabric.secondaryFabricImagePublicId)
+      }
+      fabric.secondaryFabricImage = req.files.secondaryFabricImage[0].path;
+      fabric.secondaryFabricImagePublicId = req.files.secondaryFabricImage[0].filename;
+    }
 
     fabric.name = name || fabric.name;
     fabric.type = type || fabric.type;
@@ -199,7 +213,13 @@ export const deleteFabric = async (req, res) => {
         message: "Fabric not found",
       });
     }
-
+    // Delete images from Cloudinary
+    if (fabric.fabricImagePublicId) {
+      await cloudinary.uploader.destroy(fabric.fabricImagePublicId);
+    }
+    if (fabric.secondaryFabricImagePublicId) {
+      await cloudinary.uploader.destroy(fabric.secondaryFabricImagePublicId);
+    }
     await fabric.deleteOne();
 
     res.status(200).json({

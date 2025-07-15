@@ -30,6 +30,11 @@ const customerSchema = new mongoose.Schema({
   profileImage: { type: String },  
   profileImagePublicId :{type:String},
   measurements: [measurementSchema],  
+  branchId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Branch",
+    required: true,
+  },
   createdAt: { type: Date, default: Date.now },
 });
 

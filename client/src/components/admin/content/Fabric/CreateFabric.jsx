@@ -17,6 +17,7 @@ const CreateFabric = () => {
   const [pricePerMeter, setPricePerMeter] = useState("");
   const [inStockMeters, setInStockMeters] = useState("");
   const [image, setImage] = useState(null);
+  const [secondaryImage, setSecondaryImage] = useState(null);
   const [description, setDescription] = useState("");
 
   const [createFabric, { isLoading, isSuccess, isError, error, data }] =
@@ -37,6 +38,7 @@ const CreateFabric = () => {
     if (inStockMeters) formData.append("inStockMeters", inStockMeters);
     if (description) formData.append("description", description);
     if (image) formData.append("fabricImage", image);
+    if (secondaryImage) formData.append("secondaryFabricImage", secondaryImage);
 
     await createFabric(formData);
   };
@@ -123,6 +125,21 @@ const CreateFabric = () => {
           {image && (
             <img
               src={URL.createObjectURL(image)}
+              alt="Preview"
+              className="mt-2 w-16 h-16 object-cover rounded"
+            />
+          )}
+        </div>
+        <div>
+          <Label>Secondary Fabric Image (Optional)</Label>
+          <Input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setSecondaryImage(e.target.files?.[0])}
+          />
+          {secondaryImage && (
+            <img
+              src={URL.createObjectURL(secondaryImage)}
               alt="Preview"
               className="mt-2 w-16 h-16 object-cover rounded"
             />

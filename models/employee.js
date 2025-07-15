@@ -136,6 +136,11 @@ const employeeSchema = new mongoose.Schema(
     },
 
     barcode: String,
+    branchId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Branch",
+      required: true,
+    },
   },
   {
     timestamps: true, 

@@ -146,20 +146,18 @@ export const createPendingOrder = async (req, res) => {
 export const getAllPendingOrders = async (req, res) => {
   try {
     const { page = 1, limit = 10, search = "" } = req.query;
-
-    const query = {
-      $or: [
+    const user = req.employee;
+    const query = {};
+    // Branch-based filtering
+    if (user && !["director", "superAdmin"].includes(user.role)) {
+      query.branchId = user.branchId;
+    }
+    if (search) {
+      query.$or = [
         { tokenNumber: { $regex: search, $options: "i" } },
-        { 
-           customer: await Customer.find({
-            name: { $regex: search, $options: "i" }
-          }).distinct("_id")
-        }
-      ]
-    };
-
+      ];
+    }
     const total = await PendingOrder.countDocuments(query);
-
     const orders = await PendingOrder.find(query)
       .populate("customer", "name mobile email")
       .populate("items.itemType", "name")
@@ -170,7 +168,6 @@ export const getAllPendingOrders = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
-
     res.status(200).json({ total, page: Number(page), limit: Number(limit), orders });
   } catch (error) {
     console.error(error);

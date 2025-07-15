@@ -155,26 +155,21 @@ export const getInvoiceById = async (req, res) => {
 export const getAllInvoices = async (req, res) => {
   try {
     const { page = 1, limit = 10, search = "", status = "" } = req.query;
-
-    console.log('Invoice query params:', { page, limit, search, status });
-
+    const user = req.employee;
     const query = {};
-    
+    // Branch-based filtering
+    if (user && !["director", "superAdmin"].includes(user.role)) {
+      query.branchId = user.branchId;
+    }
     if (search) {
       query.$or = [
         { invoiceNumber: { $regex: search, $options: "i" } },
       ];
     }
-
     if (status && status !== "all") {
       query.status = status;
     }
-
-    console.log('MongoDB query:', JSON.stringify(query, null, 2));
-
     const total = await Invoice.countDocuments(query);
-    console.log('Total invoices found:', total);
-
     const invoices = await Invoice.find(query)
       .populate("customer", "name mobile")
       .populate("pendingOrder", "tokenNumber")
@@ -182,28 +177,12 @@ export const getAllInvoices = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
-
-    console.log('Invoices fetched:', invoices.length);
-
-    // Debug: Log first invoice if exists
-    if (invoices.length > 0) {
-      console.log('First invoice sample:', {
-        id: invoices[0]._id,
-        invoiceNumber: invoices[0].invoiceNumber,
-        customer: invoices[0].customer,
-        status: invoices[0].status
-      });
-    }
-
     const response = {
       total,
       page: Number(page),
       limit: Number(limit),
       invoices,
     };
-
-    console.log('Sending response:', JSON.stringify(response, null, 2));
-
     res.status(200).json(response);
   } catch (error) {
     console.error("Error fetching invoices:", error);

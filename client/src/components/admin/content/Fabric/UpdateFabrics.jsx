@@ -24,6 +24,8 @@ const UpdateFabric = () => {
   const [description, setDescription] = useState("");
   const [image, setImage] = useState(null);
   const [previewImage, setPreviewImage] = useState("");
+  const [secondaryImage, setSecondaryImage] = useState(null);
+  const [previewSecondaryImage, setPreviewSecondaryImage] = useState("");
 
   const [getFabricById, { data: fabricData }] = useGetFabricByIdMutation();
   const [updateFabric, { isLoading, isSuccess, error }] =
@@ -44,6 +46,7 @@ const UpdateFabric = () => {
       setInStockMeters(f.inStockMeters);
       setDescription(f.description || "");
       setPreviewImage(f.fabricImage || "");
+      setPreviewSecondaryImage(f.secondaryFabricImage || "");
     }
   }, [fabricData]);
 
@@ -52,6 +55,14 @@ const UpdateFabric = () => {
     if (file) {
       setImage(file);
       setPreviewImage(URL.createObjectURL(file));
+    }
+  };
+
+  const handleSecondaryImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSecondaryImage(file);
+      setPreviewSecondaryImage(URL.createObjectURL(file));
     }
   };
 
@@ -70,6 +81,7 @@ const UpdateFabric = () => {
     formData.append("inStockMeters", inStockMeters);
     formData.append("description", description);
     if (image) formData.append("fabricImage", image);
+    if (secondaryImage) formData.append("secondaryFabricImage", secondaryImage);
 
     await updateFabric(formData);
   };
@@ -132,6 +144,17 @@ const UpdateFabric = () => {
           {previewImage && (
             <img
               src={previewImage}
+              alt="Preview"
+              className="mt-2 w-32 h-32 object-cover rounded border"
+            />
+          )}
+        </div>
+        <div className="md:col-span-2">
+          <Label>Secondary Fabric Image</Label>
+          <Input type="file" accept="image/*" onChange={handleSecondaryImageChange} />
+          {previewSecondaryImage && (
+            <img
+              src={previewSecondaryImage}
               alt="Preview"
               className="mt-2 w-32 h-32 object-cover rounded border"
             />

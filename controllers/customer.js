@@ -62,6 +62,12 @@ export const getAllCustomers = async (req, res) => {
 
     const query = {};
 
+    // Branch-based filtering
+    const user = req.employee;
+    if (user && !["director", "superAdmin"].includes(user.role)) {
+      query.branchId = user.branchId;
+    }
+
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: "i" } },

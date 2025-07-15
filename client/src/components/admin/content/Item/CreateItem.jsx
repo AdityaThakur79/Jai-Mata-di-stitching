@@ -14,6 +14,8 @@ const CreateItem = () => {
   const [fields, setFields] = useState([""]);
   const [description, setDescription] = useState("");
   const [stitchingCharge, setStitchingCharge] = useState("");
+  const [itemImage, setItemImage] = useState(null);
+  const [secondaryItemImage, setSecondaryItemImage] = useState(null);
 
   const [createItemMaster, { isLoading, isSuccess, isError, data, error }] =
     useCreateItemMasterMutation();
@@ -40,12 +42,14 @@ const CreateItem = () => {
       return;
     }
 
-    await createItemMaster({
-      name: itemType.trim(),
-      description,
-      fields: fields.map((f) => f.trim()  ),
-      stitchingCharge: stitchingCharge,
-    });
+    const formData = new FormData();
+    formData.append("name", itemType.trim());
+    formData.append("description", description);
+    formData.append("stitchingCharge", stitchingCharge);
+    fields.forEach((f) => formData.append("fields", f.trim()));
+    if (itemImage) formData.append("itemImage", itemImage);
+    if (secondaryItemImage) formData.append("secondaryItemImage", secondaryItemImage);
+    await createItemMaster(formData);
   };
 
   useEffect(() => {
@@ -89,6 +93,36 @@ const CreateItem = () => {
             value={stitchingCharge}
             onChange={(e) => setStitchingCharge(e.target.value)}
           />
+        </div>
+        <div>
+          <Label>Item Image (Optional)</Label>
+          <Input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setItemImage(e.target.files?.[0])}
+          />
+          {itemImage && (
+            <img
+              src={URL.createObjectURL(itemImage)}
+              alt="Preview"
+              className="mt-2 w-16 h-16 object-cover rounded"
+            />
+          )}
+        </div>
+        <div>
+          <Label>Secondary Item Image (Optional)</Label>
+          <Input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setSecondaryItemImage(e.target.files?.[0])}
+          />
+          {secondaryItemImage && (
+            <img
+              src={URL.createObjectURL(secondaryItemImage)}
+              alt="Preview"
+              className="mt-2 w-16 h-16 object-cover rounded"
+            />
+          )}
         </div>
 
         <div className="space-y-3">
