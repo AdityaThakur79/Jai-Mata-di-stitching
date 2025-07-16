@@ -42,6 +42,9 @@ import UpdateEmployee from "./components/admin/content/Employee/UpdateEmployee.j
 import Employee from "./components/admin/content/Employee/Employee.jsx";
 import EmployeeAdvance from "./components/admin/content/Employee/EmployeeAdvance.jsx";
 import EmployeeDetail from "./components/admin/content/Employee/EmployeeDetail.jsx";
+import Branches from "./components/admin/content/Branch/Branches.jsx";
+// import CreateBranch from "./components/admin/content/Branch/CreateBranch.jsx";
+// import UpdateBranch from "./components/admin/content/Branch/UpdateBranch.jsx";
 
 // Employee Components
 import EmployeeLogin from "./components/EmployeeLogin.jsx";
@@ -297,6 +300,19 @@ const appRouter = createBrowserRouter([
         path: "employee-detail",
         element: <EmployeeDetail />,
       },
+      // Branch CRUD
+      {
+        path: "branches",
+        element: <Branches />,
+      },
+      // {
+      //   path: "create-branch",
+      //   element: <CreateBranch />,
+      // },
+      // {
+      //   path: "update-branch",
+      //   element: <UpdateBranch />,
+      // },
     ],
   },
 ]);
