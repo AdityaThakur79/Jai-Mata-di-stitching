@@ -391,6 +391,16 @@ const Sidebar = () => {
                   <h2>Style Master</h2>
                 </Link>
               </AccordionContent>
+               <AccordionContent>
+                <Link
+                  to="/admin/branches"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Landmark size={22} />
+                  <h2>Branch Master</h2>
+                </Link>
+              </AccordionContent>
             </AccordionItem>
 
              <AccordionItem value="item-12">
@@ -446,7 +456,7 @@ const Sidebar = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 mt-16 transition-all ">
+      <div className="flex-1 pt-8 transition-all bg-gray-50 ">
         <Outlet />
       </div>
     </div>
