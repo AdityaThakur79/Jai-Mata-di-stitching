@@ -60,9 +60,12 @@ import Info from "./components/user/Info.jsx";
 import Categories from "./components/user/Categories.jsx";
 import FabricPage from "./components/user/pages/FabricPage.jsx";
 import Qa from "./components/user/Qa.jsx";
-import { Gallery } from "./components/user/Gallery.jsx";
+import {Gallery}  from "./components/user/Gallery.jsx";
 import CreateBranch from "./components/admin/content/Branch/CreateBranch.jsx";
-import UpdateBranch from "./components/admin/content/Branch/UpdateBranch.jsx";\
+import UpdateBranch from "./components/admin/content/Branch/UpdateBranch.jsx";
+import Services from "./components/user/Services.jsx";
+import MenItems from "./components/user/MenItems.jsx";
+import WomenItems from "./components/user/WomenItems.jsx";
 
 const appRouter = createBrowserRouter([
   //Homepage Routes
@@ -74,13 +77,16 @@ const appRouter = createBrowserRouter([
         path: "/",
         element: (
           <>
-          
             <HeroSection />
             <Feature/>
+            <Services/>
+            <Categories/>
             <Fabric />
+            <MenItems/>
+            <WomenItems/>
             <Info/>
-            <Qa/>
             <Gallery/>
+            <Qa/>
           </>
         ),
       },
