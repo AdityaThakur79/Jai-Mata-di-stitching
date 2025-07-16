@@ -27,12 +27,37 @@ const features = [
     title: 'Premium Grade',
     subtitle: 'Superior Materials',
   },
+  {
+    icon: <Search className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10" color="#2c3e50" strokeWidth={1.5} />,
+    title: 'Order Tracking',
+    subtitle: 'For all orders*',
+  },
+  {
+    icon: <Globe className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10" color="#2c3e50" strokeWidth={1.5} />,
+    title: 'Global Fulfillment',
+    subtitle: 'Worldwide Delivery',
+  },
+  {
+    icon: <Users className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10" color="#2c3e50" strokeWidth={1.5} />,
+    title: '200K+',
+    subtitle: 'Satisfied Customers',
+  },
+  {
+    icon: <Shield className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10" color="#2c3e50" strokeWidth={1.5} />,
+    title: 'Certified Quality',
+    subtitle: 'ISO Standards',
+  },
+  {
+    icon: <Award className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10" color="#2c3e50" strokeWidth={1.5} />,
+    title: 'Premium Grade',
+    subtitle: 'Superior Materials',
+  },
 ];
 
 const Feature = () => {
   return (
     <div
-      className="relative w-full overflow-hidden py-5 sm:py-6 md:py-10 mt-4 md:mt-8"
+      className="relative w-full overflow-hidden py-5 sm:py-6 md:py-10  "
       style={{
         background: 'linear-gradient(135deg, #f8f4e6 0%, #e8dcc0 50%, #d4c4a0 100%)',
         boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.06)',
@@ -68,7 +93,7 @@ const Feature = () => {
         }
 
         .animate-marquee {
-          animation: marquee 2s linear infinite;
+          animation: marquee 20s linear infinite;
         }
       `}</style>
     </div>

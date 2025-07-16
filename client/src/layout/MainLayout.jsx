@@ -15,8 +15,6 @@ const mainLayout = () => {
             <UserNavbar />
             <div>
                 <Outlet>
-            
-
                 </Outlet>
             </div>
             <UserFooter />

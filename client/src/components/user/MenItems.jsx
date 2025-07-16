@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useGetAllItemMastersQuery } from '@/features/api/itemApi';
 
 // Intersection Observer Hook
 const useIntersectionObserver = (options = {}) => {
@@ -83,69 +84,64 @@ const SectionOverlay = ({ position, size, opacity }) => {
   );
 };
 
-const staticFabrics = [
-  {
-    _id: '1',
-    name: 'Premium Cotton Twill',
-    fabricImage: '/images/balck.png',
-    secondaryFabricImage: '/images/menindark.png',
-    price: 900,
-  },
-  {
-    _id: '2',
-    name: 'Classic Blue Denim',
-    fabricImage: '/images/maroon.png',
-    secondaryFabricImage: '/images/menindark.png',
-    price: 900,
-  },
-  {
-    _id: '3',
-    name: 'Elegant Linen',
-    fabricImage: '/images/balckwithstuc.jpg',
-    secondaryFabricImage: '/images/menindark.png',
-    price: 900,
-  },
-  {
-    _id: '4',
-    name: 'Soft Flannel',
-    fabricImage: '/images/maroon.png',
-    secondaryFabricImage: '/images/menindark.png',
-    price: 900,
-  },
-];
+const MenItems = () => {
+  const { data, isLoading, isError } = useGetAllItemMastersQuery({ page: 1, limit: 12, category: 'men' });
+  const items = (data?.items || []).slice(0, 4);
 
-const Fabric = () => {
-  const fabrics = staticFabrics.slice(0, 4);
+  if (isLoading) {
+    return (
+      <div className="text-center py-12">
+        <div className="animate-pulse">
+          <div className="w-16 h-16 bg-amber-200 rounded-full mx-auto mb-4"></div>
+          <div className="text-amber-600 font-serif">Loading Men's Collection...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center py-12 text-red-500">
+        <div className="mb-4">
+          <svg className="w-16 h-16 mx-auto text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.734-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+        </div>
+        <div className="font-serif">Failed to load men's items.</div>
+      </div>
+    );
+  }
 
   return (
-    <section className="relative py-12 md:py-20 bg-gradient-to-br from-gray-50 to-gray-100">
+    <section className="relative py-12 md:py-20 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 opacity-100">
       {/* Modern Overlays */}
       <SectionOverlay position="top-left" size="38%" opacity={0.18} />
       <SectionOverlay position="top-right" size="32%" opacity={0.16} />
       <SectionOverlay position="bottom-left" size="28%" opacity={0.14} />
       <SectionOverlay position="bottom-right" size="36%" opacity={0.17} />
       
-      <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10 ">
         {/* Enhanced Header Section */}
         <BlurFade delay={0.1}>
           <div className="text-center mb-12 md:mb-20">
             {/* Decorative Icon */}
             <div className="mb-6 md:mb-8 animate-pulse">
               <svg className="w-16 h-16 md:w-20 md:h-20 mx-auto text-amber-600" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M20 40 L30 20 L50 10 L70 20 L80 40 L70 60 L50 70 L30 60 Z" stroke="currentColor" strokeWidth="2" fill="none"/>
-                <circle cx="50" cy="40" r="8" fill="currentColor"/>
-                <path d="M40 50 L60 50 M45 55 L55 55 M42 60 L58 60" stroke="currentColor" strokeWidth="1.5"/>
+                <path d="M30 20 L70 20 L70 30 L60 30 L60 70 L40 70 L40 30 L30 30 Z" stroke="currentColor" strokeWidth="2" fill="none"/>
+                <circle cx="50" cy="45" r="6" fill="currentColor"/>
+                <path d="M35 75 L65 75 M40 80 L60 80" stroke="currentColor" strokeWidth="2"/>
+                <path d="M45 25 L55 25" stroke="currentColor" strokeWidth="2"/>
               </svg>
             </div>
             
             {/* Subtitle */}
             <h2 className="text-xs font-bold text-amber-600 tracking-[0.2em] uppercase mb-4 md:mb-6 font-serif animate-fadeInUp">
-              CRAFTED WITH EXCELLENCE
+              TAILORED FOR DISTINCTION
             </h2>
             
             {/* Main Title */}
             <h1 className="text-2xl xs:text-3xl md:text-5xl lg:text-6xl font-light text-gray-800 mb-4 font-serif leading-tight px-2 xs:px-4 animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
-              Featured Fabrics Collection
+              Men's Premium Collection
             </h1>
             
             {/* Decorative Divider */}
@@ -159,12 +155,12 @@ const Fabric = () => {
             
             {/* Subtitle Description */}
             <p className="text-sm md:text-base text-gray-600 italic max-w-2xl mx-auto font-light leading-relaxed mb-8 animate-fadeInUp" style={{ animationDelay: '0.6s' }}>
-              "Discover our curated selection of premium fabrics, each chosen for its exceptional quality and timeless appeal"
+              "Expertly crafted garments that embody sophistication and timeless masculine elegance"
             </p>
             
             {/* CTA Button */}
             <div className="flex justify-center animate-fadeInUp" style={{ animationDelay: '0.8s' }}>
-              <Link to="/fabrics">
+              <Link to="/men-items">
                 <button
                   className="relative border-2 px-6 sm:px-8 py-2 sm:py-3 text-base sm:text-lg font-serif tracking-wider shadow-lg transition-all duration-500 uppercase overflow-hidden group"
                   style={{ 
@@ -188,7 +184,7 @@ const Fabric = () => {
                     e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
                   }}
                 >
-                  <span className="relative z-10">VIEW ALL FABRICS</span>
+                  <span className="relative z-10">VIEW ALL ITEMS</span>
                   <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-amber-600 opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
                 </button>
               </Link>
@@ -196,21 +192,21 @@ const Fabric = () => {
           </div>
         </BlurFade>
 
-        {/* Fabric Grid with Staggered Animation */}
+        {/* Items Grid with Staggered Animation */}
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-8">
-          {fabrics.map((fabric, index) => (
-            <BlurFade key={fabric._id} delay={0.3 + index * 0.08}>
+          {items.map((item, index) => (
+            <BlurFade key={item._id} delay={0.3 + index * 0.08}>
               <div 
                 className="flex flex-col items-center animate-fadeInUp"
                 style={{ animationDelay: `${1 + index * 0.15}s` }}
               >
                 <div className="relative w-full aspect-[3/4] overflow-hidden group rounded-lg shadow-lg hover:shadow-2xl transition-all duration-500">
                   {/* Background Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 opacity-0 group-hover:opacity-30 transition-opacity duration-500 z-10"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-gray-50 to-stone-50 opacity-0 group-hover:opacity-30 transition-opacity duration-500 z-10"></div>
                   
                   <img
-                    src={fabric.fabricImage}
-                    alt={fabric.name}
+                    src={item.itemImage || '/images/placeholder.png'}
+                    alt={item.name}
                     className="w-full h-full object-cover transition-all duration-500 ease-in-out group-hover:scale-110 group-hover:opacity-0"
                     style={{ willChange: 'transform, opacity' }}
                   />
@@ -222,8 +218,8 @@ const Fabric = () => {
                   />
                   
                   <img
-                    src={fabric.secondaryFabricImage}
-                    alt={fabric.name + ' alternate'}
+                    src={item.secondaryItemImage || item.itemImage || '/images/placeholder.png'}
+                    alt={item.name + ' alternate'}
                     className="w-full h-full object-cover absolute top-0 left-0 transition-all duration-500 ease-in-out opacity-0 group-hover:opacity-100 group-hover:scale-110"
                     style={{ willChange: 'transform, opacity', zIndex: 20 }}
                   />
@@ -233,8 +229,10 @@ const Fabric = () => {
                 </div>
                 
                 <div className="mt-3 sm:mt-4 text-center">
-                  <h3 className="text-base sm:text-lg font-medium font-serif mb-1 sm:mb-2 group-hover:text-amber-700 transition-colors duration-300">{fabric.name}</h3>
-                  <div className="text-sm sm:text-base font-serif text-gray-600 tracking-wide italic">₹ {fabric.price.toLocaleString('en-IN')}</div>
+                  <h3 className="text-base sm:text-lg font-medium font-serif mb-1 sm:mb-2 group-hover:text-amber-700 transition-colors duration-300">{item.name}</h3>
+                  <div className="text-sm sm:text-base font-serif text-gray-600 tracking-wide italic">
+                    ₹ {item.stitchingCharge?.toLocaleString('en-IN') || 0}
+                  </div>
                   
                   {/* Decorative Underline */}
                   <div className="mt-2 h-px w-8 bg-gradient-to-r from-amber-300 to-amber-500 mx-auto opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -243,6 +241,20 @@ const Fabric = () => {
             </BlurFade>
           ))}
         </div>
+        
+        {/* Show message if no items */}
+        {items.length === 0 && !isLoading && (
+          <BlurFade delay={0.5}>
+            <div className="text-center py-12">
+              <div className="mb-4">
+                <svg className="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
+              </div>
+              <p className="text-gray-500 font-serif italic">No items available at the moment</p>
+            </div>
+          </BlurFade>
+        )}
       </div>
       
       {/* Custom CSS for animations */}
@@ -287,4 +299,4 @@ const Fabric = () => {
   );
 };
 
-export default Fabric;
+export default MenItems;
