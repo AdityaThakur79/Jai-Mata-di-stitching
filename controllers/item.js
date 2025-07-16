@@ -3,12 +3,12 @@ import { v2 as cloudinary } from "cloudinary";
 
 export const createItemMaster = async (req, res) => {
   try {
-    const { name, description, fields, stitchingCharge } = req.body;
+    const { name, description, fields, stitchingCharge, category } = req.body;
 
-    if (!name || !Array.isArray(fields)) {
+    if (!name || !Array.isArray(fields) || !category) {
       return res.status(400).json({
         success: false,
-        message: "Name and fields are required and fields must be an array.",
+        message: "Name, category, and fields are required and fields must be an array.",
       });
     }
 
@@ -38,6 +38,7 @@ export const createItemMaster = async (req, res) => {
       description,
       fields,
       stitchingCharge,
+      category,
       itemImage,
       itemImagePublicId,
       secondaryItemImage,
@@ -61,7 +62,7 @@ export const createItemMaster = async (req, res) => {
 
 export const getAllItemMasters = async (req, res) => {
   try {
-    let { page, limit, search } = req.query;
+    let { page, limit, search, category } = req.query;
     page = parseInt(page) || 1;
     limit = parseInt(limit) || 10;
     const skip = (page - 1) * limit;
@@ -76,6 +77,9 @@ export const getAllItemMasters = async (req, res) => {
         { name: { $regex: search, $options: "i" } },
         { description: { $regex: search, $options: "i" } },
       ];
+    }
+    if (category && ["men", "women", "unisex"].includes(category)) {
+      query.category = category;
     }
     const items = await ItemMaster.find(query)
       .sort({ createdAt: -1 })
@@ -132,7 +136,7 @@ export const getItemMasterById = async (req, res) => {
 
 export const updateItemMaster = async (req, res) => {
   try {
-    const { itemId, itemType, description, fields, stitchingCharge } = req.body;
+    const { itemId, itemType, description, fields, stitchingCharge, category } = req.body;
 
     const existingItem = await ItemMaster.findById(itemId);
     if (!existingItem) {
@@ -161,6 +165,7 @@ export const updateItemMaster = async (req, res) => {
     existingItem.description = description || existingItem.description;
     existingItem.fields = fields || existingItem.fields;
     existingItem.stitchingCharge = stitchingCharge || existingItem.stitchingCharge;
+    if (category) existingItem.category = category;
 
     await existingItem.save();
 

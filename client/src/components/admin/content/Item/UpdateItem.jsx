@@ -24,6 +24,7 @@ const UpdateItem = () => {
   const [secondaryItemImage, setSecondaryItemImage] = useState(null);
   const [previewItemImage, setPreviewItemImage] = useState("");
   const [previewSecondaryItemImage, setPreviewSecondaryItemImage] = useState("");
+  const [category, setCategory] = useState("");
 
   const [getItemById, { isLoading: loadingItem }] =
     useGetItemMasterByIdMutation();
@@ -41,6 +42,7 @@ const UpdateItem = () => {
           setFields(item.fields?.length ? item.fields : [""]);
           setPreviewItemImage(item.itemImage || "");
           setPreviewSecondaryItemImage(item.secondaryItemImage || "");
+          setCategory(item.category || "");
         } else {
           toast.error("Failed to load item data");
           navigate("/admin/items");
@@ -82,8 +84,8 @@ const UpdateItem = () => {
 
   const handleSubmit = async () => {
  
-    if (!itemType.trim() || fields.some((f) => !f.trim())) {
-      toast.error("Item type and all fields are required");
+    if (!itemType.trim() || fields.some((f) => !f.trim()) || !category) {
+      toast.error("Item type, category, and all fields are required");
       return;
     }
 
@@ -92,6 +94,7 @@ const UpdateItem = () => {
     formData.append("name", itemType.trim());
     formData.append("description", description.trim());
     formData.append("stitchingCharge", stitchingCharge);
+    formData.append("category", category);
     fields.forEach((f) => formData.append("fields", f.trim().toLowerCase()));
     if (itemImage) formData.append("itemImage", itemImage);
     if (secondaryItemImage) formData.append("secondaryItemImage", secondaryItemImage);
@@ -101,7 +104,7 @@ const UpdateItem = () => {
   useEffect(() => {
     if (isSuccess) {
       toast.success(data?.message || "Item updated successfully");
-      navigate("/admin/items");
+      navigate("/employee/items");
     } else if (isError) {
       toast.error(error?.data?.message || "Failed to update item");
     }
@@ -122,6 +125,20 @@ const UpdateItem = () => {
             value={itemType}
             onChange={(e) => setItemType(e.target.value)}
           />
+        </div>
+        <div>
+          <Label>Category</Label>
+          <select
+            className="w-full border rounded p-2 mt-1"
+            value={category}
+            onChange={e => setCategory(e.target.value)}
+            required
+          >
+            <option value="">Select category</option>
+            <option value="men">Men</option>
+            <option value="women">Women</option>
+            <option value="unisex">Unisex</option>
+          </select>
         </div>
 
         <div>
@@ -197,7 +214,7 @@ const UpdateItem = () => {
       </div>
 
       <div className="flex gap-2 mt-6">
-        <Button variant="outline" onClick={() => navigate("/admin/items")}>
+        <Button variant="outline" onClick={() => navigate("/employee/items")}>
           Cancel
         </Button>
         <Button disabled={isLoading} onClick={handleSubmit}>

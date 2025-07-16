@@ -46,11 +46,13 @@ const Items = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const { data, isLoading, refetch } = useGetAllItemMastersQuery({
     page: currentPage,
     limit,
     search: debouncedSearchQuery,
+    category: categoryFilter,
   });
 
   const [deleteItemMaster, { isSuccess, isError }] =
@@ -134,6 +136,16 @@ const Items = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm w-full sm:w-64 bg-white dark:bg-gray-800 text-gray-800 dark:text-white placeholder:text-gray-500"
             />
+            <select
+              className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-800 dark:text-white"
+              value={categoryFilter}
+              onChange={e => { setCategoryFilter(e.target.value); setCurrentPage(1); }}
+            >
+              <option value="">All Categories</option>
+              <option value="men">Men</option>
+              <option value="women">Women</option>
+              <option value="unisex">Unisex</option>
+            </select>
 
             <div className="flex gap-2 items-center">
               <Select
@@ -151,7 +163,7 @@ const Items = () => {
                   ))}
                 </SelectContent>
               </Select>
-              <Button onClick={() => navigate("/admin/create-item")}>
+              <Button onClick={() => navigate("/employee/create-item")}>
                 Add Item
               </Button>
               <Button className="p-2" onClick={() => refetch()}>
@@ -172,6 +184,9 @@ const Items = () => {
                   Item Type
                 </th>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
+                  Category
+                </th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
                   Charge
                 </th>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
@@ -185,7 +200,7 @@ const Items = () => {
             <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200">
               {isLoading ? (
                 <tr>
-                  <td colSpan="4" className="px-6 py-10 text-center">
+                  <td colSpan="6" className="px-6 py-10 text-center">
                     Loading...
                   </td>
                 </tr>
@@ -197,6 +212,9 @@ const Items = () => {
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900 dark:text-white capitalize">
                       {item.name}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-white capitalize">
+                      {item.category}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900 dark:text-white capitalize">
                       {item.stitchingCharge}
@@ -280,6 +298,9 @@ const Items = () => {
                                 <strong>Item Type:</strong> {selectedItem?.name}
                               </p>
                               <p>
+                                <strong>Category:</strong> {selectedItem?.category}
+                              </p>
+                              <p>
                                 <strong>Item Description:</strong>{" "}
                                 {selectedItem?.description}
                               </p>
@@ -310,7 +331,7 @@ const Items = () => {
                         <Button
                           className="p-2 bg-orange-100 text-orange-600 hover:bg-orange-200"
                           onClick={() =>
-                            navigate("/admin/update-item", {
+                            navigate("/employee/update-item", {
                               state: { itemId: item._id },
                             })
                           }
@@ -365,7 +386,10 @@ const Items = () => {
                   Item Type
                 </th>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
-              Charge
+                  Category
+                </th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
+                  Charge
                 </th>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
                   Fields

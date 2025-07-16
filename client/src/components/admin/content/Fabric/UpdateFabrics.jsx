@@ -89,7 +89,7 @@ const UpdateFabric = () => {
   useEffect(() => {
     if (isSuccess) {
       toast.success("Fabric updated successfully");
-      navigate("/admin/fabrics");
+      navigate("/employee/fabrics");
     } else if (error) {
       toast.error(error?.data?.message || "Update failed");
     }
@@ -162,7 +162,7 @@ const UpdateFabric = () => {
         </div>
       </div>
       <div className="flex items-center gap-4 mt-6">
-        <Button variant="outline" onClick={() => navigate("/admin/fabrics")}>Cancel</Button>
+        <Button variant="outline" onClick={() => navigate("/employee/fabrics")}>Cancel</Button>
         <Button onClick={handleUpdate} disabled={isLoading}>
           {isLoading ? (
             <>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,7 +30,7 @@ const EmployeeLogin = () => {
     await employeeLogin(formData);
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isSuccess) {
       toast.success(data?.message || "Login successful");
       navigate("/employee/dashboard");

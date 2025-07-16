@@ -20,6 +20,9 @@ import {
 import toast from "react-hot-toast";
 import { useCreateEmployeeMutation } from "@/features/api/employeeApi.js";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { useGetAllBranchesQuery } from "@/features/api/branchApi";
+import { selectUserRole } from "@/features/authSlice";
 
 const genderOptions = ["male", "female", "other"];
 const roleOptions = ["tailor", "manager", "biller", "director", "admin", "other"];
@@ -47,6 +50,10 @@ const FormField = ({ label, required, children, className = "" }) => (
 
 const CreateEmployee = () => {
   const navigate = useNavigate();
+  const userRole = useSelector(selectUserRole);
+  const showBranchDropdown = !["branchAdmin", "billing", "operation"].includes(userRole);
+  const [branchId, setBranchId] = useState("");
+  const { data: branchData, isLoading: branchLoading } = useGetAllBranchesQuery({ page: 1, limit: 100 });
   const [createEmployee, { isLoading, isSuccess, isError, error, data }] = useCreateEmployeeMutation();
   const [form, setForm] = useState({
     name: "",
@@ -145,6 +152,10 @@ const CreateEmployee = () => {
       toast.error("Name, Mobile, Role, and Password are required.");
       return;
     }
+    if (showBranchDropdown && !branchId) {
+      toast.error("Please select a branch.");
+      return;
+    }
     const formData = new FormData();
     formData.append("name", form.name);
     formData.append("mobile", form.mobile);
@@ -166,6 +177,9 @@ const CreateEmployee = () => {
     }
     if (form.emergencyContact.name || form.emergencyContact.mobile) {
       formData.append("emergencyContact", JSON.stringify(form.emergencyContact));
+    }
+    if (showBranchDropdown) {
+      formData.append("branchId", branchId);
     }
     await createEmployee(formData);
   };
@@ -359,6 +373,20 @@ const CreateEmployee = () => {
                     className="h-8 text-sm"
                   />
                 </FormField>
+                {showBranchDropdown && (
+                  <FormField label="Branch" required>
+                    <Select value={branchId} onValueChange={setBranchId}>
+                      <SelectTrigger className="h-8 text-sm">
+                        <SelectValue placeholder={branchLoading ? "Loading..." : "Select branch"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {branchData?.branches?.map((b) => (
+                          <SelectItem key={b._id} value={b._id}>{b.branchName}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormField>
+                )}
               </div>
             </FormSection>
 

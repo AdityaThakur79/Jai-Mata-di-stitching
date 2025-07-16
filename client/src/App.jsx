@@ -43,8 +43,6 @@ import Employee from "./components/admin/content/Employee/Employee.jsx";
 import EmployeeAdvance from "./components/admin/content/Employee/EmployeeAdvance.jsx";
 import EmployeeDetail from "./components/admin/content/Employee/EmployeeDetail.jsx";
 import Branches from "./components/admin/content/Branch/Branches.jsx";
-// import CreateBranch from "./components/admin/content/Branch/CreateBranch.jsx";
-// import UpdateBranch from "./components/admin/content/Branch/UpdateBranch.jsx";
 
 // Employee Components
 import EmployeeLogin from "./components/EmployeeLogin.jsx";
@@ -63,6 +61,8 @@ import Categories from "./components/user/Categories.jsx";
 import FabricPage from "./components/user/pages/FabricPage.jsx";
 import Qa from "./components/user/Qa.jsx";
 import { Gallery } from "./components/user/Gallery.jsx";
+import CreateBranch from "./components/admin/content/Branch/CreateBranch.jsx";
+import UpdateBranch from "./components/admin/content/Branch/UpdateBranch.jsx";\
 
 const appRouter = createBrowserRouter([
   //Homepage Routes
@@ -77,8 +77,6 @@ const appRouter = createBrowserRouter([
           
             <HeroSection />
             <Feature/>
-            <Categories/>
-          
             <Fabric />
             <Info/>
             <Qa/>
@@ -129,12 +127,14 @@ const appRouter = createBrowserRouter([
     path: "employee",
     element: (
       <EmployeeProtectedRoute>
+          <AdminNavbar />
         <EmployeeSidebar />
+        <Footer />
       </EmployeeProtectedRoute>
     ),
     children: [
       {
-        path: "dashboard",
+        path: "employee-dashboard",
         element: <EmployeeDashboard />,
       },
       {
@@ -145,27 +145,12 @@ const appRouter = createBrowserRouter([
         path: "salary",
         element: <EmployeeSalary />,
       },
-    ],
-  },
-
-  {
-    path: "admin",
-    element: (
-      <RoleProtectedRoute allowedRoles={["superAdmin"]}>
-        <>
-          <AdminNavbar />
-          <Sidebar />
-          <Footer />
-        </>
-      </RoleProtectedRoute>
-    ),
-    children: [
       {
         path: "dashboard",
         element: <Dashboard />,
       },
       {
-        path: "profile",
+        path: "edit-profile",
         element: <Profile />,
       },
 
@@ -305,16 +290,184 @@ const appRouter = createBrowserRouter([
         path: "branches",
         element: <Branches />,
       },
-      // {
-      //   path: "create-branch",
-      //   element: <CreateBranch />,
-      // },
-      // {
-      //   path: "update-branch",
-      //   element: <UpdateBranch />,
-      // },
+      {
+        path: "create-branch",
+        element: <CreateBranch />,
+      },
+      {
+        path: "update-branch",
+        element: <UpdateBranch />,
+      },
     ],
   },
+
+  // {
+  //   path: "admin",
+  //   element: (
+  //     <RoleProtectedRoute allowedRoles={["superAdmin"]}>
+  //       <>
+  //         <AdminNavbar />
+  //         <Sidebar />
+  //         <Footer />
+  //       </>
+  //     </RoleProtectedRoute>
+  //   ),
+  //   children: [
+  //     {
+  //       path: "dashboard",
+  //       element: <Dashboard />,
+  //     },
+  //     {
+  //       path: "profile",
+  //       element: <Profile />,
+  //     },
+
+  //     //Customer master
+  //     {
+  //       path: "create-customer",
+  //       element: <CreateCustomer />,
+  //     },
+  //     {
+  //       path: "update-customer",
+  //       element: <UpdateCustomer />,
+  //     },
+  //     {
+  //       path: "customers",
+  //       element: <Customers />,
+  //     },
+
+  //     //Item master
+  //     {
+  //       path: "create-item",
+  //       element: <CreateItem />,
+  //     },
+  //     {
+  //       path: "update-item",
+  //       element: <UpdateItem />,
+  //     },
+  //     {
+  //       path: "items",
+  //       element: <Items />,
+  //     },
+
+  //     //Fabric master
+  //     {
+  //       path: "create-fabric",
+  //       element: <CreateFabric />,
+  //     },
+  //     {
+  //       path: "update-fabric",
+  //       element: <UpdateFabrics />,
+  //     },
+  //     {
+  //       path: "fabrics",
+  //       element: <Fabrics />,
+  //     },
+
+  //     //Master master
+  //     {
+  //       path: "create-master",
+  //       element: <CreateMaster />,
+  //     },
+  //     {
+  //       path: "update-master",
+  //       element: <UpdateMaster />,
+  //     },
+  //     {
+  //       path: "masters",
+  //       element: <Masters />,
+  //     },
+
+  //     //Salesman master
+  //     {
+  //       path: "create-salesman",
+  //       element: <CreateSalesman />,
+  //     },
+  //     {
+  //       path: "update-salesman",
+  //       element: <UpdateSalesman />,
+  //     },
+  //     {
+  //       path: "salesmans",
+  //       element: <Salesmans />,
+  //     },
+
+  //     //Style master
+  //     {
+  //       path: "create-style",
+  //       element: <CreateStyle />,
+  //     },
+  //     {
+  //       path: "update-style",
+  //       element: <UpdateStyle />,
+  //     },
+  //     {
+  //       path: "styles",
+  //       element: <Styles />,
+  //     },
+
+  //     //Pendingorder master
+  //     {
+  //       path: "create-pending-order",
+  //       element: <CreatePendingOrder />,
+  //     },
+  //     {
+  //       path: "update-pending-order",
+  //       element: <UpdatePendingOrder />,
+  //     },
+  //     {
+  //       path: "recent-pending-order",
+  //       element: <RecentPendingOrders />,
+  //     },
+  //     {
+  //       path: "pending-orders",
+  //       element: <PendingOrders />,
+  //     },
+  //     //Invoices
+  //     {
+  //       path: "generate-bill",
+  //       element: <GenerateBill />,
+  //     },
+  //     {
+  //       path: "invoices",
+  //       element: <Invoices />,
+  //     },
+  //     //Employee
+  //     {
+  //       path: "create-employee",
+  //       element: <CreateEmployee />,
+  //     },
+  //     {
+  //       path: "update-employee",
+  //       element: <UpdateEmployee />,
+  //     },
+  //     {
+  //       path: "employees",
+  //       element: <Employee />,
+  //     },
+  //     {
+  //       path: "employee-advance",
+  //       element: <EmployeeAdvance />,
+  //     },
+  //     {
+  //       path: "employee-detail",
+  //       element: <EmployeeDetail />,
+  //     },
+  //     // Branch CRUD
+  //     {
+  //       path: "branches",
+  //       element: <Branches />,
+  //     },
+  //     {
+  //       path: "create-branch",
+  //       element: <CreateBranch />,
+  //     },
+  //     {
+  //       path: "update-branch",
+  //       element: <UpdateBranch />,
+  //     },
+  //   ],
+  // },
 ]);
 
 function App() {

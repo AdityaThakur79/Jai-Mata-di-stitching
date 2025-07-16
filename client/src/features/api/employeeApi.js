@@ -23,7 +23,6 @@ export const employeeApi = createApi({
                 try {
                     const result = await queryFulfilled;
                     dispatch(employeeLoggedIn({ employee: result.data.employee }));
-                    localStorage.setItem("employeeToken", result.data.token);
                 } catch (error) {
                     console.log("Employee login error:", error);
                 }
@@ -36,6 +35,14 @@ export const employeeApi = createApi({
                 url: "/profile",
                 method: "GET",
             }),
+            async onQueryStarted(_, { queryFulfilled, dispatch }) {
+                try {
+                    const result = await queryFulfilled;
+                    dispatch(employeeLoggedIn({ employee: result.data.employee }));
+                } catch (error) {
+                    console.log(error);
+                }
+            },
             providesTags: ["Employee"],
         }),
 

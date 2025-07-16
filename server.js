@@ -42,6 +42,7 @@ import styleRoutes from "./routes/style.js";
 import pendingOrderRoutes from "./routes/pendingOrder.js"
 import invoiceRoutes from "./routes/invoice.js"
 import employeeRoutes from "./routes/employee.js"
+import branchRoutes from "./routes/branch.js"
 
 app.use("/api/customer", customerRoutes)
 app.use("/api/item", itemRoutes)
@@ -52,6 +53,7 @@ app.use("/api/style", styleRoutes);
 app.use("/api/pending-order",pendingOrderRoutes)
 app.use("/api/invoice", invoiceRoutes)
 app.use("/api/employee", employeeRoutes)
+app.use("/api/branch", branchRoutes)
 
 // Serve static files from uploads directory
 
