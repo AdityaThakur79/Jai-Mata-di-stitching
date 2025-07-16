@@ -93,18 +93,18 @@ const staticFabrics = [
 
 const Fabric = () => {
   return (
-    <section className="relative py-12 bg-white">
+    <section className="relative py-8 sm:py-12 bg-white">
       {/* Modern Overlays */}
       <SectionOverlay position="top-left" size="38%" opacity={0.18} />
       <SectionOverlay position="top-right" size="32%" opacity={0.16} />
       <SectionOverlay position="bottom-left" size="28%" opacity={0.14} />
       <SectionOverlay position="bottom-right" size="36%" opacity={0.17} />
-      <div className="max-w-7xl mx-auto px-4">
-        <h2 className="text-3xl  text-center mb-6">Featured Fabrics</h2>
-        <div className="flex justify-center mb-8">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4">
+        <h2 className="text-2xl sm:text-3xl text-center mb-4 sm:mb-6">Featured Fabrics</h2>
+        <div className="flex justify-center mb-6 sm:mb-8">
           <Link to="/fabrics">
             <button
-              className="border-2 px-8 py-2 text-lg font-serif tracking-wider shadow-md transition-all duration-300 uppercase"
+              className="border-2 px-4 sm:px-8 py-1.5 sm:py-2 text-base sm:text-lg font-serif tracking-wider shadow-md transition-all duration-300 uppercase"
               style={{ borderRadius: 0, background: '#e3b873', color: '#222', borderColor: '#e3b873' }}
               onMouseOver={e => { e.currentTarget.style.background = '#222'; e.currentTarget.style.color = '#e3b873'; e.currentTarget.style.borderColor = '#222'; }}
               onMouseOut={e => { e.currentTarget.style.background = '#e3b873'; e.currentTarget.style.color = '#222'; e.currentTarget.style.borderColor = '#e3b873'; }}
@@ -113,7 +113,7 @@ const Fabric = () => {
             </button>
           </Link>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-8">
           {staticFabrics.map((fabric) => (
             <div key={fabric._id} className="flex flex-col items-center">
               <div className="relative w-full aspect-[3/4] overflow-hidden group rounded-lg shadow-lg">
@@ -135,9 +135,9 @@ const Fabric = () => {
                   style={{ willChange: 'transform, opacity', zIndex: 20 }}
                 />
               </div>
-              <div className="mt-3 text-center">
-                <h3 className="text-lg font-medium font-serif mb-1">{fabric.name}</h3>
-                <div className="text-base font-serif text-gray-600 tracking-wide italic ">₹ {fabric.price.toLocaleString('en-IN')}</div>
+              <div className="mt-2 sm:mt-3 text-center">
+                <h3 className="text-base sm:text-lg font-medium font-serif mb-0.5 sm:mb-1">{fabric.name}</h3>
+                <div className="text-sm sm:text-base font-serif text-gray-600 tracking-wide italic ">₹ {fabric.price.toLocaleString('en-IN')}</div>
               </div>
             </div>
           ))}

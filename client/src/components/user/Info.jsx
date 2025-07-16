@@ -66,7 +66,7 @@ const BespokeServicesGrid = () => {
           <h2 className="text-xs font-bold text-amber-600 tracking-[0.2em] uppercase mb-4 md:mb-6 font-serif">
             STOP COMPROMISING
           </h2>
-          <h1 className="text-3xl md:text-5xl lg:text-6xl font-light text-gray-800 mb-4 font-serif leading-tight px-4">
+          <h1 className="text-2xl xs:text-3xl md:text-5xl lg:text-6xl font-light text-gray-800 mb-4 font-serif leading-tight px-2 xs:px-4">
             Bespoke Service – Friendly Prices
           </h1>
           <div className="w-16 md:w-24 h-0.5 bg-amber-600 mx-auto mt-4 md:mt-6"></div>
@@ -74,7 +74,7 @@ const BespokeServicesGrid = () => {
 
         {/* Services Grid */}
         <motion.div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8"
+          className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-8"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
@@ -111,7 +111,7 @@ const BespokeServicesGrid = () => {
                 </div>
 
                 {/* Title */}
-                <h3 className="text-xs md:text-sm font-bold text-gray-700 tracking-[0.15em] uppercase mb-3 md:mb-4 font-serif group-hover:text-amber-700 transition-colors duration-300">
+                <h3 className="text-[11px] xs:text-xs md:text-sm font-bold text-gray-700 tracking-[0.15em] uppercase mb-2 xs:mb-3 md:mb-4 font-serif group-hover:text-amber-700 transition-colors duration-300">
                   {service.title}
                 </h3>
 
@@ -125,7 +125,7 @@ const BespokeServicesGrid = () => {
                 </div>
 
                 {/* Description */}
-                <p className="text-xs md:text-sm text-gray-600 leading-relaxed font-light tracking-wide flex-grow group-hover:text-gray-700 transition-colors duration-300">
+                <p className="text-[11px] xs:text-xs md:text-sm text-gray-600 leading-relaxed font-light tracking-wide flex-grow group-hover:text-gray-700 transition-colors duration-300">
                   {service.description}
                 </p>
 
@@ -154,7 +154,7 @@ const BespokeServicesGrid = () => {
               <div className="w-6 md:w-8 h-px bg-amber-300"></div>
             </div>
           </div>
-          <p className="text-gray-600 text-sm md:text-base italic max-w-2xl mx-auto font-light leading-relaxed">
+          <p className="text-[13px] xs:text-sm md:text-base text-gray-600 italic max-w-2xl mx-auto font-light leading-relaxed">
             "Excellence in craftsmanship, delivered with care and attention to every detail. 
             Your satisfaction is our commitment to timeless quality."
           </p>

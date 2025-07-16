@@ -4,6 +4,7 @@ import Fabric from '@/components/user/Fabric'
 import Feature from '@/components/user/Feature'
 import HeroSection from '@/components/user/Herosection'
 import Info from '@/components/user/Info'
+import UserFooter from '@/components/user/userFooter'
 import UserNavbar from '@/components/user/Usernavbar'
 import React from 'react'
 import { Outlet } from 'react-router-dom'
@@ -14,11 +15,11 @@ const mainLayout = () => {
             <UserNavbar />
             <div>
                 <Outlet>
-                   
+            
 
                 </Outlet>
             </div>
-            <Footer />
+            <UserFooter />
         </>
     )
 }
