@@ -56,6 +56,8 @@ import Fabric from "./components/user/Fabric.jsx";
 import UserNavbar from "./components/user/Usernavbar.jsx";
 import Feature from "./components/user/Feature.jsx";
 import Info from "./components/user/Info.jsx";
+import Categories from "./components/user/Categories.jsx";
+import FabricPage from "./components/user/pages/FabricPage.jsx";
 
 const appRouter = createBrowserRouter([
   //Homepage Routes
@@ -67,16 +69,17 @@ const appRouter = createBrowserRouter([
         path: "/",
         element: (
           <>
-            <UserNavbar />
+          
             <HeroSection />
             <Feature/>
+            <Categories/>
           
             <Fabric />
             <Info/>
           </>
         ),
       },
-      // { path: "/about", element: <About /> },
+      { path: "/fabrics", element: <FabricPage /> },
       // { path: "/services", element: <Services /> },
       // { path: "/men", element: <Men /> },
       // { path: "/women", element: <Women /> },
