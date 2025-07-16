@@ -113,7 +113,7 @@ const Categories = () => {
   };
 
   return (
-    <div className="relative w-full overflow-hidden py-12 mt-10" style={{
+    <div className="relative w-full overflow-hidden py-12  mt-10" style={{
       background: 'linear-gradient(120deg, #fffbe6 0%, #f8f4e6 40%, #e8dcc0 100%)',
       boxShadow: '0 8px 32px rgba(212,175,55,0.07), 0 2px 8px rgba(0,0,0,0.06), 0 0.5px 1.5px rgba(227,184,115,0.08)',
       border: '1.5px solid #e3b873',
@@ -132,173 +132,108 @@ const Categories = () => {
 
       {/* Modal overlay for enlarged image */}
       {(selectedItem || isTransitioning) && (
-        <div 
+        <div
           className={`fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 transition-all duration-600 ease-out ${
             selectedItem && !isTransitioning ? 'opacity-100' : 'opacity-0'
           }`}
           onClick={handleCloseModal}
           style={{ zIndex: 9999, paddingTop: '40px', paddingBottom: '40px', boxSizing: 'border-box' }}
         >
-          <div className="relative">
-            {/* Classic card with enhanced smooth transitions */}
-            <div 
-              className={`bg-white transform transition-all duration-600 ease-out cursor-pointer ${
-                selectedItem && !isTransitioning ? 'scale-100 translate-y-0 opacity-100' : 'scale-95 translate-y-4 opacity-0'
-              }`}
+          {/* Close button */}
+          <button
+            onClick={handleCloseModal}
+            className="absolute top-4 right-4 w-8 h-8 bg-gray-100 hover:bg-gray-200 transition-all duration-300 flex items-center justify-center text-gray-600 hover:text-gray-800 rounded-full"
+            style={{
+              boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+            }}
+          >
+            ×
+          </button>
+          {/* Glassmorphism card with animation */}
+          <div
+            className={`relative flex flex-col items-center justify-center px-4 py-8 sm:px-8 sm:py-10 shadow-[0_8px_40px_0_rgba(40,40,60,0.25),0_2px_8px_0_rgba(212,175,55,0.10)] border border-white/30 backdrop-blur-xl bg-white/30 animate-float-in z-10`}
+            style={{
+              minWidth: 'min(90vw, 380px)',
+              maxWidth: 'min(95vw, 520px)',
+              boxShadow: '0 8px 40px 0 rgba(40,40,60,0.25), 0 2px 8px 0 rgba(212,175,55,0.10)',
+              border: '1.5px solid rgba(255,255,255,0.25)',
+              backdropFilter: 'blur(18px) saturate(1.2)',
+              WebkitBackdropFilter: 'blur(18px) saturate(1.2)',
+              transition: 'transform 0.5s cubic-bezier(.22,1,.36,1), box-shadow 0.5s',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Image hover effect: show second image on hover */}
+            <div
+              className="relative flex items-center justify-center w-full group"
+              style={{ height: '320px' }}
               onMouseEnter={() => setCardHovered(true)}
               onMouseLeave={() => setCardHovered(false)}
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                boxShadow: `
-                  0 25px 50px rgba(0,0,0,0.25),
-                  0 12px 25px rgba(0,0,0,0.15),
-                  0 6px 12px rgba(0,0,0,0.1),
-                  inset 0 1px 0 rgba(255,255,255,0.9),
-                  inset 0 -1px 0 rgba(0,0,0,0.05)
-                `,
-                border: '1px solid rgba(0,0,0,0.08)',
-                padding: '40px',
-                paddingTop: '32px',
-                paddingBottom: '32px',
-                width: '500px',
-                minHeight: '600px'
-              }}
             >
-              {/* Close button */}
-              <button 
-                onClick={handleCloseModal}
-                className="absolute top-4 right-4 w-8 h-8 bg-gray-100 hover:bg-gray-200 transition-all duration-300 flex items-center justify-center text-gray-600 hover:text-gray-800 rounded-full"
+              {/* First image (default) */}
+              <img
+                src={selectedItem ? categories[selectedItem.index].images[0] : '/images/jeans.png'}
+                alt={selectedItem ? categories[selectedItem.index].name : ''}
+                className={`w-full h-full object-cover rounded-2xl shadow-2xl transition-all duration-700 ease-out absolute top-0 left-0 ${
+                  cardHovered ? 'opacity-0 scale-105' : 'opacity-100 scale-100'
+                }`}
                 style={{
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                  filter: cardHovered ? 'blur(2px) brightness(0.8)' : 'blur(0px) brightness(1)',
+                  transform: cardHovered ? 'scale(1.05) rotate(0.3deg)' : 'scale(1) rotate(0deg)',
+                  transformOrigin: 'center center',
+                  boxShadow: '0 12px 40px 0 rgba(40,40,60,0.35), 0 2px 8px 0 rgba(212,175,55,0.10)',
+                  background: '#faf9f6',
                 }}
-              >
-                ×
-              </button>
-
-              {/* Image container */}
-              <div className="relative overflow-hidden shadow-lg border border-gray-200" style={{ width: '100%', height: '400px' }}>
-                {/* First image */}
-                <img
-                  src={selectedItem ? categories[selectedItem.index].images[0] : '/images/jeans.png'}
-                  alt={selectedItem ? categories[selectedItem.index].name : ''}
-                  className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-out ${
-                    cardHovered ? 'opacity-0 scale-105' : 'opacity-100 scale-100'
-                  }`}
-                  style={{
-                    filter: cardHovered ? 'blur(2px) brightness(0.8)' : 'blur(0px) brightness(1)',
-                    transform: cardHovered ? 'scale(1.05) rotate(0.3deg)' : 'scale(1) rotate(0deg)',
-                    transformOrigin: 'center center'
-                  }}
-                />
-                
-                {/* Second image */}
-                <img
-                  src={selectedItem ? categories[selectedItem.index].images[1] : '/images/jeanss2.png'}
-                  alt={selectedItem ? `${categories[selectedItem.index].name} alternate` : ''}
-                  className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-out ${
-                    cardHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-98'
-                  }`}
-                  style={{
-                    filter: cardHovered ? 'blur(0px) brightness(1.05) contrast(1.03)' : 'blur(3px) brightness(0.9)',
-                    transform: cardHovered ? 'scale(1) rotate(0deg)' : 'scale(0.98) rotate(-0.3deg)',
-                    transformOrigin: 'center center'
-                  }}
-                />
-                
-                {/* Elegant transition overlay */}
-                <div 
-                  className={`absolute inset-0 transition-all duration-700 ease-out ${
-                    cardHovered ? 'opacity-100' : 'opacity-0'
-                  }`}
-                  style={{
-                    background: 'linear-gradient(45deg, transparent 0%, rgba(255,255,255,0.1) 30%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.1) 70%, transparent 100%)',
-                    transform: cardHovered ? 'translateX(0)' : 'translateX(-100%)'
-                  }}
-                />
-
-                {/* Hover instruction overlay */}
-                <div 
-                  className={`absolute inset-0 bg-black/30 flex items-center justify-center transition-all duration-500 ease-out ${
-                    cardHovered ? 'opacity-0' : 'opacity-100'
-                  }`}
-                >
-                  <div className="text-white text-center px-6 py-3 bg-black/20 backdrop-blur-sm border border-white/20 rounded-lg">
-                    <p className="text-sm font-medium">Hover to see alternate view</p>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Content section */}
-              <div className="mt-8 text-center">
-                <h3 className={`text-3xl font-bold text-gray-800 mb-4 transition-all duration-600 ease-out ${
-                  selectedItem && !isTransitioning ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+              />
+              {/* Second image (on hover) */}
+              <img
+                src={selectedItem ? categories[selectedItem.index].images[1] : '/images/jeanss2.png'}
+                alt={selectedItem ? `${categories[selectedItem.index].name} alternate` : ''}
+                className={`w-full h-full object-cover rounded-2xl shadow-2xl absolute top-0 left-0 transition-all duration-700 ease-out ${
+                  cardHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-98'
                 }`}
                 style={{
-                  fontFamily: "'Playfair Display', Georgia, serif",
-                  letterSpacing: '0.02em',
-                  textShadow: '0 1px 3px rgba(0,0,0,0.1)'
-                }}>
-                  {selectedItem ? categories[selectedItem.index].name : ''}
-                </h3>
-                
-                {/* Elegant divider */}
-                <div className={`mx-auto mb-6 transition-all duration-600 ease-out ${
-                  selectedItem && !isTransitioning ? 'scale-100 opacity-100' : 'scale-50 opacity-0'
-                }`}
-                style={{
-                  width: '80px',
-                  height: '2px',
-                  background: 'linear-gradient(to right, #d4af37, #ffd700, #d4af37)',
-                  boxShadow: '0 1px 3px rgba(212,175,55,0.3)'
-                }}></div>
-                
-                {/* Image indicators */}
-                <div className="flex justify-center space-x-3 mb-6">
-                  <div className={`w-3 h-3 border-2 transition-all duration-500 ease-out rounded-full ${
-                    !cardHovered ? 'border-amber-500 bg-amber-500 scale-110' : 'border-gray-400 bg-transparent scale-100'
-                  }`} 
-                  style={{
-                    boxShadow: !cardHovered ? '0 2px 8px rgba(245,158,11,0.4)' : 'none'
-                  }}/>
-                  <div className={`w-3 h-3 border-2 transition-all duration-500 ease-out rounded-full ${
-                    cardHovered ? 'border-amber-500 bg-amber-500 scale-110' : 'border-gray-400 bg-transparent scale-100'
-                  }`}
-                  style={{
-                    boxShadow: cardHovered ? '0 2px 8px rgba(245,158,11,0.4)' : 'none'
-                  }}/>
-                </div>
-                
-                {/* Description */}
-                <p className="text-gray-600 text-base leading-relaxed mb-6 px-4 transition-all duration-600 ease-out" style={{
-                  fontFamily: "'Inter', sans-serif"
-                }}>
-                  Explore our premium collection with detailed craftsmanship and quality materials.
-                </p>
-                
-                {/* Action buttons */}
-                <div className="flex justify-center space-x-4">
-                  <button 
-                    className="px-6 py-3 bg-amber-500 text-white font-medium hover:bg-amber-600 transition-all duration-300 transform hover:scale-105 hover:shadow-lg rounded-lg"
-                    style={{
-                      boxShadow: '0 4px 12px rgba(245,158,11,0.3)',
-                      border: '1px solid rgba(0,0,0,0.1)'
-                    }}
-                  >
-                    View Details
-                  </button>
-                  <button 
-                    className="px-6 py-3 bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-all duration-300 transform hover:scale-105 hover:shadow-lg rounded-lg"
-                    style={{
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                      border: '1px solid rgba(0,0,0,0.1)'
-                    }}
-                  >
-                    Add to Cart
-                  </button>
-                </div>
-              </div>
+                  filter: cardHovered ? 'blur(0px) brightness(1.05) contrast(1.03)' : 'blur(3px) brightness(0.9)',
+                  transform: cardHovered ? 'scale(1) rotate(0deg)' : 'scale(0.98) rotate(-0.3deg)',
+                  transformOrigin: 'center center',
+                  boxShadow: '0 12px 40px 0 rgba(40,40,60,0.35), 0 2px 8px 0 rgba(212,175,55,0.10)',
+                  background: '#faf9f6',
+                }}
+              />
+            </div>
+            {/* Content section */}
+            <div className="mt-8 text-center">
+              <h3 className={`text-3xl font-bold text-gray-800 mb-4 transition-all duration-600 ease-out ${
+                selectedItem && !isTransitioning ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+              }`}
+              style={{
+                fontFamily: "'Playfair Display', Georgia, serif",
+                letterSpacing: '0.02em',
+                textShadow: '0 1px 3px rgba(0,0,0,0.1)'
+              }}>
+                {selectedItem ? categories[selectedItem.index].name : ''}
+              </h3>
+              {/* Elegant divider */}
+              <div className={`mx-auto mb-6 transition-all duration-600 ease-out ${
+                selectedItem && !isTransitioning ? 'scale-100 opacity-100' : 'scale-50 opacity-0'
+              }`}
+              style={{
+                width: '80px',
+                height: '2px',
+                background: 'linear-gradient(to right, #d4af37, #ffd700, #d4af37)',
+                boxShadow: '0 1px 3px rgba(212,175,55,0.3)'
+              }}></div>
             </div>
           </div>
+          <style>{`
+            @keyframes float-in {
+              0% { transform: scale(0.95) translateY(40px); opacity: 0.2; }
+              100% { transform: scale(1) translateY(0); opacity: 1; }
+            }
+            .animate-float-in {
+              animation: float-in 0.7s cubic-bezier(.22,1,.36,1);
+            }
+          `}</style>
         </div>
       )}
 
@@ -330,7 +265,7 @@ const Categories = () => {
               justifyContent: 'center', 
               background: 'linear-gradient(135deg, #fffbe6 0%, #f3edea 60%, #e0d3c0 100%)',
               border: '2.5px solid #e3b873',
-              boxShadow: '0 8px 32px rgba(212,175,55,0.08), 0 2px 8px rgba(0,0,0,0.08)',
+              boxShadow: '0 8px 32px rgba(212,175,55,0.08), 0 2px 8px rgba(0,0,0,0.08), 0 8px 32px 0 rgba(30,30,40,0.22)', // added dark shadow
               willChange: 'transform'
             }}>
               {/* Animated golden glow on hover */}
@@ -369,15 +304,14 @@ const Categories = () => {
             
             {/* Category name with enhanced styling */}
             <div
-              className="text-center transform transition-all duration-500 ease-out group-hover:scale-105 group-hover:-translate-y-1"
+              className="text-center font-serif transform transition-all duration-500 ease-out group-hover:scale-105 group-hover:-translate-y-1"
               style={{
-                color: '#b08d57',
-                fontWeight: 700,
+                fontWeight: 400, // normal
                 fontSize: '1.25rem',
                 letterSpacing: '0.045em',
                 textShadow: '0 2px 8px rgba(227,184,115,0.13), 0 1px 2px rgba(0,0,0,0.08)',
                 lineHeight: 1.3,
-                fontFamily: "'Playfair Display', serif",
+                fontFamily: "serif",
                 willChange: 'transform'
               }}
             >
@@ -407,7 +341,7 @@ const Categories = () => {
               justifyContent: 'center', 
               background: 'linear-gradient(135deg, #fffbe6 0%, #f3edea 60%, #e0d3c0 100%)',
               border: '2.5px solid #e3b873',
-              boxShadow: '0 8px 32px rgba(212,175,55,0.08), 0 2px 8px rgba(0,0,0,0.08)',
+              boxShadow: '0 8px 32px rgba(212,175,55,0.08), 0 2px 8px rgba(0,0,0,0.08), 0 8px 32px 0 rgba(30,30,40,0.22)', // added dark shadow
               willChange: 'transform'
             }}>
               {/* Animated golden glow on hover */}
@@ -446,15 +380,14 @@ const Categories = () => {
             
             {/* Category name with enhanced styling */}
             <div
-              className="text-center transform transition-all duration-500 ease-out group-hover:scale-105 group-hover:-translate-y-1"
+              className="text-center font-serif transform transition-all duration-500 ease-out group-hover:scale-105 group-hover:-translate-y-1"
               style={{
-                color: '#b08d57',
-                fontWeight: 700,
+                fontWeight: 400, // normal
                 fontSize: '1.25rem',
                 letterSpacing: '0.045em',
                 textShadow: '0 2px 8px rgba(227,184,115,0.13), 0 1px 2px rgba(0,0,0,0.08)',
                 lineHeight: 1.3,
-                fontFamily: "'Playfair Display', serif",
+                fontFamily: "serif",
                 willChange: 'transform'
               }}
             >

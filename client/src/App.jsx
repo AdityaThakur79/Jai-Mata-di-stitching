@@ -58,6 +58,8 @@ import Feature from "./components/user/Feature.jsx";
 import Info from "./components/user/Info.jsx";
 import Categories from "./components/user/Categories.jsx";
 import FabricPage from "./components/user/pages/FabricPage.jsx";
+import Qa from "./components/user/Qa.jsx";
+import { Gallery } from "./components/user/Gallery.jsx";
 
 const appRouter = createBrowserRouter([
   //Homepage Routes
@@ -76,6 +78,8 @@ const appRouter = createBrowserRouter([
           
             <Fabric />
             <Info/>
+            <Qa/>
+            <Gallery/>
           </>
         ),
       },
