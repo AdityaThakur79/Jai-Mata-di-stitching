@@ -818,6 +818,7 @@ const Employee = () => {
       </div>
     );
   };
+  
   const [downloadEmployeeIdCard] = useDownloadEmployeeIdCardMutation();
 
   const handleDownloadIdCard = async () => {

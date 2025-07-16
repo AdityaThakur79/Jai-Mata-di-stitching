@@ -21,10 +21,10 @@ export const itemMasterApi = createApi({
     }),
 
     getAllItemMasters: builder.query({
-      query: ({ page = 1, limit = 10, search = "" }) => ({
+      query: ({ page = 1, limit = 10, search = "", category = "" }) => ({
         url: "/all",
         method: "GET",
-        params: { page, limit, search },
+        params: { page, limit, search, ...(category ? { category } : {}) },
       }),
       providesTags: ["ItemMaster"],
     }),

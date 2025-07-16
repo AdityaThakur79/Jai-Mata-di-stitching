@@ -25,9 +25,9 @@ import {
 import { Separator } from "@radix-ui/react-dropdown-menu";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  useLoadUserQuery,
-  useLogoutUserMutation,
-} from "../../../features/api/authApi";
+  useGetEmployeeProfileQuery,
+  useEmployeeLoginMutation,
+} from "../../../features/api/employeeApi";
 import { toast } from "sonner";
 import { useSelector } from "react-redux";
 import { Dialog, DialogContent, DialogTrigger } from "@radix-ui/react-dialog";
@@ -35,19 +35,21 @@ import { Dialog, DialogContent, DialogTrigger } from "@radix-ui/react-dialog";
 import { format } from "date-fns";
 
 const Navbar = () => {
-  const { user } = useSelector((store) => store.auth);
-  const [logoutUser, { data, isLoading, isSuccess }] = useLogoutUserMutation();
+  const { employee } = useSelector((store) => store.auth);
+  // No logout mutation for employee shown, so just navigate for now
   const navigate = useNavigate();
 
   const logoutHandler = async () => {
-    await logoutUser();
+    // Implement employee logout logic if available
+    navigate("/employee/login");
   };
   useEffect(() => {
-    if (isSuccess) {
-      toast.success(data.message || "User Logged Out");
-      navigate("/auth/login");
-    }
-  }, [isSuccess]);
+    // No isSuccess check for employee logout shown
+    // if (isSuccess) {
+    //   toast.success(data.message || "User Logged Out");
+    //   navigate("/employee/login");
+    // }
+  }, []);
 
   const [currentTime, setCurrentTime] = useState("");
 
@@ -90,13 +92,13 @@ const Navbar = () => {
         </Link>
 
         <div className="flex items-center gap-4 cursor-pointer">
-          {user ? (
+          {employee ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Avatar>
-                  <AvatarImage src={user?.photoUrl} alt={user?.name} />
+                  <AvatarImage src={employee?.profileImage} alt={employee?.name} />
                   <AvatarFallback>
-                    {user?.name?.charAt(0).toUpperCase() || "U"}
+                    {employee?.name?.charAt(0).toUpperCase() || "E"}
                   </AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
@@ -104,9 +106,9 @@ const Navbar = () => {
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
-                  <Link to="profile">Edit Profile</Link>
+                  <Link to="/employee/profile">View Profile</Link>
                 </DropdownMenuItem>
-                {user.role === "superAdmin" && (
+                {employee.role === "superAdmin" && (
                   <DropdownMenuItem>
                     <Link to="/admin/dashboard">Dashboard</Link>
                   </DropdownMenuItem>
@@ -120,7 +122,7 @@ const Navbar = () => {
             </DropdownMenu>
           ) : (
             <div className="flex gap-2 items-center">
-              <Link to="/login">
+              <Link to="/employee/login">
                 <Button variant="outline">Login</Button>
               </Link>
             </div>
@@ -152,19 +154,20 @@ const Navbar = () => {
 export default Navbar;
 
 const MobileNavbar = () => {
-  const { user } = useSelector((store) => store.auth);
-  const [logoutUser, { data, isLoading, isSuccess }] = useLogoutUserMutation();
+  const { employee } = useSelector((store) => store.auth);
   const navigate = useNavigate();
 
   const logoutHandler = async () => {
-    await logoutUser();
+    // Implement employee logout logic if available
+    navigate("/employee/login");
   };
   useEffect(() => {
-    if (isSuccess) {
-      toast.success(data.message || "User Logged Out");
-      navigate("/");
-    }
-  }, [isSuccess]);
+    // No isSuccess check for employee logout shown
+    // if (isSuccess) {
+    //   toast.success(data?.message || "User Logged Out");
+    //   navigate("/employee/login");
+    // }
+  }, []);
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -191,26 +194,21 @@ const MobileNavbar = () => {
           <DarkMode />
         </SheetHeader>
         <Separator className="mr-2" />
-        {user ? (
+        {employee ? (
           <div className="flex flex-col gap-2">
             <Avatar>
               <AvatarImage
-                src={
-                  `/uploads/profile/${user?.photoUrl}` ||
-                  "https://github.com/shadcn.png"
-                }
-                alt={user?.name}
+                src={employee?.photoUrl}
+                alt={employee?.name}
               />
               <AvatarFallback>
-                {user?.name?.charAt(0).toUpperCase() || "U"}
+                {employee?.name?.charAt(0).toUpperCase() || "E"}
               </AvatarFallback>{" "}
             </Avatar>
-
-            {/* <Link to="mylearning">My Learning</Link> */}
             <DropdownMenuSeparator />
             <Link to="/admin/profile">Edit Profile</Link>
             <DropdownMenuSeparator />
-            {user.role == "superAdmin" && (
+            {employee.role === "superAdmin" && (
               <Link to="/admin/dashboard">Dashboard</Link>
             )}
             <DropdownMenuSeparator />
@@ -223,13 +221,9 @@ const MobileNavbar = () => {
           </div>
         ) : (
           <div className="flex gap-2 items-center">
-            <Link to="/auth/login">
+            <Link to="/employee/login">
               <Button variant="outline">Login</Button>
             </Link>
-            {/* <Link to="/auth/login">
-              {" "}
-              <Button>Signup</Button>
-            </Link> */}
           </div>
         )}
       </SheetContent>

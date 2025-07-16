@@ -46,7 +46,7 @@ const CreateFabric = () => {
   useEffect(() => {
     if (isSuccess) {
       toast.success(data?.message || "Fabric added successfully");
-      navigate("/admin/fabrics");
+      navigate("/employee/fabrics");
     } else if (isError) {
       toast.error(error?.data?.message || "Failed to add fabric");
     }
@@ -157,7 +157,7 @@ const CreateFabric = () => {
       </div>
 
       <div className="flex gap-2 mt-6">
-        <Button variant="outline" onClick={() => navigate("/admin/fabrics")}>
+        <Button variant="outline" onClick={() => navigate("/employee/fabrics")}>
           Cancel
         </Button>
         <Button disabled={isLoading} onClick={handleSubmit}>

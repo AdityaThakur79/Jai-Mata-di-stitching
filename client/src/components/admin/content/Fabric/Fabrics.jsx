@@ -128,7 +128,7 @@ const Fabrics = () => {
                 ))}
               </SelectContent>
             </Select>
-            <Button onClick={() => navigate("/admin/create-fabric")}>
+            <Button onClick={() => navigate("/employee/create-fabric")}>
               Add Fabric
             </Button>
             <Button className="p-2" onClick={refetch}>
@@ -253,7 +253,7 @@ const Fabrics = () => {
                                       alt={selectedFabric.name}
                                       className={`w-full h-full object-cover object-center transition-all duration-500 ease-in-out group-hover:scale-105 ${
                                         showSecondary &&
-                                        selectedFabric.secondaryFabricImage
+                                        selectedFabric?.secondaryFabricImage
                                           ? "opacity-0"
                                           : "opacity-100"
                                       }`}
@@ -430,7 +430,7 @@ const Fabrics = () => {
                         <Button
                           className="p-2 bg-orange-100 text-orange-600 hover:bg-orange-200"
                           onClick={() =>
-                            navigate("/admin/update-fabric", {
+                            navigate("/employee/update-fabric", {
                               state: { fabricId: fabric._id },
                             })
                           }

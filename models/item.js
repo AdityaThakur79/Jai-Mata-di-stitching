@@ -4,6 +4,7 @@ const itemMasterSchema = new mongoose.Schema({
     name: { type: String, required: true, unique: true },
     fields: [{ type: String, required: true }],
     description: { type: String },
+    category: { type: String, required: true, enum: ['men', 'women', 'unisex'] },
     itemImage: { type: String },
     itemImagePublicId: { type: String },
     secondaryItemImage: { type: String },
@@ -12,11 +13,6 @@ const itemMasterSchema = new mongoose.Schema({
         type: Number,
         default: 0,
         min: 0,
-    },
-    branchId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Branch",
-      required: true,
     },
     createdAt: { type: Date, default: Date.now },
 });

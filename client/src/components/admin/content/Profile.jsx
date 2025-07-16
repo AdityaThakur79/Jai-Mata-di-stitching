@@ -12,7 +12,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import React, { useState, useEffect } from 'react'
-import { useLoadUserQuery, useUpdateUserMutation } from "../../../features/api/authApi";
+import { useGetEmployeeProfileQuery, useUpdateEmployeeMutation } from "../../../features/api/employeeApi";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -20,19 +20,17 @@ import { toast } from 'sonner';
 const Profile = () => {
     const [name, setName] = useState("");
     const [profilePhoto, setProfilePhoto] = useState("");
-    const [bannerImage, setBannerImage] = useState("");
-    const { data, isLoading, refetch } = useLoadUserQuery();
+    const { data, isLoading, refetch } = useGetEmployeeProfileQuery();
     const [
-        updateUser,
+        updateEmployee,
         {
-            data: updateUserData,
-            isLoading: updateUserIsLoading,
+            data: updateEmployeeData,
+            isLoading: updateEmployeeIsLoading,
             isError,
             error,
-  
             isSuccess,
         },
-    ] = useUpdateUserMutation();
+    ] = useUpdateEmployeeMutation();
 
     const onChangeHandler = (e) => {
         const file = e.target.files?.[0];
@@ -41,19 +39,15 @@ const Profile = () => {
         if (file) {
             if (fieldName === "profilePhoto") {
                 setProfilePhoto(file);
-            } else if (fieldName === "bannerImage") {
-                setBannerImage(file);
             }
         }
     };
 
-
-    const updateUserHandler = async () => {
+    const updateEmployeeHandler = async () => {
         const formData = new FormData();
         formData.append("name", name);
-        formData.append("profilePhoto", profilePhoto);
-        formData.append("bannerImage", bannerImage);
-        await updateUser(formData);
+        if (profilePhoto) formData.append("profilePhoto", profilePhoto);
+        await updateEmployee(formData);
     };
 
     useEffect(() => {
@@ -63,38 +57,31 @@ const Profile = () => {
     useEffect(() => {
         if (isSuccess) {
             refetch();
-            toast.success(data.message || "Profile updated.");
+            toast.success(updateEmployeeData?.message || "Profile updated.");
         }
         if (isError) {
-            toast.error(error.message || "Failed to update profile");
+            toast.error(error?.data?.message || "Failed to update profile");
         }
-    }, [error, updateUserData, isSuccess, isError]);
+    }, [error, updateEmployeeData, isSuccess, isError]);
 
-    const user = data && data.user;
+    const employee = data && data.employee;
     useEffect(() => {
-        if (user?.name) {
-            setName(user.name);
+        if (employee?.name) {
+            setName(employee.name);
         }
-    }, [user]);
+    }, [employee]);
 
     //Page Skeleton
     if (isLoading) return (
         <>
             <MyProfile />
-
         </>
     )
     return (
         <>
-            <section className="relative block  ">
-                <img
-                    src= {user?.bannerUrl}
-                    alt="Banner"
-                    className="absolute top-0 left-0 w-full h-full object-cover"
-                />
-
+            <section className="relative block">
+                {/* Banner image removed */}
                 <span className="w-full h-full absolute top-0 left-0 opacity-50 bg-black z-1" />
-
                 <div className="top-auto bottom-0 left-0 right-0 w-full absolute pointer-events-none overflow-hidden h-70-px z-20" style={{ transform: 'translateZ(0px)' }}>
                     <svg
                         className="absolute bottom-0 overflow-hidden"
@@ -117,12 +104,11 @@ const Profile = () => {
                             <div className="max-w-4xl mx-auto px-4 my-24">
                                 <h1 className="font-bold text-2xl text-center md:text-left">PROFILE</h1>
 
-
                                 <div className="flex flex-col md:flex-row items-center md:items-start gap-8 my-5">
                                     <div className="flex flex-col items-center">
                                         <Avatar className="h-24 w-24 md:h-32 md:w-32 mb-4">
                                             <AvatarImage
-                                                src= {user?.photoUrl} alt={user?.name}
+                                                src={employee?.photoUrl} alt={employee?.name}
                                             />
                                             <AvatarFallback>CN</AvatarFallback>
                                         </Avatar>
@@ -140,7 +126,7 @@ const Profile = () => {
                                             <h1 className="font-semibold text-gray-900 dark:text-gray-100 ">
                                                 Email:
                                                 <span className="font-normal text-gray-700 dark:text-gray-300 ml-2">
-                                                    {user?.email}
+                                                    {employee?.email}
                                                 </span>
                                             </h1>
                                         </div>
@@ -148,7 +134,7 @@ const Profile = () => {
                                             <h1 className="font-semibold text-gray-900 dark:text-gray-100 ">
                                                 Role:
                                                 <span className="font-normal text-gray-700 dark:text-gray-300 ml-2">
-                                                    {user?.role?.toUpperCase()}
+                                                    {employee?.role?.toUpperCase()}
                                                 </span>
                                             </h1>
                                         </div>
@@ -156,7 +142,7 @@ const Profile = () => {
                                             <h1 className="font-semibold text-gray-900 dark:text-gray-100 ">
                                                 Status:
                                                 <span className="font-normal text-gray-700 dark:text-gray-300 ml-2">
-                                                    {user?.status === false ? "Deactive" : "Active"}
+                                                    {employee?.status === false ? "Deactive" : "Active"}
                                                 </span>
                                             </h1>
                                         </div>
@@ -197,24 +183,13 @@ const Profile = () => {
                                                             name="profilePhoto"
                                                         />
                                                     </div>
-                                                    <div className="grid grid-cols-4 items-center gap-4">
-                                                        <Label>Banner Image</Label>
-                                                        <Input
-                                                            onChange={onChangeHandler}
-                                                            type="file"
-                                                            accept="image/*"
-                                                            className="col-span-3"
-                                                            id="bannerImage"
-                                                            name="bannerImage"
-                                                        />
-                                                    </div>
                                                 </div>
                                                 <DialogFooter>
                                                     <Button
-                                                        disabled={updateUserIsLoading}
-                                                        onClick={updateUserHandler}
+                                                        disabled={updateEmployeeIsLoading}
+                                                        onClick={updateEmployeeHandler}
                                                     >
-                                                        {updateUserIsLoading ? (
+                                                        {updateEmployeeIsLoading ? (
                                                             <>
                                                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                                                 Please wait
@@ -230,7 +205,7 @@ const Profile = () => {
                                         <div className="mb-2 mt-4 text-center">
                                             <h1 className="font-semibold text-gray-900 dark:text-gray-100 ">
                                                 <h1 className="font-normal text-gray-700 dark:text-gray-300 ml-2">
-                                                    {user?.status === false ? "Your account is deactivated. Please contact support for assistance." : ""}
+                                                    {employee?.status === false ? "Your account is deactivated. Please contact support for assistance." : ""}
                                                 </h1>
                                             </h1>
                                         </div>

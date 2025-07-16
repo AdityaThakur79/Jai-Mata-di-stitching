@@ -62,38 +62,21 @@ export const createEmployee = async (req, res) => {
       baseSalary,
       bankDetails,
       emergencyContact,
-      branchId: branchIdFromBody, // Accept branchId from body for directors
+      branchId, // Accept branchId directly from body
     } = req.body;
 
-    // Get creator's info from req.employee (set by isAuthenticated middleware)
-    const creator = req.employee;
-    let branchId;
-    if (creator && ["director", "superAdmin"].includes(creator.role)) {
-      // Director/superAdmin can specify branchId
-      branchId = branchIdFromBody;
-    } else if (creator && creator.branchId) {
-      // Branch admin/master/billing/staff: force their own branchId
-      branchId = creator.branchId;
-    } else {
-      return res.status(400).json({
-        success: false,
-        message: "Branch information is required for employee creation.",
-      });
-    }
     if (!branchId) {
       return res.status(400).json({
         success: false,
-        message: "BranchId is required.",
+        message: "Branch is required.",
       });
     }
-
     if (!name || !mobile || !role || !password) {
       return res.status(400).json({
         success: false,
         message: "Name, mobile, role, and password are required.",
       });
     }
-
     const existing = await Employee.findOne({ mobile });
     if (existing) {
       return res.status(400).json({
@@ -101,29 +84,19 @@ export const createEmployee = async (req, res) => {
         message: "Employee with this mobile already exists.",
       });
     }
-
-    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Calculate validity date (1 year from creation)
     const validityDate = new Date();
     validityDate.setFullYear(validityDate.getFullYear() + 1);
-
     let profileImage = "";
     let aadhaarImage = "";
     let aadhaarPublicId = "";
-
-    // Handle profile image upload (from upload middleware)
     if (req.files && req.files.profileImage && req.files.profileImage[0]) {
       profileImage = req.files.profileImage[0].path;
     }
-
-    // Handle Aadhaar image upload (from upload middleware)
     if (req.files && req.files.aadhaarImage && req.files.aadhaarImage[0]) {
       aadhaarImage = req.files.aadhaarImage[0].path;
       aadhaarPublicId = req.files.aadhaarImage[0].filename;
     }
-
     const employeeId = await generateEmployeeId();
     const newEmployee = await Employee.create({
       name,
@@ -148,7 +121,6 @@ export const createEmployee = async (req, res) => {
       emergencyContact: emergencyContact ? JSON.parse(emergencyContact) : undefined,
       branchId,
     });
-
     res.status(201).json({
       success: true,
       message: "Employee created successfully",
@@ -166,15 +138,13 @@ export const createEmployee = async (req, res) => {
 
 export const getAllEmployees = async (req, res) => {
   try {
-    let { page, limit, search, status } = req.query;
+    let { page, limit, search, status, branchId } = req.query;
     page = parseInt(page) || 1;
     limit = parseInt(limit) || 10;
     const skip = (page - 1) * limit;
     const query = {};
-    // Branch-based filtering
-    const user = req.employee;
-    if (user && !["director", "superAdmin"].includes(user.role)) {
-      query.branchId = user.branchId;
+    if (branchId) {
+      query.branchId = branchId;
     }
     if (search) {
       query.$or = [
@@ -189,21 +159,13 @@ export const getAllEmployees = async (req, res) => {
     }
     if (status && status !== "") {
       query.status = status;
-      console.log("Filtering by status:", status);
-      console.log("Query object:", query);
     }
-    
-    console.log("Final query:", JSON.stringify(query, null, 2));
-    
     const employees = await Employee.find(query)
-      .select("-password") // Exclude password from response
+      .select("-password")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
     const total = await Employee.countDocuments(query);
-    
-    console.log(`Found ${employees.length} employees out of ${total} total`);
-    console.log("Employee statuses:", employees.map(emp => ({ id: emp.employeeId, status: emp.status })));
     return res.status(200).json({
       success: true,
       message: "Employees fetched successfully",
@@ -223,7 +185,6 @@ export const getAllEmployees = async (req, res) => {
   }
 };
 
-
 export const getEmployeeById = async (req, res) => {
   try {
     const { employeeId } = req.body;
@@ -242,7 +203,6 @@ export const getEmployeeById = async (req, res) => {
   }
 };
 
-
 export const updateEmployee = async (req, res) => {
   try {
     const {
@@ -250,92 +210,54 @@ export const updateEmployee = async (req, res) => {
       name,
       mobile,
       email,
-      password,
       gender,
       address,
       aadhaarNumber,
-      joiningDate,
       role,
-      designation,
-      status,
+      joiningDate,
       bloodGroup,
       grade,
       dob,
       baseSalary,
-      advancePayments,
-      salarySlips,
-      documents,
       bankDetails,
       emergencyContact,
-      barcode,
-      existingAadhaarPublicId
+      branchId,
+      status,
     } = req.body;
-    const existingEmployee = await Employee.findOne({ employeeId });
-    if (!existingEmployee) {
+    const employee = await Employee.findOne({ employeeId });
+    if (!employee) {
       return res.status(404).json({ success: false, message: "Employee not found" });
     }
-    let profileImage = existingEmployee.profileImage;
-    let aadhaarImage = existingEmployee.aadhaarImage;
-    let aadhaarPublicId = existingEmployee.aadhaarPublicId;
-
-    // Handle profile image upload (from upload middleware)
+    if (branchId) employee.branchId = branchId;
+    if (name) employee.name = name;
+    if (mobile) employee.mobile = mobile;
+    if (email) employee.email = email;
+    if (gender) employee.gender = gender;
+    if (address) employee.address = address;
+    if (aadhaarNumber) employee.aadhaarNumber = aadhaarNumber;
+    if (role) employee.role = role;
+    if (joiningDate) employee.joiningDate = joiningDate;
+    if (bloodGroup) employee.bloodGroup = bloodGroup;
+    if (grade) employee.grade = grade;
+    if (dob) employee.dob = dob;
+    if (baseSalary) employee.baseSalary = parseFloat(baseSalary);
+    if (bankDetails) employee.bankDetails = typeof bankDetails === "string" ? JSON.parse(bankDetails) : bankDetails;
+    if (emergencyContact) employee.emergencyContact = typeof emergencyContact === "string" ? JSON.parse(emergencyContact) : emergencyContact;
+    if (status) employee.status = status;
+    // Handle profile image upload
     if (req.files && req.files.profileImage && req.files.profileImage[0]) {
-      profileImage = req.files.profileImage[0].path;
-      // Delete old profile image if it exists
-      if (existingEmployee.profileImage && existingEmployee.profileImage.includes('cloudinary')) {
-        const oldPublicId = existingEmployee.profileImage.split('/').pop().split('.')[0];
-        await deleteFromCloudinary(oldPublicId);
-      }
+      employee.profileImage = req.files.profileImage[0].path;
     }
-
-    // Handle Aadhaar image upload (from upload middleware)
+    // Handle Aadhaar image upload
     if (req.files && req.files.aadhaarImage && req.files.aadhaarImage[0]) {
-      aadhaarImage = req.files.aadhaarImage[0].path;
-      aadhaarPublicId = req.files.aadhaarImage[0].filename;
-      // Delete old Aadhaar image if it exists
-      if (existingEmployee.aadhaarPublicId) {
-        await deleteFromCloudinary(existingEmployee.aadhaarPublicId);
-      }
+      employee.aadhaarImage = req.files.aadhaarImage[0].path;
+      employee.aadhaarPublicId = req.files.aadhaarImage[0].filename;
     }
-
-    // Handle Aadhaar image removal (when user wants to remove existing image)
-    if (existingAadhaarPublicId && !req.files?.aadhaarImage) {
-      await deleteFromCloudinary(existingAadhaarPublicId);
-      aadhaarImage = "";
-      aadhaarPublicId = "";
-    }
-
-    existingEmployee.name = name || existingEmployee.name;
-    existingEmployee.mobile = mobile || existingEmployee.mobile;
-    existingEmployee.email = email || existingEmployee.email;
-    if (password) {
-      existingEmployee.password = await bcrypt.hash(password, 10);
-    }
-    existingEmployee.gender = gender || existingEmployee.gender;
-    existingEmployee.address = address || existingEmployee.address;
-    existingEmployee.aadhaarNumber = aadhaarNumber || existingEmployee.aadhaarNumber;
-    existingEmployee.aadhaarImage = aadhaarImage;
-    existingEmployee.aadhaarPublicId = aadhaarPublicId;
-    existingEmployee.joiningDate = joiningDate || existingEmployee.joiningDate;
-    existingEmployee.role = role || existingEmployee.role;
-    existingEmployee.designation = designation || existingEmployee.designation;
-    existingEmployee.status = status || existingEmployee.status;
-    existingEmployee.bloodGroup = bloodGroup || existingEmployee.bloodGroup;
-    existingEmployee.grade = grade || existingEmployee.grade;
-    existingEmployee.dob = dob || existingEmployee.dob;
-    existingEmployee.baseSalary = baseSalary ? parseFloat(baseSalary) : existingEmployee.baseSalary;
-    existingEmployee.advancePayments = advancePayments ? JSON.parse(advancePayments) : existingEmployee.advancePayments;
-    existingEmployee.salarySlips = salarySlips ? JSON.parse(salarySlips) : existingEmployee.salarySlips;
-    existingEmployee.profileImage = profileImage;
-    existingEmployee.documents = documents ? JSON.parse(documents) : existingEmployee.documents;
-    existingEmployee.bankDetails = bankDetails ? JSON.parse(bankDetails) : existingEmployee.bankDetails;
-    existingEmployee.emergencyContact = emergencyContact ? JSON.parse(emergencyContact) : existingEmployee.emergencyContact;
-    existingEmployee.barcode = barcode || existingEmployee.barcode;
-    await existingEmployee.save();
+    await employee.save();
     res.status(200).json({
       success: true,
       message: "Employee updated successfully",
-      employee: existingEmployee,
+      employee,
     });
   } catch (err) {
     console.error("Error updating employee:", err);
@@ -345,26 +267,12 @@ export const updateEmployee = async (req, res) => {
 
 export const deleteEmployee = async (req, res) => {
   try {
-    const { employeeId } = req.body;
-    const employee = await Employee.findOne({ employeeId });
+    const { employeeId, branchId } = req.body;
+    const employee = await Employee.findOneAndDelete({ employeeId, branchId });
     if (!employee) {
       return res.status(404).json({ success: false, message: "Employee not found" });
     }
-
-    // Delete images from Cloudinary before deleting employee
-    if (employee.aadhaarPublicId) {
-      await deleteFromCloudinary(employee.aadhaarPublicId);
-    }
-    if (employee.profileImage && employee.profileImage.includes('cloudinary')) {
-      const profilePublicId = employee.profileImage.split('/').pop().split('.')[0];
-      await deleteFromCloudinary(profilePublicId);
-    }
-
-    await employee.deleteOne();
-    res.status(200).json({
-      success: true,
-      message: "Employee deleted successfully",
-    });
+    res.status(200).json({ success: true, message: "Employee deleted successfully" });
   } catch (err) {
     console.error("Error deleting employee:", err);
     res.status(500).json({ success: false, message: "Internal server error", error: err.message });

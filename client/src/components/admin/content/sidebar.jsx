@@ -45,14 +45,14 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { useLoadUserQuery } from "@/features/api/authApi";
+import { useGetEmployeeProfileQuery } from "../../../features/api/employeeApi";
 import { FaQuestionCircle } from "react-icons/fa";
 import { CiCircleList } from "react-icons/ci";
 
 const Sidebar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { data, isLoading, refetch } = useLoadUserQuery();
-  const user = data && data.user;
+  const { data, isLoading, refetch } = useGetEmployeeProfileQuery();
+  const employee = data && data.employee;
   return (
     <div className="flex flex-col lg:flex-row mt-20">
       {/* Mobile Menu Button */}
@@ -82,6 +82,16 @@ const Sidebar = () => {
               >
                 <LayoutDashboard size={22} />
                 <h2 className="text-sm">Dashboard</h2>
+              </Link>
+            </AccordionItem>
+            <AccordionItem value="item-1">
+              <Link
+                to="/admin/branches"
+                className="flex items-center gap-2 hover:text-[#EB811F] py-4 px-0"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Landmark size={22} />
+                <h2 className="text-sm">Branches</h2>
               </Link>
             </AccordionItem>
 
@@ -391,16 +401,6 @@ const Sidebar = () => {
                   <h2>Style Master</h2>
                 </Link>
               </AccordionContent>
-               <AccordionContent>
-                <Link
-                  to="/admin/branches"
-                  className="flex items-center gap-2 hover:text-[#EB811F]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <Landmark size={22} />
-                  <h2>Branch Master</h2>
-                </Link>
-              </AccordionContent>
             </AccordionItem>
 
              <AccordionItem value="item-12">
@@ -421,9 +421,9 @@ const Sidebar = () => {
               <Button variant="link" className="px-0">
                 {" "}
                 <Avatar>
-                  <AvatarImage src={user?.photoUrl} alt={user?.name} />
+                  <AvatarImage src={employee?.photoUrl} alt={employee?.name} />
                   <AvatarFallback>
-                    {user?.name?.charAt(0).toUpperCase() || "U"}
+                    {employee?.name?.charAt(0).toUpperCase() || "E"}
                   </AvatarFallback>
                 </Avatar>
                 Profile
@@ -432,15 +432,15 @@ const Sidebar = () => {
             <HoverCardContent className="w-50 ml-4">
               <div className="flex justify-between space-x-4">
                 <Avatar>
-                  <AvatarImage src={user?.photoUrl} alt={user?.name} />
+                  <AvatarImage src={employee?.photoUrl} alt={employee?.name} />
                   <AvatarFallback>VC</AvatarFallback>
                 </Avatar>
                 <div className="space-y-1">
-                  <h4 className="text-sm font-semibold">{user?.name}</h4>
-                  <p className="text-sm">{user?.role}</p>
+                  <h4 className="text-sm font-semibold">{employee?.name}</h4>
+                  <p className="text-sm">{employee?.role}</p>
                   <div className="flex items-center pt-2">
                     <span className="text-xs text-muted-foreground">
-                      {user?.status}
+                      {employee?.status}
                     </span>
                   </div>
                   <div className="flex items-center pt-2">

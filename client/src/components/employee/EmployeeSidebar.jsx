@@ -27,10 +27,32 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import toast from "react-hot-toast";
+import {
+  BadgeAlert,
+  BadgeCheck,
+  ContactRound,
+  FilePlus,
+  Landmark,
+  Package,
+  Package2,
+  PackageCheck,
+  PaletteIcon,
+  PersonStandingIcon,
+  Plus,
+  Quote,
+  ReceiptIndianRupee,
+  ReceiptText,
+  Shirt,
+  StarHalf,
+  Truck,
+  User2Icon,
+  Warehouse,
+} from "lucide-react";
+import { selectUserRole } from "@/features/authSlice";
 
 const EmployeeSidebar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { employee } = useSelector((state) => state.auth);
+  const { employee } = useSelector((state) => state?.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -40,60 +62,7 @@ const EmployeeSidebar = () => {
     toast.success("Logged out successfully");
     navigate("/employee/login");
   };
-
-  // Role-based navigation items
-  const getNavigationItems = () => {
-    const baseItems = [
-      {
-        id: "dashboard",
-        label: "Dashboard",
-        icon: LayoutDashboard,
-        path: "/employee/dashboard",
-        roles: ["tailor", "manager", "biller", "director", "admin", "other"],
-      },
-      {
-        id: "profile",
-        label: "My Profile",
-        icon: User,
-        path: "/employee/profile",
-        roles: ["tailor", "manager", "biller", "director", "admin", "other"],
-      },
-    ];
-
-    // Add role-specific items
-    if (employee?.role === "biller" || employee?.role === "manager" || employee?.role === "admin") {
-      baseItems.push({
-        id: "billing",
-        label: "Billing",
-        icon: Receipt,
-        path: "/employee/billing",
-        roles: ["biller", "manager", "admin"],
-      });
-    }
-
-    if (employee?.role === "manager" || employee?.role === "admin") {
-      baseItems.push({
-        id: "reports",
-        label: "Reports",
-        icon: FileText,
-        path: "/employee/reports",
-        roles: ["manager", "admin"],
-      });
-    }
-
-    // Salary slips for all employees
-    baseItems.push({
-      id: "salary",
-      label: "Salary & Payments",
-      icon: HandCoins,
-      path: "/employee/salary",
-      roles: ["tailor", "manager", "biller", "director", "admin", "other"],
-    });
-
-    return baseItems.filter(item => item.roles.includes(employee?.role));
-  };
-
-  const navigationItems = getNavigationItems();
+ 
 
   return (
     <div className="flex flex-col lg:flex-row mt-20">
@@ -116,28 +85,355 @@ const EmployeeSidebar = () => {
       >
         <div className="space-y-4">
           <Accordion type="single" collapsible className="w-full">
-            {navigationItems.map((item) => (
-              <AccordionItem key={item.id} value={item.id}>
+            <AccordionItem value="item-1">
+              <Link
+                to="dashboard"
+                className="flex items-center gap-2 hover:text-[#EB811F] py-4 px-0"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <LayoutDashboard size={22} />
+                <h2 className="text-sm">Dashboard</h2>
+              </Link>
+            </AccordionItem>
+            <AccordionItem value="item-2">
+              <Link
+                to="/employee/branches"
+                className="flex items-center gap-2 hover:text-[#EB811F] py-4 px-0"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Landmark size={22} />
+                <h2 className="text-sm">Branches</h2>
+              </Link>
+            </AccordionItem>
+
+            <AccordionItem value="item-3">
+              <AccordionTrigger className="hover:no-underline">
+                <div className="flex items-center gap-2">
+                  <FileText size={22} />
+                  <span>Bill/Invoice</span>
+                </div>{" "}
+              </AccordionTrigger>
+              <AccordionContent>
                 <Link
-                  to={item.path}
-                  className="flex items-center gap-2 hover:text-[#EB811F] py-4 px-0"
+                  to="/employee/invoices"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <item.icon size={22} />
-                  <h2 className="text-sm">{item.label}</h2>
+                  <Landmark size={22} />
+                  <h2>All Invoice</h2>
                 </Link>
-              </AccordionItem>
-            ))}
+              </AccordionContent>
+              <AccordionContent>
+                <Link
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <ReceiptIndianRupee size={22} />
+                  <h2>Fabric Invoice</h2>
+                </Link>
+              </AccordionContent>
+              <AccordionContent>
+                <Link
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <ReceiptText size={22} />
+                  <h2>Stitching Invoice</h2>
+                </Link>
+              </AccordionContent>
+              <AccordionContent>
+                <Link
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Quote size={22} />
+                  <h2>Quotation</h2>
+                </Link>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-4">
+              <AccordionTrigger className="hover:no-underline">
+                <div className="flex items-center gap-2">
+                  <ReceiptText size={22} />
+                  <span>Measurement Slip</span>
+                </div>{" "}
+              </AccordionTrigger>
+              <AccordionContent>
+                <Link
+                  to="/employee/pending-orders"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Receipt size={22} />
+                  <h2>Slip for Billing</h2>
+                </Link>
+              </AccordionContent>
+              <AccordionContent>
+                <Link
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <BadgeAlert size={22} />
+                  <h2>Pending Slip</h2>
+                </Link>
+              </AccordionContent>
+              <AccordionContent>
+                <Link
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <BadgeCheck size={22} />
+                  <h2>Printed Slip</h2>
+                </Link>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-5">
+              <AccordionTrigger className="hover:no-underline">
+                <div className="flex items-center gap-2">
+                  <Warehouse size={22} />
+                  <span>Stocks</span>
+                </div>{" "}
+              </AccordionTrigger>
+              <AccordionContent>
+                <Link
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Shirt size={22} />
+                  <h2>Full Ready</h2>
+                </Link>
+              </AccordionContent>
+              <AccordionContent>
+                <Link
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <LayoutDashboard size={22} />
+                  <h2>Partial Ready</h2>
+                </Link>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-6">
+              <AccordionTrigger className="hover:no-underline">
+                <div className="flex items-center gap-2">
+                  <Truck size={22} />
+                  <span>Delivery</span>
+                </div>{" "}
+              </AccordionTrigger>
+              <AccordionContent>
+                <Link
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <PackageCheck size={22} />
+                  <h2>Full Delivery</h2>
+                </Link>
+              </AccordionContent>
+              <AccordionContent>
+                <Link
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <StarHalf size={22} />
+                  <h2>Partial Delivery</h2>
+                </Link>
+              </AccordionContent>
+              <AccordionContent>
+                <Link
+                  to="#"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Package2 size={22} />
+                  <h2>All Delivery</h2>
+                </Link>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-7">
+              <Link
+                to="dashboard"
+                className="flex items-center gap-2 hover:text-[#EB811F] py-4 px-0"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Package size={22} />
+                <h2 className="text-sm">Order Details</h2>
+              </Link>
+            </AccordionItem>
+
+            <AccordionItem value="item-8">
+              <AccordionTrigger className="hover:no-underline">
+                <div className="flex items-center gap-2">
+                  <ContactRound size={22} />
+                  <span>Employee</span>
+                </div>{" "}
+              </AccordionTrigger>
+              <AccordionContent>
+                <Link
+                  to="/employee/employees"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <User size={22} />
+                  <h2>Employees</h2>
+                </Link>
+              </AccordionContent>
+              <AccordionContent>
+                <Link
+                  to="/employee/employee-advance"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <HandCoins size={22} />
+                  <h2>Employee Salary Slip</h2>
+                </Link>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-9">
+              <Link
+                to="#"
+                className="flex items-center gap-2 hover:text-[#EB811F] py-4 px-0"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <ReceiptIndianRupee size={22} />
+                <h2 className="text-sm">Fabric Invoice</h2>
+              </Link>
+            </AccordionItem>
+
+            <AccordionItem value="item-10">
+              <Link
+                to="#"
+                className="flex items-center gap-2 hover:text-[#EB811F] py-4 px-0"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <ReceiptText size={22} />
+                <h2 className="text-sm">Stitching Invoice</h2>
+              </Link>
+            </AccordionItem>
+
+            <AccordionItem value="item-11">
+              <Link
+                to="/employee/create-employee"
+                className="flex items-center gap-2 hover:text-[#EB811F] py-4 px-0"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Plus size={22} />
+                <h2 className="text-sm">Add Employee</h2>
+              </Link>
+            </AccordionItem>
+
+            <AccordionItem value="item-12">
+              <AccordionTrigger className="hover:no-underline">
+                <div className="flex items-center gap-2">
+                  <ContactRound size={22} />
+                  <span>Masters</span>
+                </div>{" "}
+              </AccordionTrigger>
+              <AccordionContent>
+                <Link
+                  to="/employee/customers"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <PersonStandingIcon size={22} />
+                  <h2>Customer Master</h2>
+                </Link>
+              </AccordionContent>
+              <AccordionContent>
+                <Link
+                  to="/employee/items"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <FilePlus size={22} />
+                  <h2>Item Master</h2>
+                </Link>
+              </AccordionContent>
+              <AccordionContent>
+                <Link
+                  to="/employee/fabrics"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Shirt size={22} />
+                  <h2>Fabric Master</h2>
+                </Link>
+              </AccordionContent>
+              <AccordionContent>
+                <Link
+                  to="/employee/masters"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <User2Icon size={22} />
+                  <h2>Master Master</h2>
+                </Link>
+              </AccordionContent>
+              <AccordionContent>
+                <Link
+                  to="/employee/salesmans"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <PersonStandingIcon size={22} />
+                  <h2>Salesman Master</h2>
+                </Link>
+              </AccordionContent>
+              <AccordionContent>
+                <Link
+                  to="/employee/styles"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <PaletteIcon size={22} />
+                  <h2>Style Master</h2>
+                </Link>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-13">
+              <Link
+                to="/employee/create-pending-order"
+                className="flex items-center gap-2 hover:text-[#EB811F] py-4 px-0"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Plus size={22} />
+                <h2 className="text-sm">Create Order</h2>
+              </Link>
+            </AccordionItem>
+
+            <AccordionItem value="item-14">
+              <Link
+                to="/employee/employee-dashboard"
+                className="flex items-center gap-2 hover:text-[#EB811F] py-4 px-0"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <LayoutDashboard size={22} />
+                <h2 className="text-sm">Employee Dashboard</h2>
+              </Link>
+            </AccordionItem>
           </Accordion>
 
-          {/* Profile Section */}
           <HoverCard>
             <HoverCardTrigger asChild>
               <Button variant="link" className="px-0">
                 <Avatar>
                   <AvatarImage src={employee?.profileImage} alt={employee?.name} />
                   <AvatarFallback>
-                    {employee?.name?.charAt(0).toUpperCase() || "E"}
+                    {employee?.name?.charAt(0).toUpperCase() || "U"}
                   </AvatarFallback>
                 </Avatar>
                 Profile
@@ -147,24 +443,20 @@ const EmployeeSidebar = () => {
               <div className="flex justify-between space-x-4">
                 <Avatar>
                   <AvatarImage src={employee?.profileImage} alt={employee?.name} />
-                  <AvatarFallback>{employee?.name?.charAt(0).toUpperCase() || "E"}</AvatarFallback>
+                  <AvatarFallback>VC</AvatarFallback>
                 </Avatar>
                 <div className="space-y-1">
                   <h4 className="text-sm font-semibold">{employee?.name}</h4>
-                  <p className="text-sm capitalize">{employee?.role}</p>
-                  <p className="text-xs text-muted-foreground">
-                    ID: {employee?.employeeId}
-                  </p>
+                  <p className="text-sm">{employee?.role}</p>
                   <div className="flex items-center pt-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleLogout}
-                      className="flex items-center gap-1"
-                    >
-                      <LogOut className="w-3 h-3" />
-                      Logout
-                    </Button>
+                    <span className="text-xs text-muted-foreground">
+                      {employee?.status}
+                    </span>
+                  </div>
+                  <div className="flex items-center pt-2">
+                    <span className="text-xs text-muted-foreground">
+                      <Link to="/employee/profile">View Profile</Link>
+                    </span>
                   </div>
                 </div>
               </div>
@@ -181,4 +473,4 @@ const EmployeeSidebar = () => {
   );
 };
 
-export default EmployeeSidebar; 
+export default EmployeeSidebar;

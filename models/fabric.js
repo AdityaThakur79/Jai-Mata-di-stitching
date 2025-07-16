@@ -46,11 +46,6 @@ const fabricMasterSchema = new mongoose.Schema({
   description: {
     type: String,
   },
-  branchId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Branch",
-    required: true,
-  },
   createdAt: {
     type: Date,
     default: Date.now,
