@@ -37,7 +37,7 @@ const Feature = () => {
     }}>
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }} />
       
-      <div className="whitespace-nowrap flex items-center animate-scroll-infinite" style={{ animationDuration: '35s' }}>
+      <div className="whitespace-nowrap flex items-center animate-scroll-infinite" style={{ animationDuration: '15s' }}>
         {[...Array(2)].map((_, idx) => (
           <div key={idx} className="flex">
             {features.map((feature, i) => (
