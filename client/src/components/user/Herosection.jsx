@@ -3,17 +3,17 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const slides = [
   {
-    image: "/images/banner1.png",
+    image: "/images/banner-1.png",
     headline: "Modern Tailoring for the Modern Man",
     text: "Tailor Made London offers high quality bespoke tailoring combining innovative 3D body scanning technology with traditional tailoring craft.",
   },
   {
-    image: "/images/banner1.png",
+    image: "/images/banner-2.png",
     headline: "Craftsmanship Meets Innovation",
     text: "Experience the perfect blend of traditional Hong Kong tailoring with modern precision and contemporary style.",
   },
   {
-    image: "/images/banner1.png",
+    image: "/images/banner-3.png",
     headline: "Bespoke Excellence Since 1984",
     text: "Four decades of creating exceptional garments for discerning gentlemen who appreciate quality and attention to detail.",
   },
@@ -64,8 +64,8 @@ const HeroSection = () => {
           </div>
 
           {/* Overlays */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/50 to-black/30 z-10 pointer-events-none" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/40 z-10 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-black/10 to-black/10 z-10 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/20 z-10 pointer-events-none" />
 
           {/* Content */}
           <div className="absolute inset-0 flex items-center justify-start px-4 sm:px-8 md:px-12 lg:px-20 xl:px-40 pt-[12vh] sm:pt-0 z-20">

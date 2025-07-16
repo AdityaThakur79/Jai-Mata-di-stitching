@@ -10,6 +10,7 @@ import { styleApi } from "@/features/api/styleApi.js";
 import { pendingOrderApi } from "@/features/api/pendingOrderApi.js";
 import { invoiceApi } from "@/features/api/invoiceApi.js";
 import { employeeApi } from "@/features/api/employeeApi.js";
+import { branchApi } from "@/features/api/branchApi.js";
 
 export const appStore = configureStore({
   reducer: rootReducer,
@@ -25,6 +26,7 @@ export const appStore = configureStore({
       pendingOrderApi.middleware,
       invoiceApi.middleware,
       employeeApi.middleware,
+      branchApi.middleware,
     ),
 });
 
