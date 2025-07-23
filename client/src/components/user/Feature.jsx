@@ -1,56 +1,36 @@
 import React from 'react';
-import { Search, Globe, Users, Shield, Award } from 'lucide-react';
+import { Scissors, Award, UserCheck, Shield, Star, Truck } from 'lucide-react';
 
 const features = [
   {
-    icon: <Search className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10" color="#2c3e50" strokeWidth={1.5} />,
-    title: 'Order Tracking',
-    subtitle: 'For all orders*',
+    icon: <Scissors className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10" color="#EB811F" strokeWidth={1.5} />,
+    title: 'Master Tailoring',
+    subtitle: 'Expert craftsmanship in every stitch',
   },
   {
-    icon: <Globe className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10" color="#2c3e50" strokeWidth={1.5} />,
-    title: 'Global Fulfillment',
-    subtitle: 'Worldwide Delivery',
+    icon: <Award className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10" color="#EB811F" strokeWidth={1.5} />,
+    title: 'Premium Fabrics',
+    subtitle: 'Handpicked for comfort & style',
   },
   {
-    icon: <Users className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10" color="#2c3e50" strokeWidth={1.5} />,
-    title: '200K+',
-    subtitle: 'Satisfied Customers',
+    icon: <UserCheck className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10" color="#EB811F" strokeWidth={1.5} />,
+    title: 'Personalized Fitting',
+    subtitle: 'Tailored to your unique measurements',
   },
   {
-    icon: <Shield className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10" color="#2c3e50" strokeWidth={1.5} />,
-    title: 'Certified Quality',
-    subtitle: 'ISO Standards',
+    icon: <Shield className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10" color="#EB811F" strokeWidth={1.5} />,
+    title: 'Quality Assurance',
+    subtitle: 'Strict checks for lasting satisfaction',
   },
   {
-    icon: <Award className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10" color="#2c3e50" strokeWidth={1.5} />,
-    title: 'Premium Grade',
-    subtitle: 'Superior Materials',
+    icon: <Star className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10" color="#EB811F" strokeWidth={1.5} />,
+    title: 'Bespoke Experience',
+    subtitle: 'Every detail, just for you',
   },
   {
-    icon: <Search className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10" color="#2c3e50" strokeWidth={1.5} />,
-    title: 'Order Tracking',
-    subtitle: 'For all orders*',
-  },
-  {
-    icon: <Globe className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10" color="#2c3e50" strokeWidth={1.5} />,
-    title: 'Global Fulfillment',
-    subtitle: 'Worldwide Delivery',
-  },
-  {
-    icon: <Users className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10" color="#2c3e50" strokeWidth={1.5} />,
-    title: '200K+',
-    subtitle: 'Satisfied Customers',
-  },
-  {
-    icon: <Shield className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10" color="#2c3e50" strokeWidth={1.5} />,
-    title: 'Certified Quality',
-    subtitle: 'ISO Standards',
-  },
-  {
-    icon: <Award className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10" color="#2c3e50" strokeWidth={1.5} />,
-    title: 'Premium Grade',
-    subtitle: 'Superior Materials',
+    icon: <Truck className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10" color="#EB811F" strokeWidth={1.5} />,
+    title: 'Timely Delivery',
+    subtitle: 'On time, every time',
   },
 ];
 

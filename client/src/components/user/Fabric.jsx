@@ -128,7 +128,7 @@ const Fabric = () => {
       <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
         {/* Enhanced Header Section */}
         <BlurFade delay={0.1}>
-          <div className="text-center mb-12 md:mb-20">
+          <div className="text-center mb-6 md:mb-20">
             {/* Decorative Icon */}
             <div className="mb-6 md:mb-8 animate-pulse">
               <svg className="w-16 h-16 md:w-20 md:h-20 mx-auto text-amber-600" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -166,30 +166,12 @@ const Fabric = () => {
             <div className="flex justify-center animate-fadeInUp" style={{ animationDelay: '0.8s' }}>
               <Link to="/fabrics">
                 <button
-                  className="relative border-2 px-6 sm:px-8 py-2 sm:py-3 text-base sm:text-lg font-serif tracking-wider shadow-lg transition-all duration-500 uppercase overflow-hidden group"
-                  style={{ 
-                    borderRadius: '2px', 
-                    background: '#e3b873', 
-                    color: '#222', 
-                    borderColor: '#e3b873' 
-                  }}
-                  onMouseOver={e => { 
-                    e.currentTarget.style.background = '#222'; 
-                    e.currentTarget.style.color = '#e3b873'; 
-                    e.currentTarget.style.borderColor = '#222'; 
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.2)';
-                  }}
-                  onMouseOut={e => { 
-                    e.currentTarget.style.background = '#e3b873'; 
-                    e.currentTarget.style.color = '#222'; 
-                    e.currentTarget.style.borderColor = '#e3b873'; 
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-                  }}
+                  className="border-2 px-6 sm:px-8 py-2 sm:py-3 text-base sm:text-lg font-serif tracking-wider shadow-md transition-all duration-300 uppercase"
+                  style={{ borderRadius: 0, background: '#e3b873', color: '#222', borderColor: '#e3b873' }}
+                  onMouseOver={e => { e.currentTarget.style.background = '#222'; e.currentTarget.style.color = '#e3b873'; e.currentTarget.style.borderColor = '#222'; }}
+                  onMouseOut={e => { e.currentTarget.style.background = '#e3b873'; e.currentTarget.style.color = '#222'; e.currentTarget.style.borderColor = '#e3b873'; }}
                 >
-                  <span className="relative z-10">VIEW ALL FABRICS</span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-amber-600 opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
+                  VIEW ALL FABRICS
                 </button>
               </Link>
             </div>

@@ -160,32 +160,14 @@ const MenItems = () => {
             
             {/* CTA Button */}
             <div className="flex justify-center animate-fadeInUp" style={{ animationDelay: '0.8s' }}>
-              <Link to="/men-items">
+              <Link to="/men">
                 <button
-                  className="relative border-2 px-6 sm:px-8 py-2 sm:py-3 text-base sm:text-lg font-serif tracking-wider shadow-lg transition-all duration-500 uppercase overflow-hidden group"
-                  style={{ 
-                    borderRadius: '2px', 
-                    background: '#e3b873', 
-                    color: '#222', 
-                    borderColor: '#e3b873' 
-                  }}
-                  onMouseOver={e => { 
-                    e.currentTarget.style.background = '#222'; 
-                    e.currentTarget.style.color = '#e3b873'; 
-                    e.currentTarget.style.borderColor = '#222'; 
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.2)';
-                  }}
-                  onMouseOut={e => { 
-                    e.currentTarget.style.background = '#e3b873'; 
-                    e.currentTarget.style.color = '#222'; 
-                    e.currentTarget.style.borderColor = '#e3b873'; 
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-                  }}
+                  className="border-2 px-6 sm:px-8 py-2 sm:py-3 text-base sm:text-lg font-serif tracking-wider shadow-md transition-all duration-300 uppercase"
+                  style={{ borderRadius: 0, background: '#e3b873', color: '#222', borderColor: '#e3b873' }}
+                  onMouseOver={e => { e.currentTarget.style.background = '#222'; e.currentTarget.style.color = '#e3b873'; e.currentTarget.style.borderColor = '#222'; }}
+                  onMouseOut={e => { e.currentTarget.style.background = '#e3b873'; e.currentTarget.style.color = '#222'; e.currentTarget.style.borderColor = '#e3b873'; }}
                 >
-                  <span className="relative z-10">VIEW ALL ITEMS</span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-amber-600 opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
+                  VIEW ALL ITEMS
                 </button>
               </Link>
             </div>

@@ -93,7 +93,7 @@ const UserNavbar = () => {
             </div>
 
             {/* Center - Logo */}
-            <div className="flex-1 flex justify-center lg:flex-none">
+            <div className="absolute left-1/2 transform -translate-x-1/2 lg:relative lg:left-auto lg:transform-none lg:flex-1 lg:flex lg:justify-center lg:flex-none">
               <div className="flex items-center justify-center">
               <a href='/'>  <img 
                   src="/images/jmd_logo.jpeg" 
@@ -106,7 +106,20 @@ const UserNavbar = () => {
 
             {/* Right - Contact Button (Desktop) */}
             <div className="hidden lg:block">
-              <button className="px-6 py-2 bg-gray-900 text-white text-sm font-medium tracking-wide uppercase rounded-sm hover:bg-yellow-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+              <button 
+                className="border-2 px-6 py-2.5 text-sm font-serif tracking-wider shadow-md transition-all duration-300 uppercase"
+                style={{ borderRadius: 0, background: '#e3b873', color: '#222', borderColor: '#e3b873' }}
+                onMouseOver={e => { 
+                  e.currentTarget.style.background = '#222'; 
+                  e.currentTarget.style.color = '#e3b873'; 
+                  e.currentTarget.style.borderColor = '#222'; 
+                }}
+                onMouseOut={e => { 
+                  e.currentTarget.style.background = '#e3b873'; 
+                  e.currentTarget.style.color = '#222'; 
+                  e.currentTarget.style.borderColor = '#e3b873'; 
+                }}
+              >
                 Contact Us
               </button>
             </div>
@@ -128,7 +141,7 @@ const UserNavbar = () => {
       <div className={`transition-all duration-300 ${
         isScrolled ? 'bg-gray-50 border-b border-gray-200' : 'bg-gray-50 border-b border-gray-200'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
           
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center justify-center space-x-12 h-14">
@@ -213,77 +226,73 @@ const UserNavbar = () => {
 
           {/* Mobile Navigation */}
           {isMenuOpen && (
-            <div className="lg:hidden border-t border-gray-200">
-              <div className="py-4 space-y-1">
-                
-                <a href="/about" className="block px-4 py-3 text-gray-700 hover:text-yellow-600 hover:bg-gray-100 transition-all duration-200 rounded-md">
-                  <span className="text-sm font-medium tracking-wide uppercase">About</span>
-                </a>
+            <div className="lg:hidden border-t h-screen  border-amber-200/50 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 py-3 space-y-1">
+              
+              <a href="/about" className="block px-4 py-2.5 text-gray-700 hover:text-amber-600 hover:bg-amber-100/50 transition-all duration-300 rounded-lg mx-2">
+                <span className="text-sm font-medium tracking-wider uppercase font-serif">About</span>
+              </a>
 
-                {/* Mobile Collections Dropdown */}
-                <div>
-                  <button
-                    onClick={() => handleDropdownToggle('mobileCatalog')}
-                    className="flex items-center justify-between w-full px-4 py-3 text-gray-700 hover:text-yellow-600 hover:bg-gray-100 transition-all duration-200 rounded-md focus:outline-none"
-                  >
-                    <span className="text-sm font-medium tracking-wide uppercase">Collections</span>
-                    <ChevronDown className={`w-4 h-4 text-gray-500 transition-all duration-200 ${
-                      activeDropdown === 'mobileCatalog' ? 'rotate-180 text-yellow-600' : ''
-                    }`} />
-                  </button>
-                  
-                  {activeDropdown === 'mobileCatalog' && (
-                    <div className="mt-2 ml-4 space-y-1 border-l-2 border-yellow-500 pl-4">
-                      {catalogItems.map((item, index) => (
-                        <a
-                          key={index}
-                          href={item.href}
-                          className="block py-2 px-3 text-gray-600 hover:text-yellow-600 hover:bg-gray-50 transition-all duration-200 rounded-md text-sm"
-                        >
-                          {item.name}
-                        </a>
-                      ))}
-                    </div>
-                  )}
+              <a href="/men" className="block px-4 py-2.5 text-gray-700 hover:text-amber-600 hover:bg-amber-100/50 transition-all duration-300 rounded-lg mx-2">
+                <span className="text-sm font-medium tracking-wider uppercase font-serif">Men</span>
+              </a>
+
+              <a href="/women" className="block px-4 py-2.5 text-gray-700 hover:text-amber-600 hover:bg-amber-100/50 transition-all duration-300 rounded-lg mx-2">
+                <span className="text-sm font-medium tracking-wider uppercase font-serif">Women</span>
+              </a>
+
+              <a href="/fabrics" className="block px-4 py-2.5 text-gray-700 hover:text-amber-600 hover:bg-amber-100/50 transition-all duration-300 rounded-lg mx-2">
+                <span className="text-sm font-medium tracking-wider uppercase font-serif">Fabrics</span>
+              </a>
+
+              <a href="/services" className="block px-4 py-2.5 text-gray-700 hover:text-amber-600 hover:bg-amber-100/50 transition-all duration-300 rounded-lg mx-2">
+                <span className="text-sm font-medium tracking-wider uppercase font-serif">Services</span>
+              </a>
+
+              <a href="/gallery" className="block px-4 py-2.5 text-gray-700 hover:text-amber-600 hover:bg-amber-100/50 transition-all duration-300 rounded-lg mx-2">
+                <span className="text-sm font-medium tracking-wider uppercase font-serif">Gallery</span>
+              </a>
+
+              {/* <a href="/custom-tailoring" className="block px-4 py-2.5 text-gray-700 hover:text-amber-600 hover:bg-amber-100/50 transition-all duration-300 rounded-lg mx-2">
+                <span className="text-sm font-medium tracking-wider uppercase font-serif">Custom Tailoring</span>
+              </a> */}
+
+              <a href="/contact" className="block px-4 py-2.5 text-gray-700 hover:text-amber-600 hover:bg-amber-100/50 transition-all duration-300 rounded-lg mx-2">
+                <span className="text-sm font-medium tracking-wider uppercase font-serif">Contact</span>
+              </a>
+
+              {/* Mobile Social Links */}
+              <div className="pt-3 mt-3 border-t border-amber-200/50">
+                <div className="flex items-center justify-center space-x-6">
+                  <a href="#" className="p-2 text-gray-600 hover:text-amber-600 hover:bg-amber-100 transition-all duration-300 rounded-full">
+                    <Facebook className="w-5 h-5" />
+                  </a>
+                  <a href="https://instagram.com/jmdtailors" className="p-2 text-gray-600 hover:text-amber-600 hover:bg-amber-100 transition-all duration-300 rounded-full">
+                    <Instagram className="w-5 h-5" />
+                  </a>
+                  <a href="#" className="p-2 text-gray-600 hover:text-amber-600 hover:bg-amber-100 transition-all duration-300 rounded-full">
+                    <Twitter className="w-5 h-5" />
+                  </a>
                 </div>
+              </div>
 
-                <a href="/fabrics" className="block px-4 py-3 text-gray-700 hover:text-yellow-600 hover:bg-gray-100 transition-all duration-200 rounded-md">
-                  <span className="text-sm font-medium tracking-wide uppercase">Fabrics</span>
-                </a>
-
-                <a href="/gallery" className="block px-4 py-3 text-gray-700 hover:text-yellow-600 hover:bg-gray-100 transition-all duration-200 rounded-md">
-                  <span className="text-sm font-medium tracking-wide uppercase">Gallery</span>
-                </a>
-
-                <a href="/services" className="block px-4 py-3 text-gray-700 hover:text-yellow-600 hover:bg-gray-100 transition-all duration-200 rounded-md">
-                  <span className="text-sm font-medium tracking-wide uppercase">Services</span>
-                </a>
-
-                <a href="/contact" className="block px-4 py-3 text-gray-700 hover:text-yellow-600 hover:bg-gray-100 transition-all duration-200 rounded-md">
-                  <span className="text-sm font-medium tracking-wide uppercase">Contact</span>
-                </a>
-
-                {/* Mobile Social Links */}
-                <div className="pt-4 mt-4 border-t border-gray-200">
-                  <div className="flex items-center justify-center space-x-6">
-                    <a href="#" className="text-gray-600 hover:text-yellow-500 transition-colors duration-200">
-                      <Facebook className="w-5 h-5" />
-                    </a>
-                    <a href="#" className="text-gray-600 hover:text-yellow-500 transition-colors duration-200">
-                      <Instagram className="w-5 h-5" />
-                    </a>
-                    <a href="#" className="text-gray-600 hover:text-yellow-500 transition-colors duration-200">
-                      <Twitter className="w-5 h-5" />
-                    </a>
-                  </div>
-                </div>
-
-                {/* Mobile Contact Button */}
-                <div className="pt-4 mt-4 border-t border-gray-200">
-                  <button className="w-full px-4 py-3 bg-gray-900 text-white text-sm font-medium tracking-wide uppercase rounded-md hover:bg-yellow-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500">
-                    Contact Us
-                  </button>
-                </div>
+              {/* Mobile Contact Button */}
+              <div className="pt-3 mt-3 border-t border-amber-200/50 px-4">
+                <button 
+                  className="w-full border-2 px-4 py-3 text-sm font-serif tracking-wider shadow-md transition-all duration-300 uppercase"
+                  style={{ borderRadius: 0, background: '#e3b873', color: '#222', borderColor: '#e3b873' }}
+                  onMouseOver={e => { 
+                    e.currentTarget.style.background = '#222'; 
+                    e.currentTarget.style.color = '#e3b873'; 
+                    e.currentTarget.style.borderColor = '#222'; 
+                  }}
+                  onMouseOut={e => { 
+                    e.currentTarget.style.background = '#e3b873'; 
+                    e.currentTarget.style.color = '#222'; 
+                    e.currentTarget.style.borderColor = '#e3b873'; 
+                  }}
+                >
+                  Contact Us
+                </button>
               </div>
             </div>
           )}

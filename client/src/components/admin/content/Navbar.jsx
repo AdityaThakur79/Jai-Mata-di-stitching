@@ -87,7 +87,7 @@ const Navbar = () => {
           <img
             src="/images/jmd_logo.jpeg"
             alt="Jai Mata Di Logo"
-            className="w-28 h-auto object-contain"
+            className="w-20 h-auto object-contain"
           />
         </Link>
 

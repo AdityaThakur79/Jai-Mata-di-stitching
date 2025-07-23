@@ -243,7 +243,7 @@ const Categories = () => {
             fontFamily: "'Playfair Display', Georgia, serif",
             letterSpacing: '0.02em',
           }}>
-            Shop by Category
+            Stitch by Category
           </h2>
           <div className="mx-auto w-16 h-0.5 bg-gradient-to-r from-amber-400 to-orange-400 rounded-full"></div>
         </div>
