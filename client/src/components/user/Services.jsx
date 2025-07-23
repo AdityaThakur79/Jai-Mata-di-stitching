@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
 const services = [
   {
@@ -152,7 +153,7 @@ export default function Services() {
         
         <BlurFade delay={0.2}>
           <div className="flex justify-center mb-8 sm:mb-12">
-            <button
+            <Link to="/services"
               className="border-2 px-6 sm:px-8 py-2 sm:py-3 text-base sm:text-lg font-serif tracking-wider shadow-md transition-all duration-300 uppercase hover:shadow-lg"
               style={{ 
                 borderRadius: 0, 
@@ -172,7 +173,7 @@ export default function Services() {
               }}
             >
               VIEW ALL SERVICES
-            </button>
+            </Link>
           </div>
         </BlurFade>
 
@@ -218,7 +219,7 @@ export default function Services() {
             <p className="text-gray-600 mb-6 font-serif text-lg">
               Expert tailoring with precision and care
             </p>
-            <button
+            <Link to="/custom-tailoring"
               className="border-2 px-8 sm:px-12 py-3 sm:py-4 text-base sm:text-lg font-serif tracking-wider shadow-md transition-all duration-300 uppercase hover:shadow-lg"
               style={{ 
                 borderRadius: 0, 
@@ -238,7 +239,7 @@ export default function Services() {
               }}
             >
               GET CUSTOM QUOTE
-            </button>
+            </Link>
           </div>
         </BlurFade>
       </div>

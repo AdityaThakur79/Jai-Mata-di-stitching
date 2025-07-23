@@ -5,35 +5,67 @@ import { Link } from "react-router-dom";
 const slides = [
   {
     image: "/images/banner-2.png",
-    headline: "Modern Tailoring for the Modern Man",
-    text: "Tailor Made London offers high quality bespoke tailoring combining innovative 3D body scanning technology with traditional tailoring craft.",
+    headline: "Unveiling Excellence in Every Stitch",
+    text: "At JMD, we blend time-honored tailoring traditions with contemporary precision to create garments that celebrate your individuality and style.",
+    link: "/men",
+    buttonText: "Explore Men's Collection",
     hero: {
-      script: "JMD Stitching",
-      title: "Premium TAILORS",
-      tradition: "MODERN CRAFTSMANSHIP",
-      years: "INNOVATION MEETS TRADITION",
+      script: "JMD Tailors",
+      title: "BESPOKE EXCELLENCE",
+      tradition: "CRAFTED WITH PASSION",
+      years: "SINCE 2017",
+    }
+  },
+  {
+    image: "/images/banner-2.png",
+    headline: "Where Your Vision Becomes Reality",
+    text: "Experience personalized service like never before. From consultation to final fitting, every step is designed to exceed your expectations.",
+    link: "/women",
+    buttonText: "Discover Women's Wear",
+    hero: {
+      script: "Personal Touch",
+      title: "YOUR STYLE, PERFECTED",
+      tradition: "TAILORED TO YOU",
+      years: "INDIVIDUAL EXCELLENCE",
+    }
+  },
+  {
+    image: "/images/gallery-banner.png",
+    headline: "Master Craftsmen at Your Service",
+    text: "Our skilled artisans bring decades of expertise to every garment, ensuring impeccable quality and attention to detail in every piece.",
+    link: "/services",
+    buttonText: "View Our Services",
+    hero: {
+      script: "Expert Craftsmanship",
+      title: "MASTER ARTISANS",
+      tradition: "PRECISION & ARTISTRY",
+      years: "TIMELESS QUALITY",
+    }
+  },
+  {
+    image: "/images/banner-3.png",
+    headline: "Redefining Modern Elegance",
+    text: "Discover the perfect fusion of classic sophistication and contemporary style, designed for the modern individual who values quality.",
+    link: "/gallery",
+    buttonText: "Browse Gallery",
+    hero: {
+      script: "Modern Elegance",
+      title: "CONTEMPORARY STYLE",
+      tradition: "CLASSIC MEETS MODERN",
+      years: "ELEGANCE REDEFINED",
     }
   },
   {
     image: "/images/banner-1.png",
-    headline: "Craftsmanship Meets Innovation",
-    text: "Experience the perfect blend of traditional Hong Kong tailoring with modern precision and contemporary style.",
+    headline: "Custom Tailoring Excellence",
+    text: "Experience the art of bespoke tailoring with our custom-made garments, crafted to your exact measurements and style preferences.",
+    link: "/custom-tailoring",
+    buttonText: "Start Custom Order",
     hero: {
-      script: "Bespoke Excellence",
-      title: "MASTER CRAFTSMEN",
-      tradition: "TIMELESS ELEGANCE",
-      years: "PRECISION & ARTISTRY",
-    }
-  },
-  {
-    image: "/images/banner-1.png",
-    headline: "Bespoke Excellence Since 1984",
-    text: "Four decades of creating exceptional garments for discerning gentlemen who appreciate quality and attention to detail.",
-    hero: {
-      script: "Heritage Tailoring",
-      title: "LEGACY OF EXCELLENCE",
-      tradition: "FOUR DECADES STRONG",
-      years: "SINCE 1984",
+      script: "Bespoke Craftsmanship",
+      title: "CUSTOM TAILORING",
+      tradition: "MADE TO MEASURE",
+      years: "PERFECT FIT GUARANTEED",
     }
   },
 ];
@@ -233,14 +265,14 @@ const HeroSection = () => {
                     </span>
                   </button> */}
 
-                   <Link to="/fabrics">
+                   <Link to={slides[index].link}>
             <button
               className="border-2 px-4 sm:px-8 py-1.5 sm:py-2 text-base sm:text-lg font-serif tracking-wider shadow-md transition-all duration-300 uppercase"
               style={{ borderRadius: 0, background: '#e3b873', color: '#222', borderColor: '#e3b873' }}
               onMouseOver={e => { e.currentTarget.style.background = '#222'; e.currentTarget.style.color = '#e3b873'; e.currentTarget.style.borderColor = '#222'; }}
               onMouseOut={e => { e.currentTarget.style.background = '#e3b873'; e.currentTarget.style.color = '#222'; e.currentTarget.style.borderColor = '#e3b873'; }}
             >
-             Explore Now
+             {slides[index].buttonText}
             </button>
           </Link>
                 </motion.div>

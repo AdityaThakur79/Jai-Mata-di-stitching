@@ -60,7 +60,7 @@ import Info from "./components/user/Info.jsx";
 import Categories from "./components/user/Categories.jsx";
 import FabricPage from "./components/user/pages/FabricPage.jsx";
 import Qa from "./components/user/Qa.jsx";
-import {Gallery}  from "./components/user/Gallery.jsx";
+import { Gallery } from "./components/user/Gallery.jsx";
 import CreateBranch from "./components/admin/content/Branch/CreateBranch.jsx";
 import UpdateBranch from "./components/admin/content/Branch/UpdateBranch.jsx";
 import Services from "./components/user/Services.jsx";
@@ -68,6 +68,18 @@ import MenItems from "./components/user/MenItems.jsx";
 import WomenItems from "./components/user/WomenItems.jsx";
 import MensWear from "./components/user/pages/MensWear.jsx";
 import WomensWear from "./components/user/pages/WomensWear.jsx";
+import JMDTailorsAbout from "./components/user/pages/AboutPage.jsx";
+import Testimonials from "./components/user/Testimonials.jsx";
+import GalleryPage from "./components/user/pages/Gallery.jsx";
+import ContactPage from "./components/user/pages/ContactPage.jsx";
+import CTA from "./components/user/CTA.jsx";
+import MenHeroSection from "./components/user/MenHeroSection.jsx";
+import WomenHeroSection from "./components/user/WomenHeroSection.jsx";
+import ServicesPage from "./components/user/pages/Services.jsx";
+import TermsConditions from "./components/user/pages/TermsConditions.jsx";
+import PrivacyPolicy from "./components/user/pages/PrivacyPolicy.jsx";
+import RefundPolicy from "./components/user/pages/RefundPolicy.jsx";
+import ShippingPolicy from "./components/user/pages/ShippingPolicy.jsx";
 
 const appRouter = createBrowserRouter([
   //Homepage Routes
@@ -80,23 +92,33 @@ const appRouter = createBrowserRouter([
         element: (
           <>
             <HeroSection />
-            <Feature/>
-            <Services/>
-            <Categories/>
+            <Feature />
+            <Services />
+            <Categories />
             <Fabric />
-            <MenItems/>
-            <WomenItems/>
-            <Info/>
-            <Gallery/>
-            <Qa/>
+            <MenItems />
+            <WomenItems />
+            <MenHeroSection />
+            <WomenHeroSection />
+            <Info />
+            <Gallery />
+            <Testimonials />
+            <CTA />
+            {/* <Qa/> */}
           </>
         ),
       },
       { path: "/fabrics", element: <FabricPage /> },
-      // { path: "/services", element: <Services /> },
+      { path: "/about", element: <JMDTailorsAbout /> },
+      { path: "/gallery", element: <GalleryPage /> },
+      { path: "/services", element: <ServicesPage /> },
       { path: "/men", element: <MensWear /> },
       { path: "/women", element: <WomensWear /> },
-      // { path: "/contact", element: <Contact /> },
+      { path: "/contact", element: <ContactPage /> },
+      { path: "/terms", element: <TermsConditions /> },
+      { path: "/privacy", element: <PrivacyPolicy /> },
+      { path: "/refund", element: <RefundPolicy /> },
+      { path: "/shipping", element: <ShippingPolicy /> },
       { path: "*", element: <NotFound /> },
     ],
   },
@@ -104,10 +126,10 @@ const appRouter = createBrowserRouter([
     path: "",
     element: <AuthLayout />,
     children: [
-      {
-        path: "/login",
-        element: <Login />,
-      },
+      // {
+      //   path: "/login",
+      //   element: <Login />,
+      // },
       {
         path: "/verify-otp",
         element: <VerifyOTP />,
@@ -126,7 +148,7 @@ const appRouter = createBrowserRouter([
 
   // Employee Login Route
   {
-    path: "/employee/login",
+    path: "/login",
     element: <EmployeeLogin />,
   },
 
@@ -135,9 +157,9 @@ const appRouter = createBrowserRouter([
     path: "employee",
     element: (
       <EmployeeProtectedRoute>
-          <AdminNavbar />
+        <AdminNavbar />
         <EmployeeSidebar />
-        <Footer />
+        {/* <Footer /> */}
       </EmployeeProtectedRoute>
     ),
     children: [
