@@ -57,150 +57,399 @@ const ContactPage = () => {
       </div>
 
       {/* Contact Section */}
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="flex flex-col lg:flex-row gap-8 items-stretch">
-          {/* Contact Info */}
-          <motion.div
-            className="w-full lg:w-1/2 flex flex-col gap-6 animate-fadeInUp justify-between"
-            initial={{ opacity: 0, y: 40 }}
+      <section className="py-20 relative z-10">
+        <div className="container mx-auto px-4">
+          {/* Section Header */}
+          <motion.div 
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
-            <div className="bg-white/60 backdrop-blur-lg rounded-sm shadow-xl border border-amber-100 p-8 flex flex-col gap-4 h-full justify-between">
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <MapPin className="w-6 h-6 text-amber-500" />
-                  <span className="text-lg font-semibold text-gray-800">Address</span>
-                </div>
-                <p className="text-gray-700">Shop No. 12, JMD Tailors, Main Market, New Delhi, India</p>
-              </div>
-              <div>
-                <div className="flex items-center gap-3 mt-4">
-                  <Phone className="w-6 h-6 text-amber-500" />
-                  <span className="text-lg font-semibold text-gray-800">Phone</span>
-                </div>
-                <p className="text-gray-700">+91 98765 43210</p>
-              </div>
-              <div>
-                <div className="flex items-center gap-3 mt-4">
-                  <Mail className="w-6 h-6 text-amber-500" />
-                  <span className="text-lg font-semibold text-gray-800">Email</span>
-                </div>
-                <p className="text-gray-700">support@jmdtailors.in</p>
-              </div>
-              <div>
-                <div className="flex items-center gap-3 mt-4">
-                  <Clock className="w-6 h-6 text-amber-500" />
-                  <span className="text-lg font-semibold text-gray-800">Working Hours</span>
-                </div>
-                <p className="text-gray-700">Mon – Sat: 10:00 AM – 8:00 PM<br />Sun: Closed</p>
-              </div>
+            <div className="flex items-center justify-center mb-6">
+              <div className="w-12 h-px bg-amber-300"></div>
+              <div className="mx-4 w-3 h-3 bg-amber-400 rounded-full"></div>
+              <div className="w-12 h-px bg-amber-300"></div>
             </div>
+            <h2 className="text-xs font-bold text-amber-600 tracking-[0.3em] uppercase mb-4 font-serif">
+              GET IN TOUCH
+            </h2>
+            <h1 className="text-4xl md:text-5xl font-light text-gray-800 mb-6 font-serif leading-tight">
+              We'd Love to Hear
+              <br />
+              <span className="text-amber-600 font-medium italic">From You</span>
+            </h1>
+            <p className="text-lg text-gray-600 leading-relaxed max-w-2xl mx-auto font-light">
+              Ready to create your perfect fit? Let's discuss your vision and bring it to life with our expert craftsmanship.
+            </p>
           </motion.div>
-          {/* Contact Form */}
-          <motion.form
-            className="w-full lg:w-1/2 bg-white/60 backdrop-blur-lg rounded-sm shadow-xl border border-amber-100 p-8 flex flex-col gap-6 animate-fadeInUp h-full justify-between"
+
+          <div className="relative">
+            {/* Decorative Background Elements */}
+            <div 
+              className="absolute -top-20 -left-20 w-40 h-40 rounded-full blur-3xl opacity-10"
+              style={{ background: 'radial-gradient(circle, rgba(227, 184, 115, 0.4) 0%, transparent 70%)' }}
+            ></div>
+            <div 
+              className="absolute -bottom-20 -right-20 w-60 h-60 rounded-full blur-3xl opacity-10"
+              style={{ background: 'radial-gradient(circle, rgba(227, 184, 115, 0.3) 0%, transparent 70%)' }}
+            ></div>
+
+            <div className="bg-white/90 backdrop-blur-xl rounded-2xl overflow-hidden shadow-2xl border border-amber-200/40 relative">
+              {/* Glass overlay effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-amber-50/20 pointer-events-none"></div>
+              
+              <div className="flex flex-col lg:flex-row relative z-10">
+                {/* Map Area */}
+                <motion.div 
+                  className="w-full lg:w-1/2 h-96 lg:h-auto relative group"
+                  initial={{ opacity: 0, x: -50 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                  viewport={{ once: true }}
+                >
+                  {/* Map overlay on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-amber-900/10 via-transparent to-amber-800/5 opacity-0 group-hover:opacity-100 transition-all duration-500 z-10 pointer-events-none"></div>
+                  
+                  <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1928970.5599876058!2d70.66893415625!3d19.21612910000001!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be795c8e51ee17f%3A0x561500b879ac7b6b!2sINFINITY%20BUSINESS%20PARK!5e0!3m2!1sen!2sin!4v1752780528497!5m2!1sen!2sin"
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen=""
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    className="transition-all duration-500 group-hover:saturate-110"
+                  ></iframe>
+                  
+                  {/* Location badge */}
+                  <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-amber-200/50">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm font-medium text-gray-700">JMD Tailors</span>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Contact Form */}
+                <motion.div 
+                  className="w-full lg:w-1/2 p-8 lg:p-12"
+                  initial={{ opacity: 0, x: 50 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.8, delay: 0.4 }}
+                  viewport={{ once: true }}
+                >
+                  <div className="mb-10">
+                    <h2 className="text-3xl lg:text-4xl font-light text-gray-800 mb-4 font-serif">
+                      Let's Create Something
+                      <br />
+                      <span className="text-amber-600 italic">Extraordinary</span>
+                    </h2>
+                    <p className="text-gray-600 font-light leading-relaxed">
+                      Share your requirements and we'll craft the perfect solution tailored just for you.
+                    </p>
+                  </div>
+
+                  <form className="space-y-6" onSubmit={(e) => {
+                    e.preventDefault();
+                    alert("Thank you for your message! We'll get back to you soon.");
+                  }}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <motion.div 
+                        className="form-group relative"
+                        whileHover={{ scale: 1.02 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <input
+                          type="text"
+                          name="name"
+                          placeholder="Full Name"
+                          className="w-full px-5 py-4 border border-amber-200/60 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent bg-white/80 backdrop-blur-sm transition-all duration-300 shadow-sm hover:shadow-md text-gray-700 placeholder-gray-500 font-light"
+                          style={{ '--tw-ring-color': '#e3b873' }}
+                          required
+                        />
+                        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-amber-400/5 to-orange-300/5 opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                      </motion.div>
+                      
+                      <motion.div 
+                        className="form-group relative"
+                        whileHover={{ scale: 1.02 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <input
+                          type="email"
+                          name="email"
+                          placeholder="Email Address"
+                          className="w-full px-5 py-4 border border-amber-200/60 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent bg-white/80 backdrop-blur-sm transition-all duration-300 shadow-sm hover:shadow-md text-gray-700 placeholder-gray-500 font-light"
+                          style={{ '--tw-ring-color': '#e3b873' }}
+                          required
+                        />
+                        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-amber-400/5 to-orange-300/5 opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                      </motion.div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <motion.div 
+                        className="form-group relative"
+                        whileHover={{ scale: 1.02 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <input
+                          type="tel"
+                          name="phone"
+                          placeholder="Phone Number"
+                          className="w-full px-5 py-4 border border-amber-200/60 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent bg-white/80 backdrop-blur-sm transition-all duration-300 shadow-sm hover:shadow-md text-gray-700 placeholder-gray-500 font-light"
+                          style={{ '--tw-ring-color': '#e3b873' }}
+                          required
+                        />
+                        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-amber-400/5 to-orange-300/5 opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                      </motion.div>
+                      
+                      <motion.div 
+                        className="form-group relative"
+                        whileHover={{ scale: 1.02 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <select
+                          name="service"
+                          className="w-full px-5 py-4 border border-amber-200/60 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent bg-white/80 backdrop-blur-sm transition-all duration-300 shadow-sm hover:shadow-md text-gray-700 font-light appearance-none cursor-pointer"
+                          style={{ '--tw-ring-color': '#e3b873' }}
+                          required
+                        >
+                          <option value="">Select Service</option>
+                          <option value="custom-tailoring">Custom Tailoring</option>
+                          <option value="alterations">Alterations</option>
+                          <option value="wedding-wear">Wedding Wear</option>
+                          <option value="formal-wear">Formal Wear</option>
+                          <option value="casual-wear">Casual Wear</option>
+                          <option value="consultation">Design Consultation</option>
+                        </select>
+                        <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
+                        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-amber-400/5 to-orange-300/5 opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                      </motion.div>
+                    </div>
+
+                    <motion.div 
+                      className="form-group relative"
+                      whileHover={{ scale: 1.01 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <textarea
+                        name="message"
+                        placeholder="Tell us about your vision, requirements, or any specific details..."
+                        className="w-full px-5 py-4 border border-amber-200/60 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent h-36 resize-none bg-white/80 backdrop-blur-sm transition-all duration-300 shadow-sm hover:shadow-md text-gray-700 placeholder-gray-500 font-light"
+                        style={{ '--tw-ring-color': '#e3b873' }}
+                        required
+                      ></textarea>
+                      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-amber-400/5 to-orange-300/5 opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                    </motion.div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 pt-4">
+                      <motion.button
+                        type="submit"
+                        className="group relative inline-flex items-center justify-center px-8 py-4 text-white font-medium rounded-xl shadow-lg transition-all duration-300 ease-out overflow-hidden"
+                        style={{ background: '#e3b873' }}
+                        whileHover={{ scale: 1.05, y: -2 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <span className="absolute inset-0 bg-gradient-to-r from-amber-600 to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                        <span className="relative flex items-center space-x-2">
+                          <span>Send Message</span>
+                          <svg className="w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                          </svg>
+                        </span>
+                      </motion.button>
+                      
+                      <div className="flex items-center space-x-3 text-sm text-gray-600">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span className="font-light">We typically respond within 24 hours</span>
+                      </div>
+                    </div>
+                  </form>
+                </motion.div>
+              </div>
+            </div>
+          </div>
+
+          {/* Contact Info Cards */}
+          <motion.div 
+            className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8"
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
             viewport={{ once: true }}
-            onSubmit={(e) => {
-              e.preventDefault();
-              alert("Form submitted!");
-            }}
           >
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-              <input
-                type="text"
-                placeholder="Your name"
-                className="w-full border border-gray-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white/80"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-              <input
-                type="tel"
-                placeholder="9876543210"
-                className="w-full border border-gray-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white/80"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input
-                type="email"
-                placeholder="you@example.com"
-                className="w-full border border-gray-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white/80"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
-              <textarea
-                rows="4"
-                placeholder="Write your query here..."
-                className="w-full border border-gray-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white/80"
-                required
-              ></textarea>
-            </div>
-            <motion.button
-              type="submit"
-              className="w-full bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-300 text-gray-900 py-3 rounded-xl font-semibold shadow-lg hover:from-orange-400 hover:to-amber-400 transition-all text-lg tracking-wide"
-              whileHover={{ scale: 1.04 }}
+            {/* Phone */}
+            <motion.div 
+              className="group relative bg-white/90 backdrop-blur-xl p-8 rounded-2xl shadow-xl border border-amber-200/40 transition-all duration-500 hover:shadow-2xl overflow-hidden"
+              whileHover={{ y: -8, scale: 1.02 }}
+              transition={{ duration: 0.3 }}
             >
-              Send Message
-            </motion.button>
-          </motion.form>
-        </div>
-        </div>
-        
-        {/* Map below both columns */}
-        <div className="my-10 rounded-3xl overflow-hidden border border-amber-100 shadow-xl bg-white/60 backdrop-blur-lg">
-          <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1928970.5599876058!2d70.66893415625!3d19.21612910000001!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be795c8e51ee17f%3A0x561500b879ac7b6b!2sINFINITY%20BUSINESS%20PARK!5e0!3m2!1sen!2sin!4v1752780528497!5m2!1sen!2sin"
-            width="100%"
-            height="260"
-            className="rounded-3xl border-none"
-            allowFullScreen=""
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          ></iframe>
-        </div>
-      </div>
- 
-  );
-};
+              {/* Background gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-50/50 via-transparent to-orange-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              
+              {/* Decorative corner accent */}
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-amber-200/20 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              
+              <div className="relative z-10">
+                <div className="flex items-start space-x-4 mb-6">
+                  <div className="relative">
+                    <div 
+                      className="h-16 w-16 rounded-2xl flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300"
+                      style={{ background: 'linear-gradient(135deg, #e3b873 0%, #d4a574 100%)' }}
+                    >
+                      <Phone className="h-8 w-8 text-white" />
+                    </div>
+                    {/* Pulse effect */}
+                    <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-30 group-hover:animate-ping" style={{ background: '#e3b873' }}></div>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-medium text-gray-800 font-serif mb-3 group-hover:text-amber-700 transition-colors duration-300">
+                      Call Us
+                    </h3>
+                    <div className="space-y-2">
+                      <a 
+                        href="tel:+917972889376" 
+                        className="block text-gray-700 hover:text-gray-900 font-medium transition-all duration-300 relative group/link"
+                      >
+                        +91 797 288 9376
+                        <span 
+                          className="absolute left-0 -bottom-1 w-0 h-0.5 transition-all duration-300 group-hover/link:w-full"
+                          style={{ background: '#e3b873' }}
+                        ></span>
+                      </a>
+                      <a
+                        href="mailto:info@jmdtailors.com"
+                        className="block text-gray-600 hover:text-gray-800 font-light transition-all duration-300 relative group/link text-sm"
+                      >
+                        info@jmdtailors.com
+                        <span 
+                          className="absolute left-0 -bottom-1 w-0 h-0.5 transition-all duration-300 group-hover/link:w-full"
+                          style={{ background: '#e3b873' }}
+                        ></span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center text-xs text-gray-500 font-light">
+                  <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+                  Available now
+                </div>
+              </div>
+            </motion.div>
 
-const ContactTextArea = ({ row, placeholder, name, defaultValue }) => {
-  return (
-    <>
-      <div className="mb-6">
-        <textarea
-          rows={row}
-          placeholder={placeholder}
-          name={name}
-          className="w-full resize-none rounded border border-stroke px-[14px] py-3 text-base text-body-color outline-none focus:border-primary dark:border-dark-3 dark:bg-dark dark:text-dark-6"
-          defaultValue={defaultValue}
-        />
-      </div>
-    </>
-  );
-};
+            {/* Address */}
+            <motion.div 
+              className="group relative bg-white/90 backdrop-blur-xl p-8 rounded-2xl shadow-xl border border-amber-200/40 transition-all duration-500 hover:shadow-2xl overflow-hidden"
+              whileHover={{ y: -8, scale: 1.02 }}
+              transition={{ duration: 0.3 }}
+            >
+              {/* Background gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-50/50 via-transparent to-orange-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              
+              {/* Decorative corner accent */}
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-amber-200/20 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              
+              <div className="relative z-10">
+                <div className="flex items-start space-x-4 mb-6">
+                  <div className="relative">
+                    <div 
+                      className="h-16 w-16 rounded-2xl flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300"
+                      style={{ background: 'linear-gradient(135deg, #e3b873 0%, #d4a574 100%)' }}
+                    >
+                      <MapPin className="h-8 w-8 text-white" />
+                    </div>
+                    {/* Pulse effect */}
+                    <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-30 group-hover:animate-ping" style={{ background: '#e3b873' }}></div>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-medium text-gray-800 font-serif mb-3 group-hover:text-amber-700 transition-colors duration-300">
+                      Visit Our Studio
+                    </h3>
+                    <a 
+                      href="https://maps.google.com/?q=108,+Infinity+Business+Park,+Dombivali+East,+Maharashtra" 
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-600 hover:text-gray-800 font-light leading-relaxed transition-all duration-300 relative group/link block"
+                    >
+                      108, Infinity Business Park<br />
+                      Dombivali East, Maharashtra<br />
+                      <span className="text-amber-600 text-sm font-medium">401208</span>
+                      <span 
+                        className="absolute left-0 -bottom-1 w-0 h-0.5 transition-all duration-300 group-hover/link:w-full"
+                        style={{ background: '#e3b873' }}
+                      ></span>
+                    </a>
+                  </div>
+                </div>
+                <div className="flex items-center text-xs text-gray-500 font-light">
+                  <svg className="w-3 h-3 mr-2 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                  </svg>
+                  Click for directions
+                </div>
+              </div>
+            </motion.div>
 
-const ContactInputBox = ({ type, placeholder, name }) => {
-  return (
-    <>
-      <div className="mb-6">
-        <input
-          type={type}
-          placeholder={placeholder}
-          name={name}
-          className="w-full rounded border border-stroke px-[14px] py-3 text-base text-body-color outline-none focus:border-primary dark:border-dark-3 dark:bg-dark dark:text-dark-6"
-        />
-      </div>
-    </>
+            {/* Hours */}
+            <motion.div 
+              className="group relative bg-white/90 backdrop-blur-xl p-8 rounded-2xl shadow-xl border border-amber-200/40 transition-all duration-500 hover:shadow-2xl overflow-hidden"
+              whileHover={{ y: -8, scale: 1.02 }}
+              transition={{ duration: 0.3 }}
+            >
+              {/* Background gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-50/50 via-transparent to-orange-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              
+              {/* Decorative corner accent */}
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-amber-200/20 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              
+              <div className="relative z-10">
+                <div className="flex items-start space-x-4 mb-6">
+                  <div className="relative">
+                    <div 
+                      className="h-16 w-16 rounded-2xl flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300"
+                      style={{ background: 'linear-gradient(135deg, #e3b873 0%, #d4a574 100%)' }}
+                    >
+                      <Clock className="h-8 w-8 text-white" />
+                    </div>
+                    {/* Pulse effect */}
+                    <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-30 group-hover:animate-ping" style={{ background: '#e3b873' }}></div>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-medium text-gray-800 font-serif mb-3 group-hover:text-amber-700 transition-colors duration-300">
+                      Opening Hours
+                    </h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600 font-light">Mon - Sat</span>
+                        <span className="text-gray-800 font-medium">10:00 AM - 8:00 PM</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600 font-light">Sunday</span>
+                        <span className="text-red-500 font-medium">Closed</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center text-xs text-gray-500 font-light">
+                  <div className="w-2 h-2 bg-amber-400 rounded-full mr-2"></div>
+                  Open today until 8:00 PM
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+      
+      {/* CTA Section */}
+      <CTA />
+    </div>
   );
 };
 

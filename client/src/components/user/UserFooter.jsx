@@ -42,11 +42,15 @@ const socialLinks = [
 
 const UserFooter = () => {
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (window.lenisScrollToTop) {
+      window.lenisScrollToTop();
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   return (
-    <footer className="relative overflow-hidden">
+    <footer id="footer" className="relative overflow-hidden">
       {/* Enhanced Background matching MenHeroSection */}
       <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50"></div>
       <div className="absolute inset-0 bg-gradient-to-t from-amber-100/30 via-orange-50/20 to-transparent"></div>

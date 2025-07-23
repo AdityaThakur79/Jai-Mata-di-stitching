@@ -214,3 +214,31 @@
   display: none; /* Chrome, Safari, Opera */
 }
 
+/* Lenis Smooth Scroll Styles */
+html.lenis {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+/* Ensure smooth scrolling for the entire page */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Optimize performance for smooth scrolling */
+* {
+  scroll-behavior: inherit;
+}
+
+/* Prevent scroll issues with fixed elements */
+body {
+  overflow-x: hidden;
+}
+
