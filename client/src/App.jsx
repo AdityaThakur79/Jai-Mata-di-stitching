@@ -80,6 +80,8 @@ import TermsConditions from "./components/user/pages/TermsConditions.jsx";
 import PrivacyPolicy from "./components/user/pages/PrivacyPolicy.jsx";
 import RefundPolicy from "./components/user/pages/RefundPolicy.jsx";
 import ShippingPolicy from "./components/user/pages/ShippingPolicy.jsx";
+import CustomTailoringPage from "./components/user/pages/CustomTailoringPage.jsx";
+import ScrollToTop from "./components/ScrollToTop.jsx";
 
 const appRouter = createBrowserRouter([
   //Homepage Routes
@@ -115,6 +117,7 @@ const appRouter = createBrowserRouter([
       { path: "/men", element: <MensWear /> },
       { path: "/women", element: <WomensWear /> },
       { path: "/contact", element: <ContactPage /> },
+      { path: "/custom-tailoring", element: <CustomTailoringPage /> },
       { path: "/terms", element: <TermsConditions /> },
       { path: "/privacy", element: <PrivacyPolicy /> },
       { path: "/refund", element: <RefundPolicy /> },

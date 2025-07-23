@@ -83,7 +83,7 @@ const HeroSection = () => {
   }, []);
 
   return (
-    <section className="relative w-full flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-900 via-gray-900 to-black min-h-[500px] h-screen mt-[84px]">
+    <section id="top" className="relative w-full flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-900 via-gray-900 to-black min-h-[500px] h-screen mt-[84px]">
       <AnimatePresence initial={false} mode="wait">
         <motion.div
           key={index}

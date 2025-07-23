@@ -18,7 +18,7 @@ const CTA = () => {
               Discover the art of true personalization. Book a consultation and let us craft a story that’s uniquely yours.
             </p>
             <motion.a
-              href="/book"
+              href="/contact"
               className="relative inline-block w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-4 rounded-full font-serif text-base sm:text-lg font-semibold bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-400 text-[#181c2a] shadow-lg transition-all duration-300 overflow-hidden group border-2 border-amber-300 hover:from-yellow-400 hover:to-amber-400 hover:shadow-amber-400/40 text-center"
               whileHover={{ scale: 1.06 }}
             >
