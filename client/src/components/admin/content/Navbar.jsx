@@ -64,58 +64,49 @@ const Navbar = () => {
     return () => clearInterval(interval);
   }, []);
   return (
-    <div className="dark:bg-gray-900 bg-white border-b dark:border-b-gray-800 border-b-gray-200 fixed top-0 left-0 right-0 duration-300 z-10">
-      <div className="container mx-auto px-4 md:px-10 py-0 hidden md:flex justify-between items-center">
-        <div className="flex gap-4 items-center text-gray-700 dark:text-white">
-          <div className="font-medium text-sm flex items-center">
-            <Clock className="mr-1" />
-            {currentTime}
+    <div className="bg-gradient-to-r from-[#FDE3C2] to-white dark:bg-gray-900 border-b border-[#EB811F]/20 dark:border-b-gray-800 fixed top-0 left-0 right-0 duration-300 z-40 shadow-sm">
+      {/* Desktop Navbar */}
+      <div className="hidden lg:flex justify-between items-center h-16 px-6 lg:ml-[250px]">
+        <div className="flex gap-4 items-center text-[#202020] dark:text-white">
+          <div className="font-medium text-sm flex items-center bg-white/60 dark:bg-gray-800/60 rounded-lg px-3 py-1.5 backdrop-blur-sm border border-[#EB811F]/10">
+            <Clock className="mr-2 w-4 h-4 text-[#EB811F]" />
+            <span className="text-[#202020] dark:text-white">{currentTime}</span>
           </div>
-          <Dialog>
-            <DialogTrigger asChild>
-              <button className="hover:opacity-75">
-                {/* <Calculator size={20} /> */}
-              </button>
-            </DialogTrigger>
-            <DialogContent className="max-w-sm w-full">
-              {/* <SimpleCalculator /> */}
-            </DialogContent>
-          </Dialog>
         </div>
 
         <Link to="/" className="flex items-center justify-center">
           <img
             src="/images/jmd_logo.jpeg"
             alt="Jai Mata Di Logo"
-            className="w-20 h-auto object-contain"
+            className="w-12 h-12 rounded-full border-2 border-[#EB811F]/30 shadow-sm hover:shadow-md transition-shadow"
           />
         </Link>
 
-        <div className="flex items-center gap-4 cursor-pointer">
+        <div className="flex items-center gap-4">
           {employee ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Avatar>
+                <Avatar className="ring-2 ring-[#EB811F]/30 hover:ring-[#EB811F]/50 transition-all cursor-pointer">
                   <AvatarImage src={employee?.profileImage} alt={employee?.name} />
-                  <AvatarFallback>
+                  <AvatarFallback className="bg-[#EB811F] text-white font-semibold">
                     {employee?.name?.charAt(0).toUpperCase() || "E"}
                   </AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <Link to="/employee/profile">View Profile</Link>
+              <DropdownMenuContent className="w-56 border-[#EB811F]/20">
+                <DropdownMenuLabel className="text-[#202020]">My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-[#EB811F]/10" />
+                <DropdownMenuItem className="hover:bg-[#EB811F]/10">
+                  <Link to="/employee/profile" className="w-full">View Profile</Link>
                 </DropdownMenuItem>
                 {employee.role === "superAdmin" && (
-                  <DropdownMenuItem>
-                    <Link to="/admin/dashboard">Dashboard</Link>
+                  <DropdownMenuItem className="hover:bg-[#EB811F]/10">
+                    <Link to="/admin/dashboard" className="w-full">Dashboard</Link>
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={logoutHandler}>
-                  <LogOut />
+                <DropdownMenuSeparator className="bg-[#EB811F]/10" />
+                <DropdownMenuItem onClick={logoutHandler} className="hover:bg-red-50 text-red-600">
+                  <LogOut className="w-4 h-4 mr-2" />
                   <span>Log out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -123,7 +114,9 @@ const Navbar = () => {
           ) : (
             <div className="flex gap-2 items-center">
               <Link to="/employee/login">
-                <Button variant="outline">Login</Button>
+                <Button variant="outline" className="border-[#EB811F]/40 text-[#EB811F] hover:bg-[#EB811F]/10">
+                  Login
+                </Button>
               </Link>
             </div>
           )}
@@ -131,17 +124,20 @@ const Navbar = () => {
         </div>
       </div>
 
-      <div className="flex md:hidden justify-between items-center px-4 py-2">
-        <div className="flex gap-2 text-gray-700 dark:text-white">
-          <Clock size={20} />
-          <Calculator size={20} />
+      {/* Mobile Navbar */}
+      <div className="flex lg:hidden justify-between items-center px-4 py-3 h-16">
+        <div className="flex gap-3 items-center text-[#202020] dark:text-white">
+          <div className="font-medium text-xs flex items-center bg-white/60 dark:bg-gray-800/60 rounded-lg px-2 py-1 backdrop-blur-sm border border-[#EB811F]/10">
+            <Clock className="mr-1 w-3 h-3 text-[#EB811F]" />
+            <span className="text-[#202020] dark:text-white">{currentTime}</span>
+          </div>
         </div>
 
         <Link to="/" className="flex justify-center">
           <img
             src="/images/jmd_logo.jpeg"
             alt="JMD Logo"
-            className="w-24 h-auto object-contain"
+            className="w-10 h-10 rounded-full border-2 border-[#EB811F]/30 shadow-sm"
           />
         </Link>
 
@@ -161,6 +157,7 @@ const MobileNavbar = () => {
     // Implement employee logout logic if available
     navigate("/employee/login");
   };
+  
   useEffect(() => {
     // No isSuccess check for employee logout shown
     // if (isSuccess) {
@@ -168,61 +165,82 @@ const MobileNavbar = () => {
     //   navigate("/employee/login");
     // }
   }, []);
+  
   return (
     <Sheet>
       <SheetTrigger asChild>
         <Button
           size="icon"
-          className="rounded-full hover:bg-gray-200"
+          className="rounded-full hover:bg-[#EB811F]/10 border-[#EB811F]/30"
           variant="outline"
         >
-          <Menu />
+          <Menu className="w-4 h-4 text-[#EB811F]" />
         </Button>
       </SheetTrigger>
-      <SheetContent className="flex flex-col">
+      <SheetContent className="flex flex-col bg-gradient-to-br from-[#FDE3C2] to-white border-l border-[#EB811F]/20">
         <SheetHeader className="flex flex-row items-center justify-between mt-2">
           <Link to="/" className="content-nav-logo">
-            <figure>
-              <img
-                src="/images/user/common/dellcube-favicon.png"
-                alt="AI Logo"
-                width={50}
-                height={50}
-              />
-            </figure>
+            <img
+              src="/images/jmd_logo.jpeg"
+              alt="JMD Logo"
+              className="w-10 h-10 rounded-full border-2 border-[#EB811F]/30 shadow-sm"
+            />
           </Link>
           <DarkMode />
         </SheetHeader>
-        <Separator className="mr-2" />
+        <Separator className="mr-2 bg-[#EB811F]/20" />
         {employee ? (
-          <div className="flex flex-col gap-2">
-            <Avatar>
-              <AvatarImage
-                src={employee?.photoUrl}
-                alt={employee?.name}
-              />
-              <AvatarFallback>
-                {employee?.name?.charAt(0).toUpperCase() || "E"}
-              </AvatarFallback>{" "}
-            </Avatar>
-            <DropdownMenuSeparator />
-            <Link to="/admin/profile">Edit Profile</Link>
-            <DropdownMenuSeparator />
-            {employee.role === "superAdmin" && (
-              <Link to="/admin/dashboard">Dashboard</Link>
-            )}
-            <DropdownMenuSeparator />
-            <div onClick={logoutHandler}>
-              <span>
-                <LogOut />
-                Log out
-              </span>
+          <div className="flex flex-col gap-4 mt-4">
+            <div className="flex items-center gap-3 p-3 bg-white/60 rounded-lg border border-[#EB811F]/10">
+              <Avatar className="ring-2 ring-[#EB811F]/30">
+                <AvatarImage
+                  src={employee?.profileImage}
+                  alt={employee?.name}
+                />
+                <AvatarFallback className="bg-[#EB811F] text-white font-semibold">
+                  {employee?.name?.charAt(0).toUpperCase() || "E"}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="font-semibold text-[#202020] text-sm">{employee?.name}</p>
+                <p className="text-xs text-[#828083] capitalize">{employee?.role}</p>
+              </div>
+            </div>
+            
+            <div className="flex flex-col gap-2">
+              <Link 
+                to="/employee/profile"
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-[#EB811F]/10 transition-colors text-[#202020]"
+              >
+                <School className="w-4 h-4 text-[#EB811F]" />
+                <span className="text-sm font-medium">View Profile</span>
+              </Link>
+              
+              {employee.role === "superAdmin" && (
+                <Link 
+                  to="/admin/dashboard"
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-[#EB811F]/10 transition-colors text-[#202020]"
+                >
+                  <School className="w-4 h-4 text-[#EB811F]" />
+                  <span className="text-sm font-medium">Dashboard</span>
+                </Link>
+              )}
+              
+              <button
+                onClick={logoutHandler}
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-red-50 transition-colors text-red-600"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="text-sm font-medium">Log out</span>
+              </button>
             </div>
           </div>
         ) : (
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 items-center mt-4">
             <Link to="/employee/login">
-              <Button variant="outline">Login</Button>
+              <Button variant="outline" className="w-full border-[#EB811F]/40 text-[#EB811F] hover:bg-[#EB811F]/10">
+                Login
+              </Button>
             </Link>
           </div>
         )}

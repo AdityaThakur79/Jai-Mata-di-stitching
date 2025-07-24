@@ -83,6 +83,18 @@ import ShippingPolicy from "./components/user/pages/ShippingPolicy.jsx";
 import CustomTailoringPage from "./components/user/pages/CustomTailoringPage.jsx";
 import ScrollToTop from "./components/ScrollToTop.jsx";
 
+// Website Management Components
+import ManageServices from "./components/admin/content/WebsiteServices/ManageServices.jsx";
+import CreateService from "./components/admin/content/WebsiteServices/CreateService.jsx";
+import UpdateService from "./components/admin/content/WebsiteServices/UpdateService.jsx";
+import ManageEnquiries from "./components/admin/content/ManageEnquiries.jsx";
+import CreateGallery from './components/admin/content/gallery/CreateGallery';
+import UpdateGallery from './components/admin/content/gallery/UpdateGallery';
+import ManageGallery from './components/admin/content/gallery/ManageGallery';
+import CreateCategory from './components/admin/content/categories/CreateCategory';
+import UpdateCategory from './components/admin/content/categories/UpdateCategory';
+import ManageCategories from './components/admin/content/categories/ManageCategories';
+
 const appRouter = createBrowserRouter([
   //Homepage Routes
   {
@@ -331,176 +343,52 @@ const appRouter = createBrowserRouter([
         path: "update-branch",
         element: <UpdateBranch />,
       },
-    ],
-  },
-
-  {
-    path: "admin",
-    element: (
-      <RoleProtectedRoute allowedRoles={["superAdmin"]}>
-        <>
-          <AdminNavbar />
-          <Sidebar />
-          <Footer />
-        </>
-      </RoleProtectedRoute>
-    ),
-    children: [
+      
+      // Website Management Routes
       {
-        path: "dashboard",
-        element: <Dashboard />,
+        path: "website/services",
+        element: <ManageServices />,
       },
       {
-        path: "profile",
-        element: <Profile />,
-      },
-
-      //Customer master
-      {
-        path: "create-customer",
-        element: <CreateCustomer />,
+        path: "website/services/create",
+        element: <CreateService />,
       },
       {
-        path: "update-customer",
-        element: <UpdateCustomer />,
+        path: "website/services/update/",
+        element: <UpdateService />,
       },
       {
-        path: "customers",
-        element: <Customers />,
-      },
-
-      //Item master
-      {
-        path: "create-item",
-        element: <CreateItem />,
+        path: "website/enquiries",
+        element: <ManageEnquiries />,
       },
       {
-        path: "update-item",
-        element: <UpdateItem />,
+        path: "website/gallery/create",
+        element: <CreateGallery />,
       },
       {
-        path: "items",
-        element: <Items />,
-      },
-
-      //Fabric master
-      {
-        path: "create-fabric",
-        element: <CreateFabric />,
+        path: "website/gallery/update/:id",
+        element: <UpdateGallery />,
       },
       {
-        path: "update-fabric",
-        element: <UpdateFabrics />,
+        path: "website/gallery",
+        element: <ManageGallery />,
       },
       {
-        path: "fabrics",
-        element: <Fabrics />,
-      },
-
-      //Master master
-      {
-        path: "create-master",
-        element: <CreateMaster />,
+        path: "website/category/create",
+        element: <CreateCategory />,
       },
       {
-        path: "update-master",
-        element: <UpdateMaster />,
+        path: "website/category/update/:id",
+        element: <UpdateCategory />,
       },
       {
-        path: "masters",
-        element: <Masters />,
-      },
-
-      //Salesman master
-      {
-        path: "create-salesman",
-        element: <CreateSalesman />,
-      },
-      {
-        path: "update-salesman",
-        element: <UpdateSalesman />,
-      },
-      {
-        path: "salesmans",
-        element: <Salesmans />,
-      },
-
-      //Style master
-      {
-        path: "create-style",
-        element: <CreateStyle />,
-      },
-      {
-        path: "update-style",
-        element: <UpdateStyle />,
-      },
-      {
-        path: "styles",
-        element: <Styles />,
-      },
-
-      //Pendingorder master
-      {
-        path: "create-pending-order",
-        element: <CreatePendingOrder />,
-      },
-      {
-        path: "update-pending-order",
-        element: <UpdatePendingOrder />,
-      },
-      {
-        path: "recent-pending-order",
-        element: <RecentPendingOrders />,
-      },
-      {
-        path: "pending-orders",
-        element: <PendingOrders />,
-      },
-      //Invoices
-      {
-        path: "generate-bill",
-        element: <GenerateBill />,
-      },
-      {
-        path: "invoices",
-        element: <Invoices />,
-      },
-      //Employee
-      {
-        path: "create-employee",
-        element: <CreateEmployee />,
-      },
-      {
-        path: "update-employee",
-        element: <UpdateEmployee />,
-      },
-      {
-        path: "employees",
-        element: <Employee />,
-      },
-      {
-        path: "employee-advance",
-        element: <EmployeeAdvance />,
-      },
-      {
-        path: "employee-detail",
-        element: <EmployeeDetail />,
-      },
-      // Branch CRUD
-      {
-        path: "branches",
-        element: <Branches />,
-      },
-      {
-        path: "create-branch",
-        element: <CreateBranch />,
-      },
-      {
-        path: "update-branch",
-        element: <UpdateBranch />,
+        path: "website/categories",
+        element: <ManageCategories />,
       },
     ],
   },
+
+ 
 ]);
 
 function App() {

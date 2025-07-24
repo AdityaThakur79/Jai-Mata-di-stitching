@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Star, Heart, ShoppingBag, Eye } from 'lucide-react';
-import { useGetAllItemMastersQuery } from '@/features/api/itemApi';
+import { useGetAllCategoriesQuery } from '@/features/api/categoriesApi';
 
 // Intersection Observer Hook
 const useIntersectionObserver = (options = {}) => {
@@ -76,18 +76,16 @@ const Categories = () => {
   const [isScrolling, setIsScrolling] = useState(false);
 
   // Fetch categories from API
-  const { data, isLoading, isError } = useGetAllItemMastersQuery({ 
-    page: 1, 
-    limit: 50, 
-    search: "" 
-  });
+  const { data, isLoading, isError } = useGetAllCategoriesQuery();
 
   // Transform API data to match component structure
-  const categories = (data?.items || []).map(item => ({
-    name: item.name,
-    images: [item.itemImage, item.secondaryItemImage].filter(Boolean),
-    description: item.description,
-    category: item.category
+  const categories = (data?.categories || []).map(item => ({
+    name: item.title,
+    images: [item.categoryPrimaryImage, item.categorySecondaryImage].filter(Boolean),
+    description: item.shortDesc,
+    category: item.category,
+    features: item.features || [],
+    startingFrom: item.startingFrom
   }));
 
   // Continuous scrolling effect

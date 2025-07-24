@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useGetAllFabricsQuery } from '@/features/api/fabricApi';
 
 // Intersection Observer Hook
 const useIntersectionObserver = (options = {}) => {
@@ -83,39 +84,9 @@ const SectionOverlay = ({ position, size, opacity }) => {
   );
 };
 
-const staticFabrics = [
-  {
-    _id: '1',
-    name: 'Premium Cotton Twill',
-    fabricImage: '/images/balck.png',
-    secondaryFabricImage: '/images/menindark.png',
-    price: 900,
-  },
-  {
-    _id: '2',
-    name: 'Classic Blue Denim',
-    fabricImage: '/images/maroon.png',
-    secondaryFabricImage: '/images/menindark.png',
-    price: 900,
-  },
-  {
-    _id: '3',
-    name: 'Elegant Linen',
-    fabricImage: '/images/balckwithstuc.jpg',
-    secondaryFabricImage: '/images/menindark.png',
-    price: 900,
-  },
-  {
-    _id: '4',
-    name: 'Soft Flannel',
-    fabricImage: '/images/maroon.png',
-    secondaryFabricImage: '/images/menindark.png',
-    price: 900,
-  },
-];
-
 const Fabric = () => {
-  const fabrics = staticFabrics.slice(0, 4);
+  const { data, isLoading, isError } = useGetAllFabricsQuery({ page: 1, limit: 4 });
+  const fabrics = (data?.fabrics || []);
 
   return (
     <section className="relative py-12 md:py-20 bg-gradient-to-br from-gray-50 to-gray-100">
@@ -178,53 +149,62 @@ const Fabric = () => {
           </div>
         </BlurFade>
 
+        {isLoading && (
+          <div className="flex justify-center items-center min-h-[120px]">
+            <span className="text-amber-600 font-serif">Loading Fabrics...</span>
+          </div>
+        )}
+        {isError && (
+          <div className="flex justify-center items-center min-h-[120px]">
+            <span className="text-red-500 font-serif">Failed to load fabrics.</span>
+          </div>
+        )}
+
         {/* Fabric Grid with Staggered Animation */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-8">
-          {fabrics.map((fabric, index) => (
-            <BlurFade key={fabric._id} delay={0.3 + index * 0.08}>
-              <div 
-                className="flex flex-col items-center animate-fadeInUp"
-                style={{ animationDelay: `${1 + index * 0.15}s` }}
-              >
-                <div className="relative w-full aspect-[3/4] overflow-hidden group rounded-lg shadow-lg hover:shadow-2xl transition-all duration-500">
-                  {/* Background Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 opacity-0 group-hover:opacity-30 transition-opacity duration-500 z-10"></div>
-                  
-                  <img
-                    src={fabric.fabricImage}
-                    alt={fabric.name}
-                    className="w-full h-full object-cover transition-all duration-500 ease-in-out group-hover:scale-110 group-hover:opacity-0"
-                    style={{ willChange: 'transform, opacity' }}
-                  />
-                  
-                  {/* Transition Overlay */}
-                  <div
-                    className="absolute top-0 left-0 w-full h-full pointer-events-none transition-all duration-500 ease-in-out opacity-0 group-hover:opacity-60"
-                    style={{ background: 'rgba(227, 184, 115, 0.3)', zIndex: 15 }}
-                  />
-                  
-                  <img
-                    src={fabric.secondaryFabricImage}
-                    alt={fabric.name + ' alternate'}
-                    className="w-full h-full object-cover absolute top-0 left-0 transition-all duration-500 ease-in-out opacity-0 group-hover:opacity-100 group-hover:scale-110"
-                    style={{ willChange: 'transform, opacity', zIndex: 20 }}
-                  />
-                  
-                  {/* Hover Effect Border */}
-                  <div className="absolute inset-0 border-2 border-amber-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg" style={{ zIndex: 25 }}></div>
+        {!isLoading && !isError && (
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-8">
+            {fabrics.map((fabric, index) => (
+              <BlurFade key={fabric._id} delay={0.3 + index * 0.08}>
+                <div 
+                  className="flex flex-col items-center animate-fadeInUp"
+                  style={{ animationDelay: `${1 + index * 0.15}s` }}
+                >
+                  <div className="relative w-full aspect-[3/4] overflow-hidden group rounded-lg shadow-lg hover:shadow-2xl transition-all duration-500">
+                    {/* Background Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 opacity-0 group-hover:opacity-30 transition-opacity duration-500 z-10"></div>
+                    <img
+                      src={fabric.fabricImage}
+                      alt={fabric.name}
+                      className="w-full h-full object-cover transition-all duration-500 ease-in-out group-hover:scale-110 group-hover:opacity-0"
+                      style={{ willChange: 'transform, opacity' }}
+                    />
+                    {/* Transition Overlay */}
+                    <div
+                      className="absolute top-0 left-0 w-full h-full pointer-events-none transition-all duration-500 ease-in-out opacity-0 group-hover:opacity-60"
+                      style={{ background: 'rgba(227, 184, 115, 0.3)', zIndex: 15 }}
+                    />
+                    {fabric.secondaryFabricImage && (
+                      <img
+                        src={fabric.secondaryFabricImage}
+                        alt={fabric.name + ' alternate'}
+                        className="w-full h-full object-cover absolute top-0 left-0 transition-all duration-500 ease-in-out opacity-0 group-hover:opacity-100 group-hover:scale-110"
+                        style={{ willChange: 'transform, opacity', zIndex: 20 }}
+                      />
+                    )}
+                    {/* Hover Effect Border */}
+                    <div className="absolute inset-0 border-2 border-amber-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg" style={{ zIndex: 25 }}></div>
+                  </div>
+                  <div className="mt-3 sm:mt-4 text-center">
+                    <h3 className="text-base sm:text-lg font-medium font-serif mb-1 sm:mb-2 group-hover:text-amber-700 transition-colors duration-300">{fabric.name}</h3>
+                    <div className="text-sm sm:text-base font-serif text-gray-600 tracking-wide italic">₹ {fabric.pricePerMeter ? fabric.pricePerMeter.toLocaleString('en-IN') : ''}/m</div>
+                    {/* Decorative Underline */}
+                    <div className="mt-2 h-px w-8 bg-gradient-to-r from-amber-300 to-amber-500 mx-auto opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  </div>
                 </div>
-                
-                <div className="mt-3 sm:mt-4 text-center">
-                  <h3 className="text-base sm:text-lg font-medium font-serif mb-1 sm:mb-2 group-hover:text-amber-700 transition-colors duration-300">{fabric.name}</h3>
-                  <div className="text-sm sm:text-base font-serif text-gray-600 tracking-wide italic">₹ {fabric.price.toLocaleString('en-IN')}</div>
-                  
-                  {/* Decorative Underline */}
-                  <div className="mt-2 h-px w-8 bg-gradient-to-r from-amber-300 to-amber-500 mx-auto opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                </div>
-              </div>
-            </BlurFade>
-          ))}
-        </div>
+              </BlurFade>
+            ))}
+          </div>
+        )}
       </div>
       
       {/* Custom CSS for animations */}

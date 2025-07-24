@@ -11,6 +11,10 @@ import { pendingOrderApi } from "@/features/api/pendingOrderApi.js";
 import { invoiceApi } from "@/features/api/invoiceApi.js";
 import { employeeApi } from "@/features/api/employeeApi.js";
 import { branchApi } from "@/features/api/branchApi.js";
+import { serviceApi } from "@/features/api/serviceApi.js";
+import { enquiryApi } from "@/features/api/enquiryApi.js";
+import { galleryApi } from "@/features/api/galleryApi.js";
+import { categoriesApi } from "@/features/api/categoriesApi.js";
 
 const rootReducer = combineReducers({
   [authApi.reducerPath]: authApi.reducer,
@@ -24,6 +28,10 @@ const rootReducer = combineReducers({
   [invoiceApi.reducerPath]:invoiceApi.reducer,
   [employeeApi.reducerPath]: employeeApi.reducer,
   [branchApi.reducerPath]: branchApi.reducer,
+  [serviceApi.reducerPath]: serviceApi.reducer,
+  [enquiryApi.reducerPath]: enquiryApi.reducer,
+  [galleryApi.reducerPath]: galleryApi.reducer,
+  [categoriesApi.reducerPath]: categoriesApi.reducer,
   auth: authReducer,
 });
 

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { useGetAllItemMastersQuery } from "@/features/api/itemApi";
+import { useGetAllCategoriesQuery } from "@/features/api/categoriesApi";
 import { Input } from "@/components/ui/input";
 import {
   Pagination,
@@ -32,16 +32,17 @@ const MensWear = () => {
     scale: 1,
   });
 
-  // Fetch men's items
-  const { data, isLoading, isError } = useGetAllItemMastersQuery({
-    page,
-    limit,
-    search,
-    category: "men",
-  });
-  const items = data?.items || [];
-  const total = data?.total || 0;
+  // Fetch men's categories
+  const { data, isLoading, isError } = useGetAllCategoriesQuery();
+  let categories = (data?.categories || []).filter(cat => cat.category === 'men');
+  // Search filter
+  if (search) {
+    categories = categories.filter(cat => cat.title?.toLowerCase().includes(search.toLowerCase()));
+  }
+  const total = categories.length;
   const totalPage = Math.ceil(total / limit) || 1;
+  // Pagination
+  const pagedCategories = categories.slice((page - 1) * limit, page * limit);
 
   // Modal image tilt effect
   const handleImgMouseMove = (e) => {
@@ -222,15 +223,15 @@ const MensWear = () => {
               <ShoppingBag size={48} className="mx-auto mb-4" />
               <p className="text-xl font-medium">Failed to load men's wear</p>
             </div>
-          ) : items.length === 0 ? (
+          ) : pagedCategories.length === 0 ? (
             <div className="col-span-full text-center py-20">
               <ShoppingBag size={48} className="mx-auto mb-4 text-gray-400" />
               <p className="text-xl font-medium">No men's wear found</p>
               <p className="text-sm">Try adjusting your search</p>
             </div>
           ) : (
-            items.map((item, index) => (
-              <BlurFade key={item._id} delay={0.2 + index * 0.07}>
+            pagedCategories.map((cat, index) => (
+              <BlurFade key={cat._id} delay={0.2 + index * 0.07}>
                 <div
                   className={`group relative bg-white shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 overflow-hidden ${
                     viewMode === "list"
@@ -248,9 +249,7 @@ const MensWear = () => {
                     onClick={(e) => {
                       e.stopPropagation();
                       setModalImages(
-                        [item.itemImage, item.secondaryItemImage].filter(
-                          Boolean
-                        )
+                        [cat.categoryPrimaryImage, cat.categorySecondaryImage].filter(Boolean)
                       );
                       setActiveModalIdx(0);
                       setModalImage(true);
@@ -291,37 +290,31 @@ const MensWear = () => {
                   >
                     {/* Background Gradient Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 opacity-0 group-hover:opacity-30 transition-opacity duration-500 z-10"></div>
-                    
                     <img
-                      src={item.itemImage || "/images/placeholder.png"}
-                      alt={item.name}
+                      src={cat.categoryPrimaryImage || "/images/placeholder.png"}
+                      alt={cat.title}
                       className="w-full h-full object-cover transition-all duration-500 ease-in-out group-hover:scale-110 group-hover:opacity-0"
                       style={{ willChange: "transform, opacity" }}
                     />
-                    
                     {/* Transition Overlay */}
                     <div
                       className="absolute top-0 left-0 w-full h-full pointer-events-none transition-all duration-500 ease-in-out opacity-0 group-hover:opacity-60"
                       style={{ background: 'rgba(227, 184, 115, 0.3)', zIndex: 15 }}
                     />
-                    
-                    <img
-                      src={
-                        item.secondaryItemImage ||
-                        item.itemImage ||
-                        "/images/placeholder.png"
-                      }
-                      alt={item.name + " alternate"}
-                      className="w-full h-full object-cover absolute top-0 left-0 transition-all duration-500 ease-in-out opacity-0 group-hover:opacity-100 group-hover:scale-110"
-                      style={{ willChange: "transform, opacity", zIndex: 20 }}
-                    />
-                    
+                    {cat.categorySecondaryImage && (
+                      <img
+                        src={cat.categorySecondaryImage}
+                        alt={cat.title + " alternate"}
+                        className="w-full h-full object-cover absolute top-0 left-0 transition-all duration-500 ease-in-out opacity-0 group-hover:opacity-100 group-hover:scale-110"
+                        style={{ willChange: "transform, opacity", zIndex: 20 }}
+                      />
+                    )}
                     {/* Hover Effect Border */}
                     <div className="absolute inset-0 border-2 border-amber-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg" style={{ zIndex: 25 }}></div>
                   </div>
                   {/* Content */}
                   <div
-                    className={`${
+                    className={`$${
                       viewMode === "list"
                         ? "flex-1 pl-6 py-2 flex flex-col justify-center"
                         : "mt-3 sm:mt-4 text-center"
@@ -330,14 +323,13 @@ const MensWear = () => {
                     <h3 className={`font-medium font-serif group-hover:text-amber-700 transition-colors duration-300 ${
                       viewMode === "list" ? "text-lg mb-1" : "text-base sm:text-lg mb-1 sm:mb-2"
                     }`}>
-                      {item.name}
+                      {cat.title}
                     </h3>
                     <div className={`font-serif text-gray-600 tracking-wide italic ${
                       viewMode === "list" ? "text-base font-semibold text-gray-900" : "text-sm sm:text-base"
                     }`}>
-                      ₹ {item.stitchingCharge?.toLocaleString("en-IN") || 0}
+                      ₹ {cat.startingFrom ? cat.startingFrom.toLocaleString("en-IN") : 0}
                     </div>
-                    
                     {/* Decorative Underline - only in grid view */}
                     {viewMode === "grid" && (
                       <div className="mt-2 h-px w-8 bg-gradient-to-r from-amber-300 to-amber-500 mx-auto opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -387,7 +379,6 @@ const MensWear = () => {
           </div>
         </div>
       </div>
-      {/* Modal for enlarged image with thumbnails */}
       {modalImage && (
         <div
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm"
