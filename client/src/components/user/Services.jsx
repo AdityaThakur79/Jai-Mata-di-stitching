@@ -1,83 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-
-const services = [
-  {
-    image: '/images/jiodh2.jpg',
-    title: 'Jodhpuri Suits',
-    description: 'Traditional royal attire'
-  },
-  {
-    image: '/images/suit2.jpg',
-    title: 'Premium Suits',
-    description: 'Business & formal wear'
-  },
-  {
-    image: '/images/jeanss2.png',
-    title: 'Casual Jeans',
-    description: 'Comfort & style'
-  },
-  {
-    image: '/images/formal1.jpg',
-    title: 'Formal Wear',
-    description: 'Professional attire'
-  },
-  {
-    image: '/images/jeans.png',
-    title: 'Denim Collection',
-    description: 'Custom fit jeans'
-  },
-  {
-    image: '/images/kurta1.jpg',
-    title: 'Traditional Kurtas',
-    description: 'Ethnic elegance'
-  },
-  {
-    image: '/images/formal2.jpg',
-    title: 'Office Formals',
-    description: 'Daily professional wear'
-  },
-  {
-    image: '/images/menindark.png',
-    title: 'Evening Wear',
-    description: 'Special occasions'
-  },
-  {
-    image: '/images/pathani1.jpg',
-    title: 'Pathani Suits',
-    description: 'Cultural heritage'
-  },
-  {
-    image: '/images/suit1.jpg',
-    title: 'Wedding Suits',
-    description: 'Special celebration wear'
-  },
-  {
-    image: '/images/trouser1.jpg',
-    title: 'Tailored Trousers',
-    description: 'Perfect fit guarantee'
-  },
-  {
-    image: '/images/tshirt.jpg',
-    title: 'Custom T-Shirts',
-    description: 'Casual comfort'
-  },
-  {
-    image: '/images/jodh1.png',
-    title: 'Royal Jodhpuri',
-    description: 'Regal sophistication'
-  },
-  {
-    image: '/images/shirt2.png',
-    title: 'Dress Shirts',
-    description: 'Crisp & professional'
-  },
-  {
-    image: '/images/shirts1.jpg',
-    title: 'Casual Shirts',
-    description: 'Everyday comfort'
-  }
-];
+import { useGetAllServicesQuery } from '@/features/api/serviceApi';
 
 // Custom hook for intersection observer
 const useIntersectionObserver = (options = {}) => {
@@ -141,6 +64,9 @@ const BlurFade = ({ children, delay = 0, inView = false }) => {
 };
 
 export default function Services() {
+  const { data, isLoading, isError } = useGetAllServicesQuery({ page: 1, limit: 8 });
+  const services = (data?.services || []);
+
   return (
     <section id="services" className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-50 to-white">
       <div className="max-w-7xl mx-auto">
@@ -177,22 +103,33 @@ export default function Services() {
           </div>
         </BlurFade>
 
+        {/* Loading and Error States */}
+        {isLoading && (
+          <div className="flex justify-center items-center min-h-[200px]">
+            <span className="text-amber-600 font-serif">Loading Services...</span>
+          </div>
+        )}
+        {isError && (
+          <div className="flex justify-center items-center min-h-[200px]">
+            <span className="text-red-500 font-serif">Failed to load services.</span>
+          </div>
+        )}
+
         {/* Clean Grid Layout - 4 columns desktop, 2 columns mobile */}
+        {!isLoading && !isError && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-7xl mx-auto">
-          {services.slice(0, 12).map((service, idx) => (
-            <BlurFade key={service.image} delay={0.3 + idx * 0.08} inView>
+            {services.map((service, idx) => (
+              <BlurFade key={service._id || service.title || idx} delay={0.3 + idx * 0.08} inView>
               <div 
                 className="relative overflow-hidden rounded-sm shadow-md group cursor-pointer h-64 sm:h-96 transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] hover:z-10 border border-gray-200/50 hover:border-[#e3b873]/60"
               >
                 <img
                   className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 group-hover:brightness-105"
-                  src={service.image}
+                    src={service.serviceImage}
                   alt={service.title}
                 />
-                
                 {/* Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-600" />
-                
                 {/* Content */}
                 <div className="absolute inset-0 p-3 sm:p-4 flex flex-col justify-end text-white transform translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-600 ease-out">
                   <h3 className="text-sm sm:text-base font-bold mb-1 font-serif tracking-wide drop-shadow-lg">
@@ -202,16 +139,15 @@ export default function Services() {
                     {service.description}
                   </p>
                 </div>
-
                 {/* Golden shine effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#e3b873]/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
-                
                 {/* Additional golden glow */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#f4d03f]/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1200 ease-out delay-100" />
               </div>
             </BlurFade>
           ))}
         </div>
+        )}
 
         {/* Bottom CTA */}
         <BlurFade delay={0.8}>

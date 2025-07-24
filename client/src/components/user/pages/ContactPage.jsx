@@ -1,9 +1,77 @@
-import React from "react";
+import React, { useState } from "react";
 import CTA from "../CTA";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
 import { motion } from "framer-motion";
+import { useCreateEnquiryMutation } from '@/features/api/enquiryApi';
+import { useGetAllServicesQuery } from '@/features/api/serviceApi';
+import toast from 'react-hot-toast';
 
 const ContactPage = () => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    service: '',
+    serviceName: '',
+    message: ''
+  });
+
+  // API hooks
+  const [createEnquiry, { isLoading: isSubmitting }] = useCreateEnquiryMutation();
+  const { data: servicesData } = useGetAllServicesQuery({
+    page: 1,
+    limit: 100,
+    status: 'active'
+  });
+
+  const services = servicesData?.services || [];
+
+  // Handle input change
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Basic validation
+    if (!formData.name.trim() || !formData.phone.trim() || !formData.service || !formData.message.trim()) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      await createEnquiry({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phoneNumber: formData.phone.trim(),
+        serviceId: formData.service,
+        serviceName: formData.serviceName,
+        message: formData.message.trim(),
+        source: 'contact_page'
+      }).unwrap();
+
+      toast.success('Thank you for your message! We\'ll get back to you soon.');
+      
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        service: '',
+        serviceName: '',
+        message: ''
+      });
+    } catch (error) {
+      console.error('Contact form submission error:', error);
+      toast.error(error?.data?.message || 'Failed to send message. Please try again.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 pt-2 md:pt-0 relative">
       {/* Header with background image and overlay */}
@@ -60,7 +128,7 @@ const ContactPage = () => {
       <section className="py-20 relative z-10">
         <div className="container mx-auto px-4">
           {/* Section Header */}
-          <motion.div 
+          <motion.div
             className="text-center mb-16"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -129,7 +197,7 @@ const ContactPage = () => {
                       <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
                       <span className="text-sm font-medium text-gray-700">JMD Tailors</span>
                     </div>
-                  </div>
+                </div>
                 </motion.div>
 
                 {/* Contact Form */}
@@ -149,12 +217,9 @@ const ContactPage = () => {
                     <p className="text-gray-600 font-light leading-relaxed">
                       Share your requirements and we'll craft the perfect solution tailored just for you.
                     </p>
-                  </div>
+              </div>
 
-                  <form className="space-y-6" onSubmit={(e) => {
-                    e.preventDefault();
-                    alert("Thank you for your message! We'll get back to you soon.");
-                  }}>
+                  <form className="space-y-6" onSubmit={handleSubmit}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <motion.div 
                         className="form-group relative"
@@ -165,6 +230,8 @@ const ContactPage = () => {
                           type="text"
                           name="name"
                           placeholder="Full Name"
+                          value={formData.name}
+                          onChange={(e) => handleInputChange('name', e.target.value)}
                           className="w-full px-5 py-4 border border-amber-200/60 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent bg-white/80 backdrop-blur-sm transition-all duration-300 shadow-sm hover:shadow-md text-gray-700 placeholder-gray-500 font-light"
                           style={{ '--tw-ring-color': '#e3b873' }}
                           required
@@ -181,13 +248,14 @@ const ContactPage = () => {
                           type="email"
                           name="email"
                           placeholder="Email Address"
+                          value={formData.email}
+                          onChange={(e) => handleInputChange('email', e.target.value)}
                           className="w-full px-5 py-4 border border-amber-200/60 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent bg-white/80 backdrop-blur-sm transition-all duration-300 shadow-sm hover:shadow-md text-gray-700 placeholder-gray-500 font-light"
                           style={{ '--tw-ring-color': '#e3b873' }}
-                          required
                         />
                         <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-amber-400/5 to-orange-300/5 opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                       </motion.div>
-                    </div>
+                </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <motion.div 
@@ -199,6 +267,8 @@ const ContactPage = () => {
                           type="tel"
                           name="phone"
                           placeholder="Phone Number"
+                          value={formData.phone}
+                          onChange={(e) => handleInputChange('phone', e.target.value)}
                           className="w-full px-5 py-4 border border-amber-200/60 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent bg-white/80 backdrop-blur-sm transition-all duration-300 shadow-sm hover:shadow-md text-gray-700 placeholder-gray-500 font-light"
                           style={{ '--tw-ring-color': '#e3b873' }}
                           required
@@ -213,26 +283,31 @@ const ContactPage = () => {
                       >
                         <select
                           name="service"
+                          value={formData.service}
+                          onChange={(e) => {
+                            const selectedService = services.find(s => s._id === e.target.value);
+                            handleInputChange('service', e.target.value);
+                            handleInputChange('serviceName', selectedService?.title || '');
+                          }}
                           className="w-full px-5 py-4 border border-amber-200/60 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent bg-white/80 backdrop-blur-sm transition-all duration-300 shadow-sm hover:shadow-md text-gray-700 font-light appearance-none cursor-pointer"
                           style={{ '--tw-ring-color': '#e3b873' }}
                           required
                         >
                           <option value="">Select Service</option>
-                          <option value="custom-tailoring">Custom Tailoring</option>
-                          <option value="alterations">Alterations</option>
-                          <option value="wedding-wear">Wedding Wear</option>
-                          <option value="formal-wear">Formal Wear</option>
-                          <option value="casual-wear">Casual Wear</option>
-                          <option value="consultation">Design Consultation</option>
+                          {services.map((service) => (
+                            <option key={service._id} value={service._id}>
+                              {service.title} - {service.category}
+                            </option>
+                          ))}
                         </select>
                         <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
                           <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                           </svg>
-                        </div>
+              </div>
                         <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-amber-400/5 to-orange-300/5 opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                       </motion.div>
-                    </div>
+                </div>
 
                     <motion.div 
                       className="form-group relative"
@@ -242,6 +317,8 @@ const ContactPage = () => {
                       <textarea
                         name="message"
                         placeholder="Tell us about your vision, requirements, or any specific details..."
+                        value={formData.message}
+                        onChange={(e) => handleInputChange('message', e.target.value)}
                         className="w-full px-5 py-4 border border-amber-200/60 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent h-36 resize-none bg-white/80 backdrop-blur-sm transition-all duration-300 shadow-sm hover:shadow-md text-gray-700 placeholder-gray-500 font-light"
                         style={{ '--tw-ring-color': '#e3b873' }}
                         required
@@ -252,25 +329,53 @@ const ContactPage = () => {
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 pt-4">
                       <motion.button
                         type="submit"
-                        className="group relative inline-flex items-center justify-center px-8 py-4 text-white font-medium rounded-xl shadow-lg transition-all duration-300 ease-out overflow-hidden"
-                        style={{ background: '#e3b873' }}
-                        whileHover={{ scale: 1.05, y: -2 }}
-                        whileTap={{ scale: 0.95 }}
+                        disabled={isSubmitting}
+                        className="group relative inline-flex items-center justify-center px-8 py-4 font-serif tracking-wider shadow-lg transition-all duration-300 ease-out overflow-hidden border-2 uppercase disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{ 
+                          borderRadius: 0,
+                          background: '#e3b873', 
+                          color: '#222', 
+                          borderColor: '#e3b873' 
+                        }}
+                        whileHover={!isSubmitting ? { scale: 1.05, y: -2 } : {}}
+                        whileTap={!isSubmitting ? { scale: 0.95 } : {}}
+                        onMouseOver={e => { 
+                          if (!isSubmitting) {
+                            e.currentTarget.style.background = '#222'; 
+                            e.currentTarget.style.color = '#e3b873'; 
+                            e.currentTarget.style.borderColor = '#222'; 
+                          }
+                        }}
+                        onMouseOut={e => { 
+                          if (!isSubmitting) {
+                            e.currentTarget.style.background = '#e3b873'; 
+                            e.currentTarget.style.color = '#222'; 
+                            e.currentTarget.style.borderColor = '#e3b873'; 
+                          }
+                        }}
                       >
-                        <span className="absolute inset-0 bg-gradient-to-r from-amber-600 to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                         <span className="relative flex items-center space-x-2">
+                          {isSubmitting ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                              <span>Submitting...</span>
+                            </>
+                          ) : (
+                            <>
                           <span>Send Message</span>
                           <svg className="w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                           </svg>
+                            </>
+                          )}
                         </span>
                       </motion.button>
                       
                       <div className="flex items-center space-x-3 text-sm text-gray-600">
                         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                         <span className="font-light">We typically respond within 24 hours</span>
-                      </div>
-                    </div>
+              </div>
+                </div>
                   </form>
                 </motion.div>
               </div>
@@ -335,13 +440,13 @@ const ContactPage = () => {
                         ></span>
                       </a>
                     </div>
-                  </div>
-                </div>
+            </div>
+            </div>
                 <div className="flex items-center text-xs text-gray-500 font-light">
                   <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
                   Available now
-                </div>
-              </div>
+            </div>
+            </div>
             </motion.div>
 
             {/* Address */}
@@ -386,15 +491,15 @@ const ContactPage = () => {
                         style={{ background: '#e3b873' }}
                       ></span>
                     </a>
-                  </div>
-                </div>
+        </div>
+        </div>
                 <div className="flex items-center text-xs text-gray-500 font-light">
                   <svg className="w-3 h-3 mr-2 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                   </svg>
                   Click for directions
-                </div>
-              </div>
+        </div>
+      </div>
             </motion.div>
 
             {/* Hours */}
@@ -444,12 +549,12 @@ const ContactPage = () => {
               </div>
             </motion.div>
           </motion.div>
-        </div>
+      </div>
       </section>
       
       {/* CTA Section */}
       <CTA />
-    </div>
+      </div>
   );
 };
 

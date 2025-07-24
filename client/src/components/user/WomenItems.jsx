@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useGetAllItemMastersQuery } from '@/features/api/itemApi';
+import { useGetAllCategoriesQuery } from '@/features/api/categoriesApi';
 
 // Intersection Observer Hook
 const useIntersectionObserver = (options = {}) => {
@@ -85,8 +85,9 @@ const SectionOverlay = ({ position, size, opacity }) => {
 };
 
 const WomenItems = () => {
-  const { data, isLoading, isError } = useGetAllItemMastersQuery({ page: 1, limit: 12, category: 'women' });
-  const items = (data?.items || []).slice(0, 4);
+  const { data, isLoading, isError } = useGetAllCategoriesQuery();
+  const categories = (data?.categories || []);
+  const items = categories.filter(cat => cat.category === 'women').slice(0, 4);
 
   if (isLoading) {
     return (
@@ -178,8 +179,8 @@ const WomenItems = () => {
 
         {/* Items Grid with Staggered Animation */}
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-8">
-          {items.map((item, index) => (
-            <BlurFade key={item._id} delay={0.3 + index * 0.08}>
+          {items.map((cat, index) => (
+            <BlurFade key={cat._id} delay={0.3 + index * 0.08}>
               <div 
                 className="flex flex-col items-center animate-fadeInUp"
                 style={{ animationDelay: `${1 + index * 0.15}s` }}
@@ -187,40 +188,35 @@ const WomenItems = () => {
                 <div className="relative w-full aspect-[3/4] overflow-hidden group rounded-lg shadow-lg hover:shadow-2xl transition-all duration-500">
                   {/* Background Gradient Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-br from-rose-50 via-pink-50 to-amber-50 opacity-0 group-hover:opacity-40 transition-opacity duration-500 z-10"></div>
-                  
                   <img
-                    src={item.itemImage || '/images/placeholder.png'}
-                    alt={item.name}
+                    src={cat.categoryPrimaryImage || '/images/placeholder.png'}
+                    alt={cat.title}
                     className="w-full h-full object-cover transition-all duration-500 ease-in-out group-hover:scale-110 group-hover:opacity-0"
                     style={{ willChange: 'transform, opacity' }}
                   />
-                  
                   {/* Transition Overlay */}
                   <div
                     className="absolute top-0 left-0 w-full h-full pointer-events-none transition-all duration-500 ease-in-out opacity-0 group-hover:opacity-60"
                     style={{ background: 'rgba(227, 184, 115, 0.3)', zIndex: 15 }}
                   />
-                  
+                  {cat.categorySecondaryImage && (
                   <img
-                    src={item.secondaryItemImage || item.itemImage || '/images/placeholder.png'}
-                    alt={item.name + ' alternate'}
+                      src={cat.categorySecondaryImage}
+                      alt={cat.title + ' alternate'}
                     className="w-full h-full object-cover absolute top-0 left-0 transition-all duration-500 ease-in-out opacity-0 group-hover:opacity-100 group-hover:scale-110"
                     style={{ willChange: 'transform, opacity', zIndex: 20 }}
                   />
-                  
+                  )}
                   {/* Hover Effect Border */}
                   <div className="absolute inset-0 border-2 border-rose-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg" style={{ zIndex: 25 }}></div>
                 </div>
-                
                 <div className="mt-3 sm:mt-4 text-center">
-                  <h3 className="text-base sm:text-lg font-medium font-serif mb-1 sm:mb-2 group-hover:text-amber-700 transition-colors duration-300">{item.name}</h3>
+                  <h3 className="text-base sm:text-lg font-medium font-serif mb-1 sm:mb-2 group-hover:text-amber-700 transition-colors duration-300">{cat.title}</h3>
                   <div className="text-sm sm:text-base font-serif text-gray-600 tracking-wide italic">
-                    ₹ {item.stitchingCharge?.toLocaleString('en-IN') || 0}
+                    ₹ {cat.startingFrom ? cat.startingFrom.toLocaleString('en-IN') : 0}
                   </div>
-                  
                   {/* Decorative Underline with Gradient */}
                   <div className="mt-2 h-px w-12 bg-gradient-to-r from-rose-300 via-amber-300 to-pink-300 mx-auto opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  
                   {/* Floating Hearts Animation */}
                   <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
                     <div className="animate-bounce" style={{ animationDelay: '0.1s' }}>

@@ -21,7 +21,12 @@ const imageFields = [
   "itemImage",
   "secondaryItemImage",
   "styleImage",
-  "aadhaarImage"
+  "aadhaarImage",
+  "serviceImage",
+  "secondaryServiceImage",
+  "categoryPrimaryImage",
+  "categorySecondaryImage",
+  "galleryImage"
 ];
 
 const videoFields = ["videoUpload"];
@@ -30,7 +35,7 @@ const videoFields = ["videoUpload"];
 const storage = new CloudinaryStorage({
   cloudinary,
   params: (req, file) => {
-
+    console.log('[MULTER PARAMS] fieldname:', file.fieldname, 'mimetype:', file.mimetype);
     const isVideo = file.mimetype.startsWith("video/");
     let folder = "uploads";
 
@@ -56,6 +61,7 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024,
   },
   fileFilter: (req, file, cb) => {
+    console.log('[MULTER FILTER] fieldname:', file.fieldname, 'mimetype:', file.mimetype);
     if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
       cb(null, true);
     } else {
@@ -74,6 +80,12 @@ const upload = multer({
   { name: "styleImage", maxCount: 1 },
   { name: "aadhaarImage", maxCount: 1 },
   { name: "videoUpload", maxCount: 1 },
+  { name: "serviceImage", maxCount: 1 },
+  { name: "secondaryServiceImage", maxCount: 1 },
+  { name: "categoryPrimaryImage", maxCount: 1 },
+  { name: "categorySecondaryImage", maxCount: 1 },
+  { name: "galleryImage", maxCount: 1 },
 ]);
+ 
 
 export default upload;

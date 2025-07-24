@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   ListOrdered,
   MailWarning,
+  MessageSquare,
   Package,
   Package2,
   PackageCheck,
@@ -53,6 +54,14 @@ const Sidebar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { data, isLoading, refetch } = useGetEmployeeProfileQuery();
   const employee = data && data.employee;
+  // Handler to prevent background scroll when mouse is over sidebar
+  const handleSidebarWheel = (e) => {
+    const el = e.currentTarget;
+    const isScrollable = el.scrollHeight > el.clientHeight;
+    if (isScrollable) {
+      e.stopPropagation();
+    }
+  };
   return (
     <div className="flex flex-col lg:flex-row mt-20">
       {/* Mobile Menu Button */}
@@ -70,7 +79,9 @@ const Sidebar = () => {
       <div
         className={`${
           isMobileMenuOpen ? "block" : "hidden"
-        } lg:block w-full lg:w-[250px] sm:w-[300px] space-y-8 border-r border-b border-gray-300 dark:border-gray-700 p-5 bg-white dark:bg-gray-900 z-50 lg:z-auto`}
+        } lg:block w-full lg:w-[250px] sm:w-[300px] space-y-8 border-r border-b border-gray-300 dark:border-gray-700 p-5 bg-white dark:bg-gray-900 z-50 lg:z-auto overflow-y-auto max-h-screen`}
+        style={{ WebkitOverflowScrolling: 'touch' }}
+        onWheel={handleSidebarWheel}
       >
         <div className="space-y-4 ">
           <Accordion type="single" collapsible className="w-full">
@@ -93,6 +104,35 @@ const Sidebar = () => {
                 <Landmark size={22} />
                 <h2 className="text-sm">Branches</h2>
               </Link>
+            </AccordionItem>
+
+            <AccordionItem value="item-enquiries">
+              <AccordionTrigger className="hover:no-underline">
+                <div className="flex items-center gap-2">
+                  <MessageSquare size={22} />
+                  <span>Website Services</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <Link
+                  to="/admin/services"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Shirt size={22} />
+                  <h2>Manage Services</h2>
+                </Link>
+              </AccordionContent>
+              <AccordionContent>
+                <Link
+                  to="/admin/enquiries"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <MessageSquare size={22} />
+                  <h2>Manage Enquiries</h2>
+                </Link>
+              </AccordionContent>
             </AccordionItem>
 
             <AccordionItem value="item-2">

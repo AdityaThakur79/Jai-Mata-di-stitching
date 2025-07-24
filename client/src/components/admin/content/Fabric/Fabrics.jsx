@@ -39,6 +39,9 @@ import {
 import { EyeIcon, Loader2 } from "lucide-react";
 import { Drawer } from "antd";
 import { useDebounce } from "@/hooks/Debounce";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Search, Eye, Edit, Trash2, Filter, RefreshCw, ChevronDown, X, Loader2 as LucideLoader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 const Fabrics = () => {
   const navigate = useNavigate();
@@ -46,11 +49,15 @@ const Fabrics = () => {
   const [limit, setLimit] = useState(5);
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 500);
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [colorFilter, setColorFilter] = useState("all");
 
-  const { data, isLoading, refetch } = useGetAllFabricsQuery({
+  const { data, isLoading, refetch, error } = useGetAllFabricsQuery({
     page: currentPage,
     limit,
     search: debouncedSearch,
+    type: typeFilter,
+    color: colorFilter,
   });
 
   console.log(data);
@@ -96,434 +103,207 @@ const Fabrics = () => {
   }, [isSuccess, isError]);
 
   return (
-    <section className="bg-gray-50 dark:bg-gray-900 min-h-screen rounded-md">
+    <section className=" dark:bg-gray-900 min-h-screen rounded-md">
       <div className="md:p-6 p-2">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-          <h2 className="md:text-xl font-semibold text-gray-700 dark:text-white">
-            All Fabrics
-          </h2>
-          <div className="flex flex-wrap gap-3">
-            <input
-              type="text"
-              placeholder="Search by name, type, color"
+        {/* Header - Responsive */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+          <div>
+            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Manage Fabrics</h1>
+            <p className="text-gray-600 text-sm lg:text-base">Create and manage fabrics</p>
+          </div>
+          <Button
+            onClick={() => navigate("/employee/create-fabric")}
+            className="w-full sm:w-auto bg-[#EB811F] hover:bg-[#EB811F]/90 text-white rounded"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Fabric
+          </Button>
+        </div>
+        {/* Search and Filters */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              placeholder="Search fabrics..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-800 dark:text-white"
+              className="pl-10"
             />
-            <Select
-              value={limit.toString()}
-              onValueChange={(v) => {
-                setLimit(+v);
-                setCurrentPage(1);
-              }}
+          </div>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => refetch()}
+              disabled={isLoading}
+              className="gap-2 border border-[#EB811F] text-[#EB811F] bg-white hover:bg-[#EB811F]/10 rounded"
             >
-              <SelectTrigger className="w-[80px]">
-                <SelectValue placeholder="Limit" />
-              </SelectTrigger>
-              <SelectContent>
-                {[5, 10, 15, 20].map((n) => (
-                  <SelectItem key={n} value={n.toString()}>
-                    {n}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button onClick={() => navigate("/employee/create-fabric")}>
-              Add Fabric
-            </Button>
-            <Button className="p-2" onClick={refetch}>
-              <GrPowerCycle />
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+              Refresh
             </Button>
           </div>
         </div>
-
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50 dark:bg-gray-900">
-              <tr className="text-left">
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase">
-                  No
-                </th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase">
-                  Image
-                </th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase">
-                  Type
-                </th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase">
-                  Color
-                </th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase">
-                  Price/m
-                </th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase">
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200">
-              {isLoading ? (
-                <tr>
-                  <td colSpan="7" className="text-center py-10">
-                    Loading...
-                  </td>
-                </tr>
-              ) : data?.fabrics?.length > 0 ? (
-                data.fabrics.map((fabric, i) => (
-                  <tr key={fabric._id} className="text-left">
-                    <td className=" px-6 py-4 text-sm text-gray-900 dark:text-white">
-                      {limit * (currentPage - 1) + i + 1}
-                    </td>
-                    <td className="px-6 py-4">
-                      {fabric.fabricImage ? (
-                        <img
-                          src={fabric?.fabricImage}
-                          className="w-10 h-10 rounded object-cover"
-                          alt="fabric"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center text-gray-500">
-                          N/A
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                      {fabric.name}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-white capitalize">
-                      {fabric.type}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                      {fabric.color}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                      ₹{fabric.pricePerMeter}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex gap-2  ">
-                        <Button
-                          className="p-2 bg-blue-100 text-blue-600 hover:bg-blue-200"
-                          onClick={() => handleViewFabric(fabric._id)}
-                        >
-                          <EyeIcon className="w-5 h-5" />
-                        </Button>
-
-                        <Drawer
-                          title={
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                                <span className="text-white text-sm font-bold">
-                                  {selectedFabric?.name?.charAt(0) || "F"}
-                                </span>
-                              </div>
-                              <span className="text-xl font-bold text-gray-800 dark:text-white">
-                                {selectedFabric?.name || "Loading..."}
-                              </span>
-                            </div>
-                          }
-                          placement="right"
-                          width={450}
-                          onClose={() => {
-                            setDrawerOpen(false);
-                            setSelectedFabric(null);
-                          }}
-                          open={drawerOpen}
-                          mask={false}
-                          className="fabric-drawer"
-                        >
-                          {!selectedFabric ? (
-                            <div className="flex flex-col justify-center items-center h-96 space-y-4">
-                              <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-                              <p className="text-gray-500 dark:text-gray-400">
-                                Loading fabric details...
-                              </p>
-                            </div>
+        {/* Error Display */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <h3 className="text-red-800 font-medium">Error Loading Fabrics</h3>
+            <p className="text-red-600 text-sm mt-1">
+              {error?.data?.message || error?.message || 'Failed to load fabrics'}
+            </p>
+            <Button 
+              size="sm" 
+              onClick={() => refetch()} 
+              className="mt-2 border border-[#EB811F] text-[#EB811F] bg-white hover:bg-[#EB811F]/10 rounded"
+            >
+              Try Again
+            </Button>
+          </div>
+        )}
+        {/* Fabrics Display - Responsive */}
+        {isLoading ? (
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading fabrics...</p>
+          </div>
+        ) : !data?.fabrics || data.fabrics.length === 0 ? (
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <div className="text-gray-400 text-6xl mb-4">📋</div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Fabrics Found</h3>
+            <p className="text-gray-600 mb-4">
+              {searchQuery || typeFilter !== "all" || colorFilter !== "all"
+                ? "No fabrics match your current filters."
+                : "You haven't created any fabrics yet."}
+            </p>
+            <Button onClick={() => navigate("/employee/create-fabric")}> <Plus className="w-4 h-4 mr-2 text-[#EB811F]" /> Create First Fabric </Button>
+          </div>
+        ) : (
+          <>
+            {/* Desktop Table View - Hidden on mobile */}
+            <div className="hidden lg:block bg-white rounded-lg shadow overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50 dark:bg-gray-900">
+                    <tr className="text-left">
+                      <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase">No</th>
+                      <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase">Image</th>
+                      <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase">Name</th>
+                      <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase">Type</th>
+                      <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase">Color</th>
+                      <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase">Price/m</th>
+                      <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200">
+                    {data.fabrics.map((fabric, i) => (
+                      <tr key={fabric._id} className="text-left">
+                        <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{limit * (currentPage - 1) + i + 1}</td>
+                        <td className="px-6 py-4">
+                          {fabric.fabricImage ? (
+                            <img src={fabric.fabricImage} className="w-10 h-10 rounded object-cover" alt="fabric" />
                           ) : (
-                            <div className="space-y-6">
-                              {/* Image Section with Enhanced Design */}
-                              {selectedFabric?.fabricImage && (
-                                <div className="relative group">
-                                  <div className="w-full h-56 md:h-72 overflow-hidden rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 shadow-lg">
-                                    {/* Primary Image */}
-                                    <img
-                                      src={selectedFabric.fabricImage}
-                                      alt={selectedFabric.name}
-                                      className={`w-full h-full object-cover object-center transition-all duration-500 ease-in-out group-hover:scale-105 ${
-                                        showSecondary &&
-                                        selectedFabric?.secondaryFabricImage
-                                          ? "opacity-0"
-                                          : "opacity-100"
-                                      }`}
-                                      onError={(e) => {
-                                        e.currentTarget.src =
-                                          "/placeholder.png";
-                                      }}
-                                    />
-
-                                    {/* Secondary Image */}
-                                    {selectedFabric.secondaryFabricImage && (
-                                      <img
-                                        src={
-                                          selectedFabric.secondaryFabricImage
-                                        }
-                                        alt={`${selectedFabric.name} - alternate view`}
-                                        className={`absolute inset-0 w-full h-full object-cover object-center transition-all duration-500 ease-in-out group-hover:scale-105 ${
-                                          showSecondary
-                                            ? "opacity-100"
-                                            : "opacity-0"
-                                        }`}
-                                        onError={(e) => {
-                                          e.currentTarget.src =
-                                            "/placeholder.png";
-                                        }}
-                                      />
-                                    )}
-
-                                    {/* Hover trigger area */}
-                                    {selectedFabric.secondaryFabricImage && (
-                                      <div
-                                        className="absolute inset-0 cursor-pointer"
-                                        onMouseEnter={() =>
-                                          setShowSecondary(true)
-                                        }
-                                        onMouseLeave={() =>
-                                          setShowSecondary(false)
-                                        }
-                                      />
-                                    )}
-
-                                    {/* Overlay for secondary image hint */}
-                                    {selectedFabric.secondaryFabricImage && (
-                                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300 flex items-end justify-center pb-4">
-                                        <div className="bg-white dark:bg-gray-800 px-3 py-1 rounded-full text-xs font-medium text-gray-600 dark:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-md">
-                                          Hover to see alternate view
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  {/* Image indicators */}
-                                  {selectedFabric.secondaryFabricImage && (
-                                    <div className="absolute top-3 right-3 flex space-x-1">
-                                      <div
-                                        className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                                          !showSecondary
-                                            ? "bg-white shadow-md"
-                                            : "bg-white/50"
-                                        }`}
-                                      ></div>
-                                      <div
-                                        className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                                          showSecondary
-                                            ? "bg-white shadow-md"
-                                            : "bg-white/50"
-                                        }`}
-                                      ></div>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-
-                              {/* Details Section with Cards */}
-                              <div className="space-y-4">
-                                {/* Primary Info Card */}
-                                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-xl border border-blue-200 dark:border-blue-800">
-                                  <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-3">
-                                      <div>
-                                        <p className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">
-                                          Type
-                                        </p>
-                                        <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                                          {selectedFabric.type}
-                                        </p>
-                                      </div>
-                                      <div>
-                                        <p className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">
-                                          Color
-                                        </p>
-                                        <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                                          {selectedFabric.color}
-                                        </p>
-                                      </div>
-                                    </div>
-                                    <div className="space-y-3">
-                                      <div>
-                                        <p className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">
-                                          Pattern
-                                        </p>
-                                        <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                                          {selectedFabric.pattern || "Solid"}
-                                        </p>
-                                      </div>
-                                      <div>
-                                        <p className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">
-                                          Price per meter
-                                        </p>
-                                        <p className="text-lg font-bold text-green-600 dark:text-green-400">
-                                          ₹{selectedFabric.pricePerMeter}
-                                        </p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* Stock Info Card */}
-                                <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-4 rounded-xl border border-green-200 dark:border-green-800">
-                                  <div className="flex items-center justify-between">
-                                    <div>
-                                      <p className="text-xs font-medium text-green-600 dark:text-green-400 uppercase tracking-wide">
-                                        Available Stock
-                                      </p>
-                                      <p className="text-xl font-bold text-gray-800 dark:text-gray-200">
-                                        {selectedFabric.inStockMeters} meters
-                                      </p>
-                                    </div>
-                                    <div className="flex items-center">
-                                      <div
-                                        className={`w-3 h-3 rounded-full mr-2 ${
-                                          selectedFabric.inStockMeters > 10
-                                            ? "bg-green-500"
-                                            : selectedFabric.inStockMeters > 5
-                                            ? "bg-yellow-500"
-                                            : "bg-red-500"
-                                        }`}
-                                      ></div>
-                                      <span
-                                        className={`text-xs font-medium ${
-                                          selectedFabric.inStockMeters > 10
-                                            ? "text-green-600"
-                                            : selectedFabric.inStockMeters > 5
-                                            ? "text-yellow-600"
-                                            : "text-red-600"
-                                        }`}
-                                      >
-                                        {selectedFabric.inStockMeters > 10
-                                          ? "In Stock"
-                                          : selectedFabric.inStockMeters > 5
-                                          ? "Low Stock"
-                                          : "Limited"}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* Description Card */}
-                                {selectedFabric.description && (
-                                  <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-                                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                                      Description
-                                    </p>
-                                    <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                                      {selectedFabric.description}
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
+                            <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center text-gray-500">N/A</div>
                           )}
-                        </Drawer>
-
-                        <Button
-                          className="p-2 bg-orange-100 text-orange-600 hover:bg-orange-200"
-                          onClick={() =>
-                            navigate("/employee/update-fabric", {
-                              state: { fabricId: fabric._id },
-                            })
-                          }
-                        >
-                          <MdOutlineEdit className="w-5 h-5" />
-                        </Button>
-
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button className="p-2 bg-red-100 text-red-600 hover:bg-red-200">
-                              <FaRegTrashCan />
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{fabric.name}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900 dark:text-white capitalize">{fabric.type}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{fabric.color}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">₹{fabric.pricePerMeter}</td>
+                        <td className="px-6 py-4">
+                          <div className="flex gap-2">
+                            <Button className="p-2 bg-blue-100 text-blue-600 hover:bg-blue-200" onClick={() => handleViewFabric(fabric._id)}>
+                              <Eye className="w-5 h-5 text-[#EB811F]" />
                             </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                Delete Fabric?
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDelete(fabric._id)}
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="7" className="text-center py-10 text-gray-400">
-                    No Fabrics Found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-            <thead className="bg-gray-50 dark:bg-gray-900 text-left">
-              <tr>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase">
-                  No
-                </th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase">
-                  Image
-                </th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase">
-                  Type
-                </th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase">
-                  Color
-                </th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase">
-                  Price/m
-                </th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-white uppercase">
-                  Action
-                </th>
-              </tr>
-            </thead>
-          </table>
-
-          {/* Pagination */}
-          <div className="border-t border-gray-200 px-4 py-3 flex flex-col lg:flex-row lg:items-center lg:justify-between">
-            <div className="mb-4 lg:mb-0">
-              <p className="text-sm text-gray-700 dark:text-white">
-                Showing{" "}
-                {data?.fabrics?.length ? (data?.page - 1) * data?.limit + 1 : 0}{" "}
-                to {Math.min(data?.page * data?.limit, data?.total || 0)} of{" "}
-                <span className="font-medium">{data?.total || 0}</span> entries
-              </p>
+                            <Button className="p-2 bg-orange-100 text-orange-600 hover:bg-orange-200" onClick={() => navigate("/employee/update-fabric", { state: { fabricId: fabric._id } })}>
+                              <Edit className="w-5 h-5 text-[#EB811F]" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button className="p-2 bg-red-100 text-red-600 hover:bg-red-200 rounded"><Trash2 className="text-[#EB811F]" /></Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Fabric?</AlertDialogTitle>
+                                  <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDelete(fabric._id)}>Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <div>
-              {data?.totalPage > 1 && (
+            {/* Mobile Card View - Visible only on mobile */}
+            <div className="lg:hidden space-y-4">
+              {data.fabrics.map((fabric) => (
+                <div key={fabric._id} className="bg-white rounded-lg shadow p-4">
+                  <div className="flex items-start space-x-3 mb-3">
+                    {fabric.fabricImage && (
+                      <img src={fabric.fabricImage} alt={fabric.name} className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-gray-900 truncate">{fabric.name}</h3>
+                      <p className="text-sm text-gray-500 mt-1 line-clamp-2">{fabric.description}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 mb-3 text-sm">
+                    <div>
+                      <span className="text-gray-500">Type:</span>
+                      <div className="font-medium">{fabric.type}</div>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Color:</span>
+                      <div className="font-medium">{fabric.color}</div>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Price:</span>
+                      <div className="font-medium text-blue-600">₹{fabric.pricePerMeter}</div>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Stock:</span>
+                      <div className="font-medium">{fabric.inStockMeters} m</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Badge variant="outline" className="text-xs">{fabric.type}</Badge>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button variant="ghost" size="sm" onClick={() => handleViewFabric(fabric._id)} className="text-[#EB811F] hover:text-[#EB811F]/80 rounded" title="View Details"><Eye className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="sm" onClick={() => navigate("/employee/update-fabric", { state: { fabricId: fabric._id } })} className="text-[#EB811F] hover:text-[#EB811F]/80 rounded" title="Edit Fabric"><Edit className="w-4 h-4" /></Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="sm" className="text-[#EB811F] hover:text-[#EB811F]/80 rounded" title="Delete Fabric"><Trash2 className="w-4 h-4" /></Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Fabric?</AlertDialogTitle>
+                            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(fabric._id)}>Delete</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Pagination - Responsive */}
+            {data?.totalPage > 1 && (
+              <div className="bg-white rounded-lg shadow px-4 py-4 mt-6">
                 <Pagination>
                   <PaginationContent>
                     <PaginationItem>
                       <PaginationPrevious
                         onClick={() => handlePageChange(currentPage - 1)}
-                        className={
-                          currentPage === 1
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                       />
                     </PaginationItem>
                     {getPageNumbers().map((num) => (
@@ -540,19 +320,98 @@ const Fabrics = () => {
                     <PaginationItem>
                       <PaginationNext
                         onClick={() => handlePageChange(currentPage + 1)}
-                        className={
-                          currentPage === (data?.totalPage || 1)
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
+                        className={currentPage === (data?.totalPage || 1) ? "pointer-events-none opacity-50" : "cursor-pointer"}
                       />
                     </PaginationItem>
                   </PaginationContent>
                 </Pagination>
-              )}
+              </div>
+            )}
+          </>
+        )}
+        {/* Drawer for Fabric Details */}
+        <Drawer
+          title={null}
+          placement="right"
+          width={500}
+          onClose={() => {
+            setDrawerOpen(false);
+            setSelectedFabric(null);
+            document.body.style.overflow = 'unset';
+          }}
+          open={drawerOpen}
+          mask={false}
+          maskClosable={true}
+          styles={{
+            body: { padding: 0, height: '100vh', overflow: 'hidden' },
+            header: { display: 'none' },
+            wrapper: { height: '100vh' }
+          }}
+          className="fabric-drawer"
+          getContainer={false}
+        >
+          {!selectedFabric ? (
+            <div className="flex flex-col justify-center items-center h-96 space-y-4">
+              <LucideLoader2 className="w-8 h-8 animate-spin text-blue-500" />
+              <p className="text-gray-500 dark:text-gray-400">Loading fabric details...</p>
             </div>
-          </div>
-        </div>
+          ) : (
+            <div className="h-full bg-gradient-to-br from-blue-25 via-white to-blue-25 flex flex-col">
+              <div className="bg-gradient-to-r from-blue-100 to-indigo-100 p-6 border-b border-blue-200 relative flex-shrink-0">
+                <button
+                  onClick={() => {
+                    setDrawerOpen(false);
+                    setSelectedFabric(null);
+                    document.body.style.overflow = 'unset';
+                  }}
+                  className="absolute top-4 right-4 p-2 hover:bg-white/50 rounded-lg transition-colors"
+                >
+                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-blue-200 rounded-lg">
+                    <Eye className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">{selectedFabric?.name}</h2>
+                    <p className="text-blue-600">Fabric Details</p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex-1 p-6 space-y-6 overflow-y-auto overflow-x-hidden" style={{ scrollbarWidth: 'thin' }}>
+                {selectedFabric?.fabricImage && (
+                  <div className="bg-white rounded-xl p-4 shadow-sm border border-blue-100">
+                    <img src={selectedFabric.fabricImage} alt={selectedFabric.name} className="w-full h-48 object-cover rounded-lg" />
+                  </div>
+                )}
+                <div className="bg-white rounded-xl p-4 shadow-sm border border-blue-100">
+                  <h3 className="font-semibold text-gray-900 mb-3">Basic Information</h3>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between"><span className="text-gray-600">Name:</span><span className="font-medium">{selectedFabric?.name}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-600">Type:</span><span className="font-medium">{selectedFabric?.type}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-600">Color:</span><span className="font-medium">{selectedFabric?.color}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-600">Pattern:</span><span className="font-medium">{selectedFabric?.pattern || 'Solid'}</span></div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-xl p-4 shadow-sm border border-blue-100">
+                  <h3 className="font-semibold text-gray-900 mb-3">Pricing & Stock</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between"><span className="text-gray-600">Price Per Meter:</span><span className="font-medium text-blue-600">₹{selectedFabric?.pricePerMeter}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-600">Stock:</span><span className="font-medium">{selectedFabric?.inStockMeters} meters</span></div>
+                  </div>
+                </div>
+                {selectedFabric?.description && (
+                  <div className="bg-white rounded-xl p-4 shadow-sm border border-blue-100">
+                    <h3 className="font-semibold text-gray-900 mb-3">Description</h3>
+                    <p className="text-gray-700 text-sm leading-relaxed">{selectedFabric?.description}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </Drawer>
       </div>
     </section>
   );

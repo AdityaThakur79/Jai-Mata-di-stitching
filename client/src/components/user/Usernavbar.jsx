@@ -81,13 +81,13 @@ const UserNavbar = () => {
             
             {/* Left - Social Icons (Desktop) */}
             <div className="hidden lg:flex items-center space-x-4">
-              <a href="#" className="text-black hover:text-yellow-500 transition-colors duration-200">
+              <a href="https://www.instagram.com/jmdstitching.co.in/" className="text-black hover:text-yellow-500 transition-colors duration-200">
                 <Facebook className="w-4 h-4" />
               </a>
-              <a href="#" className="text-black hover:text-yellow-500 transition-colors duration-200">
+              <a href="https://www.instagram.com/jmdstitching.co.in/" className="text-black hover:text-yellow-500 transition-colors duration-200">
                 <Instagram className="w-4 h-4" />
               </a>
-              <a href="#" className="text-black hover:text-yellow-500 transition-colors duration-200">
+              <a href="https://www.instagram.com/jmdstitching.co.in/" className="text-black hover:text-yellow-500 transition-colors duration-200">
                 <Twitter className="w-4 h-4" />
               </a>
             </div>
@@ -106,7 +106,7 @@ const UserNavbar = () => {
 
             {/* Right - Contact Button (Desktop) */}
             <div className="hidden lg:block">
-              <button 
+              <a href='/contact' 
                 className="border-2 px-6 py-2.5 text-sm font-serif tracking-wider shadow-md transition-all duration-300 uppercase"
                 style={{ borderRadius: 0, background: '#e3b873', color: '#222', borderColor: '#e3b873' }}
                 onMouseOver={e => { 
@@ -121,7 +121,7 @@ const UserNavbar = () => {
                 }}
               >
                 Contact Us
-              </button>
+              </a>
             </div>
 
             {/* Mobile Menu Button */}
@@ -263,13 +263,13 @@ const UserNavbar = () => {
               {/* Mobile Social Links */}
               <div className="pt-3 mt-3 border-t border-amber-200/50">
                 <div className="flex items-center justify-center space-x-6">
-                  <a href="#" className="p-2 text-gray-600 hover:text-amber-600 hover:bg-amber-100 transition-all duration-300 rounded-full">
+                  <a href="https://www.instagram.com/jmdstitching.co.in/" className="p-2 text-gray-600 hover:text-amber-600 hover:bg-amber-100 transition-all duration-300 rounded-full">
                     <Facebook className="w-5 h-5" />
                   </a>
-                  <a href="https://instagram.com/jmdtailors" className="p-2 text-gray-600 hover:text-amber-600 hover:bg-amber-100 transition-all duration-300 rounded-full">
+                  <a href="https://www.instagram.com/jmdstitching.co.in/" className="p-2 text-gray-600 hover:text-amber-600 hover:bg-amber-100 transition-all duration-300 rounded-full">
                     <Instagram className="w-5 h-5" />
                   </a>
-                  <a href="#" className="p-2 text-gray-600 hover:text-amber-600 hover:bg-amber-100 transition-all duration-300 rounded-full">
+                  <a href="https://www.instagram.com/jmdstitching.co.in/" className="p-2 text-gray-600 hover:text-amber-600 hover:bg-amber-100 transition-all duration-300 rounded-full">
                     <Twitter className="w-5 h-5" />
                   </a>
                 </div>
@@ -277,7 +277,7 @@ const UserNavbar = () => {
 
               {/* Mobile Contact Button */}
               <div className="pt-3 mt-3 border-t border-amber-200/50 px-4">
-                <button 
+                <a href='/contact' 
                   className="w-full border-2 px-4 py-3 text-sm font-serif tracking-wider shadow-md transition-all duration-300 uppercase"
                   style={{ borderRadius: 0, background: '#e3b873', color: '#222', borderColor: '#e3b873' }}
                   onMouseOver={e => { 
@@ -292,7 +292,7 @@ const UserNavbar = () => {
                   }}
                 >
                   Contact Us
-                </button>
+                </a>
               </div>
             </div>
           )}
