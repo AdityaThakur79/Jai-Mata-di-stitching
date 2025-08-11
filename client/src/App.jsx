@@ -116,8 +116,8 @@ const appRouter = createBrowserRouter([
             <WomenHeroSection />
             <Info />
             <Gallery />
-            <Testimonials />
-            <CTA />
+            <Testimonials />  
+            <CTA /> 
             {/* <Qa/> */}
           </>
         ),

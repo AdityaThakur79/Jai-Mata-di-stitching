@@ -32,7 +32,7 @@ const UserNavbar = () => {
       <div className="bg-black border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Desktop Top Bar */}
-          <div className="hidden md:flex items-center justify-between h-10 text-sm">
+          {/* <div className="hidden md:flex items-center justify-between h-10 text-sm">
             <div className="flex items-center space-x-8">
               <div className="flex items-center space-x-2">
                 <Phone className="w-3 h-3 text-yellow-400" />
@@ -53,10 +53,10 @@ const UserNavbar = () => {
                 <span className="text-gray-300">108, Business park,Dombivali</span>
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Mobile Top Bar */}
-          <div className="md:hidden flex items-center justify-center h-9">
+          {/* <div className="md:hidden flex items-center justify-center h-9">
             <div className="flex items-center space-x-4 text-xs">
               <div className="flex items-center space-x-1">
                 <Clock className="w-3 h-3 text-yellow-400" />
@@ -68,9 +68,11 @@ const UserNavbar = () => {
                 <span className="text-gray-300">+852 2234 5678</span>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
+            
+
 
       {/* Logo Section - Centered logo with social and contact */}
       <div className={`transition-all duration-300 ${
@@ -78,23 +80,14 @@ const UserNavbar = () => {
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
+
             
             {/* Left - Social Icons (Desktop) */}
             <div className="hidden lg:flex items-center space-x-4">
-              <a href="https://www.instagram.com/jmdstitching.co.in/" className="text-black hover:text-yellow-500 transition-colors duration-200">
-                <Facebook className="w-4 h-4" />
-              </a>
-              <a href="https://www.instagram.com/jmdstitching.co.in/" className="text-black hover:text-yellow-500 transition-colors duration-200">
-                <Instagram className="w-4 h-4" />
-              </a>
-              <a href="https://www.instagram.com/jmdstitching.co.in/" className="text-black hover:text-yellow-500 transition-colors duration-200">
-                <Twitter className="w-4 h-4" />
-              </a>
-            </div>
-
-            {/* Center - Logo */}
-            <div className="absolute left-1/2 transform -translate-x-1/2 lg:relative lg:left-auto lg:transform-none lg:flex-1 lg:flex lg:justify-center lg:flex-none">
-              <div className="flex items-center justify-center">
+              
+                {/* Center - Logo */}
+               <div className="absolute left-1/2 transform -translate-x-1/2 lg:relative lg:left-auto lg:transform-none lg:flex-1 lg:flex  lg:flex-none">
+              <div className="flex items-center">
               <a href='/'>  <img 
                   src="/images/jmd_logo.jpeg" 
                   alt="JMD Logo" 
@@ -104,47 +97,18 @@ const UserNavbar = () => {
               </div>
             </div>
 
-            {/* Right - Contact Button (Desktop) */}
-            <div className="hidden lg:block">
-              <a href='/contact' 
-                className="border-2 px-6 py-2.5 text-sm font-serif tracking-wider shadow-md transition-all duration-300 uppercase"
-                style={{ borderRadius: 0, background: '#e3b873', color: '#222', borderColor: '#e3b873' }}
-                onMouseOver={e => { 
-                  e.currentTarget.style.background = '#222'; 
-                  e.currentTarget.style.color = '#e3b873'; 
-                  e.currentTarget.style.borderColor = '#222'; 
-                }}
-                onMouseOut={e => { 
-                  e.currentTarget.style.background = '#e3b873'; 
-                  e.currentTarget.style.color = '#222'; 
-                  e.currentTarget.style.borderColor = '#e3b873'; 
-                }}
-              >
-                Contact Us
+              {/* <a href="https://www.instagram.com/jmdstitching.co.in/" className="text-black hover:text-yellow-500 transition-colors duration-200">
+                <Facebook className="w-4 h-4" />
               </a>
+              <a href="https://www.instagram.com/jmdstitching.co.in/" className="text-black hover:text-yellow-500 transition-colors duration-200">
+                <Instagram className="w-4 h-4" />
+              </a>
+              <a href="https://www.instagram.com/jmdstitching.co.in/" className="text-black hover:text-yellow-500 transition-colors duration-200">
+                <Twitter className="w-4 h-4" />
+              </a> */}
             </div>
 
-            {/* Mobile Menu Button */}
-            <div className="lg:hidden">
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="p-2 text-gray-900 hover:text-yellow-500 transition-colors duration-200 focus:outline-none"
-              >
-                {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation Menu Bar */}
-      <div className={`transition-all duration-300 ${
-        isScrolled ? 'bg-gray-50 border-b border-gray-200' : 'bg-gray-50 border-b border-gray-200'
-      }`}>
-        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-          
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center justify-center space-x-12 h-14">
+            <div className="hidden lg:flex items-center justify-center space-x-12 h-14">
             <a href="/about" className="relative group py-2">
               <span className="text-gray-700 hover:text-yellow-600 transition-colors duration-200 text-sm font-medium tracking-wide uppercase">
                 About
@@ -216,13 +180,68 @@ const UserNavbar = () => {
               <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-yellow-500 transition-all duration-300 group-hover:w-full"></div>
             </a>
 
-            <a href="/contact" className="relative group py-2">
+            {/* <a href="/contact" className="relative group py-2">
               <span className="text-gray-700 hover:text-yellow-600 transition-colors duration-200 text-sm font-medium tracking-wide uppercase">
                 Contact
               </span>
               <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-yellow-500 transition-all duration-300 group-hover:w-full"></div>
-            </a>
+            </a> */}
           </div>
+
+            {/* Center - Logo */}
+            <div className="absolute left-1/2 transform -translate-x-1/2 lg:relative lg:left-auto lg:transform-none lg:flex-1 lg:flex  lg:flex-none lg:hidden">
+              <div className="flex items-center">
+              <a href='/'>  <img 
+                  src="/images/jmd_logo.jpeg" 
+                  alt="JMD Logo" 
+                  className="w-26 h-20  shadow-sm"
+                />
+                </a>
+              </div>
+            </div>
+
+
+            {/* Right - Contact Button (Desktop) */}
+            <div className="hidden lg:block">
+              <a href='/contact' 
+                className="border-2 px-6 py-2.5 text-sm font-serif tracking-wider shadow-md transition-all duration-300 uppercase"
+                style={{ borderRadius: 0, background: '#e3b873', color: '#222', borderColor: '#e3b873' }}
+                onMouseOver={e => { 
+                  e.currentTarget.style.background = '#222'; 
+                  e.currentTarget.style.color = '#e3b873'; 
+                  e.currentTarget.style.borderColor = '#222'; 
+                }}
+                onMouseOut={e => { 
+                  e.currentTarget.style.background = '#e3b873'; 
+                  e.currentTarget.style.color = '#222'; 
+                  e.currentTarget.style.borderColor = '#e3b873'; 
+                }}
+              >
+                Contact Us
+              </a>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <div className="lg:hidden">
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="p-2 text-gray-900 hover:text-yellow-500 transition-colors duration-200 focus:outline-none"
+              >
+                {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation Menu Bar */}
+      <div className={`transition-all duration-300 ${
+        isScrolled ? 'bg-gray-50 border-b border-gray-200' : 'bg-gray-50 border-b border-gray-200'
+      }`}>
+        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+          
+          {/* Desktop Navigation */}
+    
 
           {/* Mobile Navigation */}
           {isMenuOpen && (
@@ -255,13 +274,13 @@ const UserNavbar = () => {
               {/* <a href="/custom-tailoring" className="block px-4 py-2.5 text-gray-700 hover:text-amber-600 hover:bg-amber-100/50 transition-all duration-300 rounded-lg mx-2">
                 <span className="text-sm font-medium tracking-wider uppercase font-serif">Custom Tailoring</span>
               </a> */}
-
+{/* 
               <a href="/contact" className="block px-4 py-2.5 text-gray-700 hover:text-amber-600 hover:bg-amber-100/50 transition-all duration-300 rounded-lg mx-2">
                 <span className="text-sm font-medium tracking-wider uppercase font-serif">Contact</span>
-              </a>
+              </a> */}
 
               {/* Mobile Social Links */}
-              <div className="pt-3 mt-3 border-t border-amber-200/50">
+              {/* <div className="pt-3 mt-3 border-t border-amber-200/50">
                 <div className="flex items-center justify-center space-x-6">
                   <a href="https://www.instagram.com/jmdstitching.co.in/" className="p-2 text-gray-600 hover:text-amber-600 hover:bg-amber-100 transition-all duration-300 rounded-full">
                     <Facebook className="w-5 h-5" />
@@ -273,10 +292,10 @@ const UserNavbar = () => {
                     <Twitter className="w-5 h-5" />
                   </a>
                 </div>
-              </div>
+              </div> */}
 
               {/* Mobile Contact Button */}
-              <div className="pt-3 mt-3 border-t border-amber-200/50 px-4">
+              <div className="pt-3 mt-3 border-amber-200/50 px-4">
                 <a href='/contact' 
                   className="w-full border-2 px-4 py-3 text-sm font-serif tracking-wider shadow-md transition-all duration-300 uppercase"
                   style={{ borderRadius: 0, background: '#e3b873', color: '#222', borderColor: '#e3b873' }}
