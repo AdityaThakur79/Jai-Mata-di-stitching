@@ -149,11 +149,11 @@ const UserFooter = () => {
             </div>
             
             <h2 className="text-3xl sm:text-4xl font-light text-gray-800 mb-4 font-serif drop-shadow-sm">
-              JAI MATA DI STITCHING
+              JMD STITCHING
             </h2>
             <div className="w-24 h-1 mx-auto mb-6 rounded-full shadow-lg" style={{ background: '#e3b873' }}></div>
             <p className="text-gray-600 leading-relaxed max-w-3xl mx-auto text-lg font-light drop-shadow-sm">
-              Crafting excellence since 2017. Where tradition meets innovation, and every stitch tells a story of precision, care, and timeless elegance.
+              Crafting excellence since 2023. Where tradition meets innovation, and every stitch tells a story of precision, care, and timeless elegance.
             </p>
           </motion.div>
 

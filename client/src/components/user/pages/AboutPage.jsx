@@ -50,7 +50,7 @@ const JMDTailorsAbout = () => {
 
   // Animation variants
   const fadeInUp = {
-    hidden: { opacity: 0, y: 40 },
+    hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.7 } }
   };
 
@@ -60,7 +60,7 @@ const JMDTailorsAbout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50 md:pt-44 pt-24">
+    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50 mb-8 sm:mb-12 mt-[100px] sm:mt-[110px] md:mt-[120px] ">
       <div className="relative h-[40vh] md:h-[60vh] flex items-center justify-center text-center text-white overflow-hidden">
         {/* Background Image as Header */}
         <div 
