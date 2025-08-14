@@ -233,7 +233,7 @@ const ServicesPage = () => {
       `}</style>
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50">
       {/* Hero Header Section */}
-      <div className="relative h-[40vh] sm:h-[45vh] md:h-[50vh] lg:h-[60vh] flex items-center justify-center text-center text-white overflow-hidden mb-8 sm:mb-12 mt-[100px] sm:mt-[110px] md:mt-[120px]">
+      <div className="relative h-[40vh] sm:h-[45vh] md:h-[50vh] lg:h-[60vh] flex items-center justify-center text-center text-white overflow-hidden mb-8 sm:mb-12 mt-[80px]">
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: "url('/images/tailor.png')" }}
@@ -241,7 +241,7 @@ const ServicesPage = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/20" />
         {/* Breadcrumbs */}
         <nav
-          className="absolute top-12 sm:top-12 md:top-12 lg:top-20 left-1/2 -translate-x-1/2 z-20"
+          className="absolute top-12 sm:top-12 md:top-12  left-1/2 -translate-x-1/2 z-20"
           aria-label="Breadcrumb"
         >
           <ol className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm md:text-base">

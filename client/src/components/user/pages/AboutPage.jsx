@@ -60,13 +60,13 @@ const JMDTailorsAbout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50 mb-8 sm:mb-12 mt-[100px] sm:mt-[110px] md:mt-[120px] ">
+    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50 mb-8 sm:mb-12">
       <div className="relative h-[40vh] md:h-[60vh] flex items-center justify-center text-center text-white overflow-hidden">
         {/* Background Image as Header */}
         <div 
           className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-105"
           style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1512436991641-6745cdb1723f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1500&q=80')` // Appealing tailor image
+             backgroundImage: `url('https://images.unsplash.com/photo-1512436991641-6745cdb1723f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1500&q=80')` // Appealing tailor image
           }}
         />
         {/* Enhanced Overlay for readability */}
