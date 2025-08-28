@@ -101,7 +101,7 @@ const Navbar = () => {
                 </DropdownMenuItem>
                 {employee.role === "superAdmin" && (
                   <DropdownMenuItem className="hover:bg-[#EB811F]/10">
-                    <Link to="/admin/dashboard" className="w-full">Dashboard</Link>
+                    <Link to="/employee/dashboard" className="w-full">Dashboard</Link>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator className="bg-[#EB811F]/10" />
@@ -218,7 +218,7 @@ const MobileNavbar = () => {
               
               {employee.role === "superAdmin" && (
                 <Link 
-                  to="/admin/dashboard"
+                  to="/employee/dashboard"
                   className="flex items-center gap-3 p-3 rounded-lg hover:bg-[#EB811F]/10 transition-colors text-[#202020]"
                 >
                   <School className="w-4 h-4 text-[#EB811F]" />

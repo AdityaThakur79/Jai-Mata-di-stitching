@@ -1,7 +1,6 @@
 import Employee from "../models/employee.js";
 import moment from "moment";
 import puppeteer from "puppeteer";
-import bwipjs from "bwip-js";
 import path from "path";
 import fs from "fs";
 import bcrypt from "bcryptjs";
@@ -210,6 +209,7 @@ export const updateEmployee = async (req, res) => {
       name,
       mobile,
       email,
+      password,
       gender,
       address,
       aadhaarNumber,
@@ -223,36 +223,76 @@ export const updateEmployee = async (req, res) => {
       emergencyContact,
       branchId,
       status,
+      existingAadhaarPublicId,
     } = req.body;
+    
     const employee = await Employee.findOne({ employeeId });
     if (!employee) {
       return res.status(404).json({ success: false, message: "Employee not found" });
     }
-    if (branchId) employee.branchId = branchId;
-    if (name) employee.name = name;
-    if (mobile) employee.mobile = mobile;
-    if (email) employee.email = email;
-    if (gender) employee.gender = gender;
-    if (address) employee.address = address;
-    if (aadhaarNumber) employee.aadhaarNumber = aadhaarNumber;
-    if (role) employee.role = role;
-    if (joiningDate) employee.joiningDate = joiningDate;
-    if (bloodGroup) employee.bloodGroup = bloodGroup;
-    if (grade) employee.grade = grade;
-    if (dob) employee.dob = dob;
-    if (baseSalary) employee.baseSalary = parseFloat(baseSalary);
-    if (bankDetails) employee.bankDetails = typeof bankDetails === "string" ? JSON.parse(bankDetails) : bankDetails;
-    if (emergencyContact) employee.emergencyContact = typeof emergencyContact === "string" ? JSON.parse(emergencyContact) : emergencyContact;
-    if (status) employee.status = status;
+    
+    // Update fields - use more specific checks for fields that can be empty
+    if (branchId !== undefined) employee.branchId = branchId;
+    if (name !== undefined) employee.name = name;
+    if (mobile !== undefined) employee.mobile = mobile;
+    if (email !== undefined) employee.email = email;
+    if (gender !== undefined) employee.gender = gender;
+    if (address !== undefined) employee.address = address;
+    if (aadhaarNumber !== undefined) employee.aadhaarNumber = aadhaarNumber;
+    if (role !== undefined) employee.role = role;
+    if (joiningDate !== undefined) employee.joiningDate = joiningDate;
+    if (bloodGroup !== undefined) employee.bloodGroup = bloodGroup;
+    if (grade !== undefined) employee.grade = grade;
+    if (dob !== undefined) employee.dob = dob;
+    if (baseSalary !== undefined && baseSalary !== "") employee.baseSalary = parseFloat(baseSalary);
+    if (status !== undefined) employee.status = status;
+    
+    // Handle password update (only if provided and not empty)
+    if (password && password.trim() !== "") {
+      const salt = await bcrypt.genSalt(10);
+      employee.password = await bcrypt.hash(password, salt);
+    }
+    
+    // Handle bank details
+    if (bankDetails) {
+      const parsedBankDetails = typeof bankDetails === "string" ? JSON.parse(bankDetails) : bankDetails;
+      // Only update if the parsed data has meaningful content
+      if (parsedBankDetails && (parsedBankDetails.bankName || parsedBankDetails.accountNumber || parsedBankDetails.ifsc)) {
+        employee.bankDetails = parsedBankDetails;
+      } else {
+        // Clear bank details if all fields are empty
+        employee.bankDetails = { bankName: "", accountNumber: "", ifsc: "" };
+      }
+    }
+    
+    // Handle emergency contact
+    if (emergencyContact) {
+      const parsedEmergencyContact = typeof emergencyContact === "string" ? JSON.parse(emergencyContact) : emergencyContact;
+      // Only update if the parsed data has meaningful content
+      if (parsedEmergencyContact && (parsedEmergencyContact.name || parsedEmergencyContact.mobile)) {
+        employee.emergencyContact = parsedEmergencyContact;
+      } else {
+        // Clear emergency contact if all fields are empty
+        employee.emergencyContact = { name: "", mobile: "" };
+      }
+    }
+    
     // Handle profile image upload
     if (req.files && req.files.profileImage && req.files.profileImage[0]) {
       employee.profileImage = req.files.profileImage[0].path;
     }
+    
     // Handle Aadhaar image upload
     if (req.files && req.files.aadhaarImage && req.files.aadhaarImage[0]) {
+      // If there's an existing Aadhaar image, we might want to delete it
+      if (existingAadhaarPublicId && employee.aadhaarPublicId) {
+        // You can add logic here to delete the old image file if needed
+        // For now, just update the references
+      }
       employee.aadhaarImage = req.files.aadhaarImage[0].path;
       employee.aadhaarPublicId = req.files.aadhaarImage[0].filename;
     }
+    
     await employee.save();
     res.status(200).json({
       success: true,
@@ -444,7 +484,7 @@ export const getAllEmployeeAdvances = async (req, res) => {
     }
 
     const employees = await Employee.find(query)
-      .select("name employeeId baseSalary advancePayments salarySlips")
+      .select("name employeeId baseSalary advancePayments salarySlips profileImage")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -504,6 +544,7 @@ export const getAllEmployeeAdvances = async (req, res) => {
           name: employee.name,
           employeeId: employee.employeeId,
           baseSalary: employee.baseSalary,
+          profileImage: employee.profileImage,
         },
         currentMonth: {
           totalAdvance: totalCurrentMonthAdvance,
@@ -607,31 +648,12 @@ export const deleteEmployeeAdvance = async (req, res) => {
 // Generate Salary Slip
 export const generateSalarySlip = async (req, res) => {
   try {
-    const { employeeId, month } = req.body;
-
-    if (!employeeId || !month) {
+    const { employeeId, month, year } = req.body;
+    if (!employeeId || !month || !year) {
       return res.status(400).json({
         success: false,
-        message: "Employee ID and month are required.",
+        message: "Employee ID, month, and year are required",
       });
-    }
-
-    // Parse month to 'YYYY-MM' format
-    let slipMonthKey = "";
-    if (/\d{4}-\d{2}/.test(month)) {
-      // Already in 'YYYY-MM' format
-      slipMonthKey = month;
-    } else {
-      // Try to parse e.g. 'July 2024' or 'Jul 2024'
-      const date = new Date(month + " 1");
-      if (!isNaN(date)) {
-        slipMonthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      } else {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid month format. Use 'YYYY-MM' or 'Month YYYY' (e.g., '2024-07' or 'July 2024').",
-        });
-      }
     }
 
     const employee = await Employee.findOne({ employeeId });
@@ -642,119 +664,52 @@ export const generateSalarySlip = async (req, res) => {
       });
     }
 
+    // Calculate salary based on base salary and any deductions
+    const baseSalary = employee.baseSalary || 0;
+    const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+    
     // Check if salary slip already exists for this month
-    const existingSlip = employee.salarySlips.find(slip => slip.monthKey === slipMonthKey);
+    const existingSlip = employee.salarySlips.find(slip => slip.monthKey === monthKey);
     if (existingSlip) {
       return res.status(400).json({
         success: false,
-        message: "Salary slip already exists for this month",
+        message: "Salary slip already generated for this month",
       });
     }
 
-    // Calculate advances for the specified month
-    const [year, monthNum] = slipMonthKey.split('-').map(Number);
+    // Get advances for this month
     const monthAdvances = employee.advancePayments.filter(advance => {
       const advanceDate = new Date(advance.date);
-      return advanceDate.getFullYear() === year && (advanceDate.getMonth() + 1) === monthNum;
+      return advanceDate.getMonth() === parseInt(month) - 1 && advanceDate.getFullYear() === parseInt(year);
     });
 
     const totalAdvances = monthAdvances.reduce((sum, advance) => sum + advance.amount, 0);
-    const finalPayable = employee.baseSalary - totalAdvances;
+    const netPay = Math.max(0, baseSalary - totalAdvances);
 
     // Create salary slip
     const salarySlip = {
-      month: month, // original label (e.g., 'July 2024')
-      monthKey: slipMonthKey, // 'YYYY-MM' for robust comparison
-      basicSalary: employee.baseSalary,
-      advancesDeducted: totalAdvances,
-      finalPayable: finalPayable,
+      monthKey,
+      month: new Date(year, month).toLocaleDateString('en-US', { month: 'long' }), // Store month name
+      year,
+      basicSalary: baseSalary,        // Required field by Employee model
+      finalPayable: netPay,           // Required field by Employee model
+      baseSalary,                     // Keep for backward compatibility
+      advances: monthAdvances,
+      totalAdvances,
+      netPay,                         // Keep for backward compatibility
+      advancesDeducted: totalAdvances, // Required by email template
+      notes: `Salary slip generated for ${new Date(year, month).toLocaleDateString('en-US', { month: 'long' })} ${year}. Total advances: ₹${totalAdvances.toLocaleString('en-IN')}.`, // Required by email template
       generatedAt: new Date(),
-      notes: `Generated on ${new Date().toLocaleDateString()}`
     };
 
+    // Add to employee's salary slips
     employee.salarySlips.push(salarySlip);
     await employee.save();
 
-    // Generate PDF with Puppeteer
-    const logoPath = path.join(process.cwd(), "client/public/images/jmd_logo.jpeg");
-    const logoDataUrl = `data:image/jpeg;base64,${fs.readFileSync(logoPath).toString("base64")}`;
-    const slipHtml = `
-      <html>
-        <head>
-          <link href='https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap' rel='stylesheet'>
-        </head>
-        <body style="font-family:'Inter',sans-serif;background:#f8fafc;margin:0;padding:0;">
-          <div style="max-width:520px;margin:40px auto;background:white;border-radius:18px;box-shadow:0 4px 24px rgba(0,0,0,0.08);overflow:hidden;">
-            <div style="background:linear-gradient(90deg,#ff9800 0%,#1976d2 100%);padding:24px 0;text-align:center;">
-              <img src='${logoDataUrl}' style="height:48px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:8px;" />
-              <h1 style="color:white;font-size:2rem;margin:0;font-weight:700;letter-spacing:1px;">JMD STITCHING</h1>
-              <div style="color:#fff;font-size:1.1rem;opacity:0.85;">Salary Slip</div>
-              <div style="color:#fff;font-size:1rem;opacity:0.7;">${salarySlip.month}</div>
-            </div>
-            <div style="padding:32px 28px 24px 28px;">
-              <table style="width:100%;font-size:1rem;margin-bottom:24px;">
-                <tr><td style="color:#888;padding:4px 0;">Employee Name:</td><td style="font-weight:600;">${employee.name}</td></tr>
-                <tr><td style="color:#888;padding:4px 0;">Employee ID:</td><td style="font-weight:600;">${employee.employeeId}</td></tr>
-                <tr><td style="color:#888;padding:4px 0;">Designation:</td><td style="font-weight:600;">${employee.designation || '—'}</td></tr>
-                <tr><td style="color:#888;padding:4px 0;">Month:</td><td style="font-weight:600;">${salarySlip.month}</td></tr>
-              </table>
-              <div style="background:#f3f4f6;border-radius:12px;padding:20px 18px 12px 18px;margin-bottom:24px;">
-                <h3 style="margin:0 0 12px 0;font-size:1.1rem;color:#1976d2;font-weight:700;">Salary Breakdown</h3>
-                <table style="width:100%;font-size:1rem;">
-                  <tr>
-                    <td style="color:#666;padding:6px 0;">Basic Salary:</td>
-                    <td style="font-weight:600;color:#388e3c;">₹${salarySlip.basicSalary.toLocaleString('en-IN')}</td>
-                  </tr>
-                  <tr>
-                    <td style="color:#666;padding:6px 0;">Advances Deducted:</td>
-                    <td style="font-weight:600;color:#d32f2f;">-₹${salarySlip.advancesDeducted.toLocaleString('en-IN')}</td>
-                  </tr>
-                  <tr style="border-top:2px solid #1976d2;">
-                    <td style="padding:12px 0;font-weight:700;font-size:1.1rem;">Final Payable:</td>
-                    <td style="padding:12px 0;font-weight:700;font-size:1.1rem;color:#1976d2;">₹${salarySlip.finalPayable.toLocaleString('en-IN')}</td>
-                  </tr>
-                </table>
-              </div>
-              <div style="background:#fff3e0;border-radius:8px;padding:12px 16px;margin-bottom:18px;color:#ff9800;font-size:0.98rem;">
-                <b>Notes:</b> ${salarySlip.notes || 'No additional notes'}
-              </div>
-              <div style="text-align:center;color:#888;font-size:0.95rem;margin-top:18px;">
-                Generated on: ${new Date(salarySlip.generatedAt).toLocaleDateString('en-IN')}
-              </div>
-            </div>
-          </div>
-        </body>
-      </html>
-    `;
-    const browser = await puppeteer.launch({ headless: "new", args: ["--no-sandbox"] });
-    const page = await browser.newPage();
-    await page.setContent(slipHtml, { waitUntil: "networkidle0" });
-    const pdfBuffer = await page.pdf({
-      printBackground: true,
-      width: '595px', // A4 width in px at 72dpi
-      height: '842px', // A4 height in px at 72dpi
-      landscape: false,
-      pageRanges: '1',
-    });
-    await browser.close();
-
-    // Send email with PDF attachment
-    if (employee.email) {
-      await sendSalarySlipEmail(employee.email, employee, salarySlip, salarySlip.month, pdfBuffer);
-    }
-
-    res.status(201).json({
+    res.status(200).json({
       success: true,
-      message: "Salary slip generated and emailed successfully",
-      data: {
-        salarySlip,
-        employee: {
-          name: employee.name,
-          employeeId: employee.employeeId,
-          baseSalary: employee.baseSalary,
-        },
-        monthAdvances: monthAdvances,
-      },
+      message: "Salary slip generated successfully",
+      salarySlip,
     });
   } catch (err) {
     console.error("Error generating salary slip:", err);
@@ -763,228 +718,6 @@ export const generateSalarySlip = async (req, res) => {
       message: "Internal server error",
       error: err.message,
     });
-  }
-};
-
-export const generateEmployeeIdCardPdf = async (req, res) => {
-  try {
-    const { employeeId } = req.body;
-    if (!employeeId) {
-      return res.status(400).json({ success: false, message: "employeeId is required" });
-    }
-
-    const employee = await Employee.findOne({ employeeId });
-    if (!employee) {
-      return res.status(404).json({ success: false, message: "Employee not found" });
-    }
-
-    const barcodeBuffer = await bwipjs.toBuffer({
-      bcid: "code128",
-      text: employee.employeeId,
-      scale: 1.5,
-      height: 20,
-      includetext: false,
-      backgroundcolor: "FFFFFF",
-      paddingwidth: 0,
-      paddingheight: 0,
-      barcolor: "f77f2f",
-    });
-    const barcodeDataUrl = `data:image/png;base64,${barcodeBuffer.toString("base64")}`;
-
-    const logoPath = path.join(process.cwd(), "client/public/images/jmd_logo.jpeg");
-    const logoDataUrl = `data:image/jpeg;base64,${fs.readFileSync(logoPath).toString("base64")}`;
-
-    let photoDataUrl = logoDataUrl;
-    if (employee.profileImage?.startsWith("http")) {
-      photoDataUrl = employee.profileImage;
-    } else if (employee.profileImage) {
-      try {
-        const photoPath = path.join(process.cwd(), employee.profileImage);
-        photoDataUrl = `data:image/jpeg;base64,${fs.readFileSync(photoPath).toString("base64")}`;
-      } catch (e) {
-        photoDataUrl = logoDataUrl;
-      }
-    }
-
-    const {
-      name = "—",
-      role = "—",
-      email = "—",
-      grade="A",
-      mobile = "—",
-      address = "—",
-      employeeId: empId = "—",
-      joiningDate,
-      gender = "—",
-      emergencyContact = {},
-      bloodGroup = "B+",
-      validityDate = "—",
-    } = employee;
-
-    const joinDate = joiningDate ? new Date(joiningDate).toLocaleDateString() : "—";
-    const emergencyName = emergencyContact.name || "—";
-    const emergencyMobile = emergencyContact.mobile || "—";
-
-    const companyName = "JMD Stitching";
-    const companyAddress = "108, Infinity Business park, Dombivali(E), Thane - 421203";
-    const companyEmail = "info@jmdstitching.com";
-
-    const html = `
-    <html>
-      <head>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-      </head>
-      <body style="margin:0;padding:0;font-family:'Inter','Roboto','Poppins',sans-serif;width:210mm;height:297mm;display:flex;align-items:center;justify-content:center;box-sizing:border-box;">
-        <div style="display:flex;flex-direction:row;align-items:center;justify-content:center;padding:15mm;gap:15mm;width:100%;height:100%;box-sizing:border-box;">
-    
-          <!-- FRONT SIDE -->
-          <div style="width:85mm;height:125mm;background:linear-gradient(135deg,#ffffff 0%,#fefefe 100%);border-radius:18px;overflow:hidden;position:relative;box-shadow:0 6mm 12mm rgba(255,111,0,0.15),0 3mm 6mm rgba(0,0,0,0.1);display:flex;flex-direction:column;justify-content:space-between;padding:0;transition:all 0.3s ease;">
-            <!-- Enhanced Polygon Accent Top -->
-            <div style="width:100%;height:28mm;background:linear-gradient(135deg,#ff6f00 0%,#ff8f00 50%,#ffb74d 100%);clip-path:polygon(0 0, 100% 0, 100% 65%, 0 100%);position:absolute;top:0;left:0;box-shadow:0 2mm 4mm rgba(255,111,0,0.25);"></div>
-            
-            <!-- Decorative Elements -->
-            <div style="position:absolute;top:5mm;right:5mm;width:10mm;height:10mm;background:rgba(255,255,255,0.2);border-radius:50%;z-index:1;"></div>
-            <div style="position:absolute;top:8mm;right:8mm;width:5mm;height:5mm;background:rgba(255,255,255,0.15);border-radius:50%;z-index:1;"></div>
-            <div style="position:absolute;top:3mm;right:15mm;width:3mm;height:3mm;background:rgba(255,255,255,0.1);border-radius:50%;z-index:1;"></div>
-            
-            <!-- Header with Logo and Company Name -->
-            <div style="display:flex;align-items:center;justify-content:center;padding:3mm 5mm;z-index:2;position:relative;">
-              <div style="background:rgba(255,255,255,0.95);border-radius:2mm;padding:1.5mm;display:flex;align-items:center;box-shadow:0 2mm 4mm rgba(255,111,0,0.2);backdrop-filter:blur(10px);">
-                <img src="${logoDataUrl}" style="width:10mm;height:10mm;border-radius:2mm;margin-right:3mm;" />
-                <div style="font-size:8px;font-weight:700;color:#1a1a1a;letter-spacing:0.2px;line-height:1.1;">JMD STITCHING <span style="font-size:6px;color:#ff6f00;">PVT LTD</span></div>
-              </div>
-            </div>
-    
-            <!-- Profile Section -->
-            <div style="text-align:center;z-index:2;margin-top:0mm;padding:0 5mm;">
-              <div style="background:white;border-radius:6mm;padding:2mm;display:inline-block;box-shadow:0 3mm 6mm rgba(255,111,0,0.25);margin-bottom:3mm;">
-                <img src="${photoDataUrl}" style="width:24mm;height:24mm;object-fit:cover;border-radius:4mm;border:2px solid #ff6f00;" />
-              </div>
-              <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:1mm;letter-spacing:-0.2px;">${name}</div>
-              <div style="font-size:9px;color:#ff6f00;font-weight:600;margin-bottom:4mm;text-transform:uppercase;letter-spacing:0.4px;background:rgba(255,111,0,0.1);padding:1mm 3mm;border-radius:3mm;display:inline-block;">${role}</div>
-              </div>
-              
-            <!-- Information Section -->
-          <div style="font-size:7px;color:#333;margin-top:2mm;padding:0 4mm;z-index:2;flex-grow:1;">
-  ${[
-    ['ID', empId],
-    ['Phone', mobile],
-    ['Email', email, 'font-size:6.5px'],
-    ['Grade', grade, 'color:#ff6f00;font-weight:700;background:rgba(255,111,0,0.1);padding:1mm 2mm;border-radius:2mm;'],
-    ['Joined', joinDate],
-    ['Valid Till', validityDate],
-    ['Gender', gender],
-    ['Blood Group', bloodGroup, 'color:#ff6f00;font-weight:700;background:rgba(255,111,0,0.1);padding:1mm 2mm;border-radius:2mm;']
-  ].map(([label, value, valueStyle = '']) => `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:1mm 0;border-bottom:1px solid #eee;">
-      <span style="font-weight:600;color:#666;text-transform:uppercase;letter-spacing:0.3px;">${label}:</span>
-      <span style="${valueStyle}">${value}</span>
-    </div>
-  `).join('')}
-  
-  <!-- QR CODE -->
-  <div style="text-align:center;margin-top:4mm;">
-    <div style="background:white;border-radius:3mm;padding:2mm;display:inline-block;box-shadow:0 2mm 4mm rgba(255,111,0,0.2);">
-      <img src="${barcodeDataUrl}" style="width:28mm;height:7mm;border-radius:2mm;" />
-                </div>
-              </div>
-            </div>
-    
-    
-            <!-- Enhanced Bottom Section -->
-            <div style="position:absolute;bottom:0;left:0;width:100%;height:18mm;background:linear-gradient(135deg,#ff6f00 0%,#ff8f00 50%,#ffb74d 100%);clip-path:polygon(0 35%, 100% 0, 100% 100%, 0 100%);display:flex;align-items:center;justify-content:center;z-index:1;box-shadow:0 -2mm 4mm rgba(255,111,0,0.25);">
-              <div style="font-size:8px;font-weight:700;color:white;text-align:center;margin-top:4mm;letter-spacing:0.3px;text-shadow:0 1mm 2mm rgba(0,0,0,0.3);line-height:1.2;">Excellence in Every Stitch<br><span style="font-size:6px;opacity:0.9;">Quality • Innovation • Trust</span></div>
-            </div>
-          </div>
-    
-          <!-- BACK SIDE -->
-          <div style="width:85mm;height:125mm;background:linear-gradient(135deg,#ffffff 0%,#fefefe 100%);border-radius:18px;overflow:hidden;position:relative;box-shadow:0 6mm 12mm rgba(255,111,0,0.15),0 3mm 6mm rgba(0,0,0,0.1);padding:0;display:flex;flex-direction:column;justify-content:space-between;transition:all 0.3s ease;">
-            <!-- Enhanced Polygon Accent Top -->
-            <div style="width:100%;height:28mm;background:linear-gradient(135deg,#ff6f00 0%,#ff8f00 50%,#ffb74d 100%);clip-path:polygon(0 0, 100% 0, 100% 65%, 0 100%);position:absolute;top:0;left:0;box-shadow:0 2mm 4mm rgba(255,111,0,0.25);"></div>
-    
-            <!-- Decorative Elements -->
-            <div style="position:absolute;top:5mm;right:5mm;width:10mm;height:10mm;background:rgba(255,255,255,0.2);border-radius:50%;z-index:1;"></div>
-            <div style="position:absolute;top:8mm;right:8mm;width:5mm;height:5mm;background:rgba(255,255,255,0.15);border-radius:50%;z-index:1;"></div>
-            <div style="position:absolute;top:3mm;right:15mm;width:3mm;height:3mm;background:rgba(255,255,255,0.1);border-radius:50%;z-index:1;"></div>
-    
-            <!-- Company Header -->
-            <div style="z-index:2;text-align:center;margin-top:8mm;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0 5mm;">
-              <div style="background:white;border-radius:4mm;padding:2mm;display:inline-block;box-shadow:0 2mm 4mm rgba(255,111,0,0.2);margin-bottom:3mm;">
-                <img src="${logoDataUrl}" style="width:16mm;height:16mm;border-radius:3mm;" />
-              </div>
-              <div style="font-size:12px;font-weight:700;color:#1a1a1a;text-align:center;margin-bottom:1mm;letter-spacing:-0.2px;">JMD STITCHING</div>
-              <div style="font-size:9px;font-weight:600;color:#ff6f00;text-align:center;margin-bottom:4mm;letter-spacing:0.3px;">PVT LTD</div>
-              
-              <!-- Company Information -->
-              <div style="background:rgba(255,111,0,0.05);border-radius:4mm;padding:3mm;margin-bottom:3mm;border:1px solid rgba(255,111,0,0.1);">
-                <div style="font-size:7px;color:#555;margin-bottom:1mm;line-height:1.3;"><span style="font-weight:600;color:#ff6f00;">Address:</span> ${companyAddress}</div>
-                <div style="font-size:7px;color:#555;margin-bottom:1mm;line-height:1.3;"><span style="font-weight:600;color:#ff6f00;">Email:</span> ${companyEmail}</div>
-                <div style="font-size:7px;color:#555;line-height:1.3;"><span style="font-weight:600;color:#ff6f00;">Customer Care:</span> 9082150556</div>
-              </div>
-              
-              <!-- Employee Details -->
-              <div style="background:rgba(255,111,0,0.05);border-radius:4mm;padding:3mm;margin-bottom:3mm;border:1px solid rgba(255,111,0,0.1);width:100%;box-sizing:border-box;">
-                <div style="font-size:8px;color:#ff6f00;font-weight:700;margin-bottom:2mm;text-transform:uppercase;letter-spacing:0.3px;text-align:center;">Employee Details</div>
-                <div style="font-size:7px;color:#555;margin-bottom:1mm;line-height:1.3;"><span style="font-weight:600;color:#333;">Address:</span> ${address}</div>
-                <div style="font-size:7px;color:#555;line-height:1.3;"><span style="font-weight:600;color:#333;">Emergency Contact:</span> ${emergencyName} (${emergencyMobile})</div>
-              </div>
-              
-              <!-- Terms & Conditions -->
-              <div style="width:100%;text-align:center;">
-                <div style="font-size:8px;color:#ff6f00;font-weight:700;margin-bottom:2mm;text-transform:uppercase;letter-spacing:0.3px;">Terms & Conditions</div>
-                <ul style="font-size:6px;color:#555;line-height:1.2;padding-left:3mm;margin:0;text-align:left;">
-                  <li style="margin-bottom:1mm;">ID card must be visible during work hours</li>
-                  <li style="margin-bottom:1mm;">Report lost/damaged cards to HR immediately</li>
-                  <li style="margin-bottom:1mm;">Card remains company property</li>
-                  <li style="margin-bottom:1mm;">Return upon resignation/termination</li>
-                  <li style="margin-bottom:1mm;">If found, return to company address</li>
-              </ul>
-              </div>
-            </div>
-            
-            <div style="text-align:center;font-size:5px;color:#999;margin-bottom:20mm;font-weight:400;">© ${new Date().getFullYear()} JMD Stitching PVT LTD. All rights reserved.</div>
-            
-            <!-- Enhanced Bottom Section -->
-            <div style="position:absolute;bottom:0;left:0;width:100%;height:18mm;background:linear-gradient(135deg,#ff6f00 0%,#ff8f00 50%,#ffb74d 100%);clip-path:polygon(0 35%, 100% 0, 100% 100%, 0 100%);display:flex;align-items:center;justify-content:center;z-index:1;box-shadow:0 -2mm 4mm rgba(255,111,0,0.25);">
-              <div style="font-size:8px;font-weight:700;color:white;text-align:center;margin-top:4mm;letter-spacing:0.3px;text-shadow:0 1mm 2mm rgba(0,0,0,0.3);line-height:1.2;">Excellence in Every Stitch<br><span style="font-size:6px;opacity:0.9;">Quality • Innovation • Trust</span></div>
-            </div>
-          </div>
-        </div>
-      </body>
-    </html>`;
-
-    const browser = await puppeteer.launch({ headless: "new", args: ["--no-sandbox"] });
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
-    const pdfBuffer = await page.pdf({
-      printBackground: true,
-      width: '210mm',
-      height: '297mm', 
-      landscape: false,
-      pageRanges: '1',
-    });
-    await browser.close();
-
-    res.set({
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename=JMD-Employee-ID-${employee.employeeId}.pdf`,
-    });
-    res.end(pdfBuffer);
-  } catch (err) {
-    console.error("Error generating employee ID card PDF:", err);
-    const browser = await puppeteer.launch({ headless: "new", args: ["--no-sandbox"] });
-    const page = await browser.newPage();
-    await page.setContent(`<html><body><div style='color:red;font-size:18px;padding:40px;text-align:center;'>Failed to generate ID Card PDF</div></body></html>`, { waitUntil: "networkidle0" });
-    const pdfBuffer = await page.pdf({
-      printBackground: true,
-      width: "210mm",
-      height: "297mm",
-      landscape: false,
-      pageRanges: "1",
-    });
-    await browser.close();
-    res.set({ "Content-Type": "application/pdf", "Content-Disposition": `attachment; filename=JMD-Employee-ID-ERROR.pdf` });
-    res.end(pdfBuffer);
   }
 };
 
@@ -1268,12 +1001,12 @@ const generateSalarySlipPDF = async (employee, salarySlip) => {
       <tr>
         <td style="padding:8px; border:1px solid #ddd;">Basic Salary</td>
         <td style="padding:8px; border:1px solid #ddd;">₹${salarySlip.basicSalary?.toLocaleString('en-IN', {minimumFractionDigits:2}) || '0.00'}</td>
-        <td style="padding:8px; border:1px solid #ddd;">Advance</td>
-        <td style="padding:8px; border:1px solid #ddd;">₹${salarySlip.advance?.toLocaleString('en-IN', {minimumFractionDigits:2}) || '0.00'}</td>
+        <td style="padding:8px; border:1px solid #ddd;">Advances</td>
+        <td style="padding:8px; border:1px solid #ddd;">₹${salarySlip.totalAdvances?.toLocaleString('en-IN', {minimumFractionDigits:2}) || '0.00'}</td>
       </tr>
       <tr style="font-weight:bold;">
-        <td style="padding:8px; border:1px solid #ddd;">Net Payable</td>
-        <td style="padding:8px; border:1px solid #ddd;">₹${salarySlip.netPay?.toLocaleString('en-IN', {minimumFractionDigits:2}) || '0.00'}</td>
+        <td style="padding:8px; border:1px solid #ddd;">Final Payable</td>
+        <td style="padding:8px; border:1px solid #ddd;">₹${salarySlip.finalPayable?.toLocaleString('en-IN', {minimumFractionDigits:2}) || '0.00'}</td>
         <td colspan="2"></td>
       </tr>
     </table>
@@ -1296,6 +1029,164 @@ const generateSalarySlipPDF = async (employee, salarySlip) => {
   await browser.close();
 
   return pdfBuffer;
+};
+
+export const getFilteredEmployeeDetails = async (req, res) => {
+  try {
+    const { 
+      employeeId, 
+      year, 
+      month = "all", 
+      search = "", 
+      slipFilter = "all", 
+      advanceFilter = "all" 
+    } = req.body;
+
+    if (!employeeId || !year) {
+      return res.status(400).json({
+        success: false,
+        message: "Employee ID and year are required",
+      });
+    }
+
+    // Find the employee
+    const employee = await Employee.findOne({ employeeId });
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    // Get joining month and year
+    const joiningDate = new Date(employee.joiningDate);
+    const joiningYear = joiningDate.getFullYear();
+    const joiningMonth = joiningDate.getMonth();
+
+    // Check if the requested year is before the joining year
+    if (year < joiningYear) {
+      return res.status(200).json({
+        success: true,
+        message: "Employee not yet joined in this year",
+        monthlyData: [],
+        employee: {
+          name: employee.name,
+          employeeId: employee.employeeId,
+          joiningDate: employee.joiningDate,
+        }
+      });
+    }
+
+    // Initialize months for the requested year
+    let startMonth = 0;
+    let endMonth = 11;
+    
+    if (year === joiningYear) {
+      startMonth = joiningMonth;
+    }
+
+    const monthlyData = [];
+    
+    for (let i = startMonth; i <= endMonth; i++) {
+      const monthKey = `${year}-${String(i + 1).padStart(2, '0')}`;
+      const monthName = new Date(year, i).toLocaleDateString('en-US', { month: 'long' });
+      
+      // Get advances for this month
+      const monthAdvances = employee.advancePayments?.filter(advance => {
+        const advanceDate = new Date(advance.date);
+        return advanceDate.getMonth() === i && advanceDate.getFullYear() === year;
+      }) || [];
+      
+      const monthTotalAdvance = monthAdvances.reduce((sum, advance) => sum + advance.amount, 0);
+      const monthRemaining = employee.baseSalary - monthTotalAdvance;
+      
+      // Find salary slip for this month
+      const salarySlip = employee.salarySlips?.find(slip => {
+        const slipDate = new Date(slip.generatedAt);
+        return slipDate.getMonth() === i && slipDate.getFullYear() === year;
+      });
+      
+      monthlyData.push({
+        month: monthName,
+        monthIndex: i,
+        monthKey: monthKey,
+        year: year,
+        baseSalary: employee.baseSalary || 0,
+        advances: monthAdvances,
+        totalAdvance: monthTotalAdvance,
+        remainingAmount: monthRemaining,
+        salarySlip: salarySlip,
+        advanceCount: monthAdvances.length,
+        salarySlipGenerated: !!salarySlip,
+        isJoiningMonth: (year === joiningYear && i === joiningMonth)
+      });
+    }
+
+    // Apply filters
+    let filteredData = monthlyData;
+
+    // Month filter
+    if (month !== "all") {
+      filteredData = filteredData.filter(m => m.monthIndex === parseInt(month));
+    }
+
+    // Search filter
+    if (search) {
+      const query = search.toLowerCase();
+      filteredData = filteredData.filter(m => {
+        // Search in month name
+        if (m.month.toLowerCase().includes(query)) return true;
+        
+        // Search in advances reason
+        if (m.advances.some(advance => 
+          advance.reason.toLowerCase().includes(query)
+        )) return true;
+        
+        // Search in employee name and ID
+        if (employee.name.toLowerCase().includes(query)) return true;
+        if (employee.employeeId.toLowerCase().includes(query)) return true;
+        
+        return false;
+      });
+    }
+
+    // Slip filter
+    if (slipFilter === "generated") {
+      filteredData = filteredData.filter(m => m.salarySlipGenerated);
+    } else if (slipFilter === "not-generated") {
+      filteredData = filteredData.filter(m => !m.salarySlipGenerated);
+    }
+
+    // Advance filter
+    if (advanceFilter === "with-advance") {
+      filteredData = filteredData.filter(m => m.advanceCount > 0);
+    } else if (advanceFilter === "no-advance") {
+      filteredData = filteredData.filter(m => m.advanceCount === 0);
+    }
+
+    // Sort by month index
+    filteredData.sort((a, b) => a.monthIndex - b.monthIndex);
+
+    res.status(200).json({
+      success: true,
+      message: "Filtered employee details fetched successfully",
+      monthlyData: filteredData,
+      employee: {
+        name: employee.name,
+        employeeId: employee.employeeId,
+        joiningDate: employee.joiningDate,
+        baseSalary: employee.baseSalary,
+      }
+    });
+
+  } catch (err) {
+    console.error("Error fetching filtered employee details:", err);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
 };
 
 

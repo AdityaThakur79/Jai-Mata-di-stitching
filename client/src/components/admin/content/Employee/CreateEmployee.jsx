@@ -185,7 +185,7 @@ const CreateEmployee = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-4 px-2 sm:px-4">
+    <div className="min-h-screen   py-4 px-2 sm:px-4">
       <div className="container mx-auto">
         {/* Header */}
         <div className="mb-4">

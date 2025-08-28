@@ -10,7 +10,7 @@ import {
   SelectContent,
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Plus, Trash2, Eye, DollarSign, FileText, Calendar, User, Download, Receipt } from "lucide-react";
+import { Loader2, Plus, Trash2, Eye, DollarSign, FileText, Calendar, User, Download, Receipt, Search } from "lucide-react";
 import toast from "react-hot-toast";
 import {
   useGetAllEmployeesQuery,
@@ -78,6 +78,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const EmployeeAdvance = () => {
   const navigate = useNavigate();
@@ -230,20 +231,35 @@ const EmployeeAdvance = () => {
   };
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 min-h-[100vh] rounded-md pt-8 md:pt-12">
+    <div className="bg-gradient-to-br from-gray-50 via-blue-50 to-orange-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-orange-900/20 min-h-[100vh] rounded-md pt-8 md:pt-12">
       <div className="md:p-6 p-2">
-        <div className="mb-6 flex flex-col md:flex-row md:justify-between md:items-center space-y-2 md:space-y-0">
-          <h2 className="md:text-xl font-semibold text-gray-700 text-center dark:text-white">
-            Employee Salary & Advance Management
-          </h2>
-          <div className="flex gap-2">
-            <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
-                  <Plus className="w-4 h-4" />
-                  Add Advance
-                </Button>
-              </DialogTrigger>
+        {/* Enhanced Header */}
+        <div className="mb-8 rounded-3xl shadow-2xl bg-gradient-to-br from-orange-100 via-white to-blue-100 dark:from-orange-900/40 dark:via-gray-900 dark:to-blue-900/40 px-8 py-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6 relative overflow-hidden border border-orange-200/50 dark:border-orange-800/30">
+          {/* Decorative Elements */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-200/30 to-transparent rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-200/30 to-transparent rounded-full blur-2xl"></div>
+          
+          <div className="flex items-center gap-6">
+            <div className="p-3 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl">
+              <DollarSign className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-extrabold text-orange-600 dark:text-orange-400 tracking-tight mb-2">
+                Employee Salary & Advance Management
+              </h1>
+              <p className="text-lg text-gray-600 dark:text-gray-300 font-semibold">
+                Manage employee advances, salary slips, and financial records
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-3">
+                          <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+                <DialogTrigger asChild>
+                  <Button className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold shadow-xl rounded-2xl px-6 py-3 hover:from-orange-600 hover:to-orange-700 hover:scale-105 transition-all duration-300 border-0">
+                    <Plus className="w-5 h-5" />
+                    Add Advance
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                   <DialogTitle>Add Employee Advance</DialogTitle>
@@ -375,59 +391,108 @@ const EmployeeAdvance = () => {
           </div>
         </div>
 
-        {/* Search and Filters */}
-        <div className="mb-6 flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
-            <Input
-              placeholder="Search employees..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="max-w-sm"
-            />
+        {/* Enhanced Search and Filters */}
+        <Card className="mb-6 relative overflow-hidden shadow-2xl border border-orange-200/50 dark:border-orange-800/30 rounded-3xl bg-gradient-to-br from-orange-50 via-white to-blue-50 dark:from-orange-900/40 dark:via-gray-900 dark:to-blue-900/40">
+          {/* Decorative Background */}
+          <div className="absolute inset-0 z-0">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-200/20 to-transparent rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-200/20 to-transparent rounded-full blur-2xl"></div>
           </div>
-          <div className="flex gap-2">
-            <Select
-              value={limit.toString()}
-              onValueChange={(value) => setLimit(parseInt(value))}
-            >
-              <SelectTrigger className="w-[80px]">
-                <SelectValue placeholder="Limit" />
-              </SelectTrigger>
-              <SelectContent>
-                {[5, 10, 15, 20].map((n) => (
-                  <SelectItem key={n} value={n.toString()}>
-                    {n}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button onClick={() => refetchAdvances()}>
-              <Loader2 className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
+          
+          <CardHeader className="z-10 relative">
+            <CardTitle className="flex items-center gap-3 text-xl font-bold text-gray-800 dark:text-white">
+              <div className="p-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl">
+                <Search className="w-6 h-6 text-white" />
+              </div>
+              Search & Filters
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="z-10 relative">
+            <div className="bg-white/90 dark:bg-gray-950/90 rounded-2xl shadow-lg p-6 flex flex-col md:flex-row gap-6 items-center">
+              <div className="flex-1">
+                <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">Search Employees</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search by name, ID, or designation..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 border-2 border-gray-200 hover:border-orange-300 focus:border-orange-500 rounded-xl transition-colors"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3 items-end">
+                <div>
+                  <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">Items per page</Label>
+                  <Select
+                    value={limit.toString()}
+                    onValueChange={(value) => setLimit(parseInt(value))}
+                  >
+                    <SelectTrigger className="w-[100px] border-2 border-gray-200 hover:border-orange-300 focus:border-orange-500 rounded-xl transition-colors">
+                      <SelectValue placeholder="Limit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[5, 10, 15, 20].map((n) => (
+                        <SelectItem key={n} value={n.toString()}>
+                          {n}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button 
+                  onClick={() => refetchAdvances()}
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow-lg rounded-xl px-4 py-2 hover:from-blue-600 hover:to-blue-700 hover:scale-105 transition-all duration-300 border-0"
+                >
+                  <Loader2 className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Employee Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {advancesLoading ? (
             <div className="col-span-full flex justify-center py-10">
-              <Loader2 className="w-8 h-8 animate-spin" />
+              <div className="text-center">
+                <Loader2 className="w-12 h-12 animate-spin mx-auto text-orange-500 mb-4" />
+                <p className="text-gray-600 dark:text-gray-400">Loading employee data...</p>
+              </div>
             </div>
           ) : advancesData?.data?.length > 0 ? (
             advancesData.data.map((item, index) => (
-              <Card key={index} className="relative overflow-hidden shadow-xl border border-gray-200 dark:border-gray-800 rounded-2xl bg-gradient-to-br from-orange-50 via-white to-blue-50 dark:from-orange-900/30 dark:via-gray-900 dark:to-blue-900/30 transition-transform hover:scale-[1.02] group">
-                {/* Profile Icon */}
-                <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-10">
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-blue-700 flex items-center justify-center text-white text-2xl font-bold shadow-lg border-4 border-white dark:border-gray-950">
-                    {item.employee.name?.[0]?.toUpperCase() || <User className="w-8 h-8" />}
+              <Card key={index} className="relative overflow-hidden shadow-2xl border border-orange-200/50 dark:border-orange-800/30 rounded-3xl bg-gradient-to-br from-orange-50 via-white to-blue-50 dark:from-orange-900/40 dark:via-gray-900 dark:to-blue-900/40 transition-all duration-300 hover:scale-[1.03] hover:shadow-3xl group">
+                {/* Decorative Corner */}
+                <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-orange-200/30 to-transparent rounded-bl-full"></div>
+                
+                {/* Profile Image/Avatar */}
+                <div className="absolute top-8 left-1/2 -translate-x-1/2 z-10 ">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 to-blue-600 flex items-center justify-center text-white text-3xl font-bold shadow-2xl border-4 border-white dark:border-gray-950 relative overflow-hidden">
+                    {item.employee.profileImage ? (
+                      <Avatar className="w-20 h-20">
+                        <AvatarImage src={item.employee.profileImage} />
+                        <AvatarFallback className="text-2xl bg-gradient-to-br from-orange-500 to-blue-600 text-white">
+                          {item.employee.name?.split(' ').map(n => n[0]).join('').toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    ) : (
+                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 to-blue-600 flex items-center justify-center text-white text-3xl font-bold">
+                        {item.employee.name?.split(' ').map(n => n[0]).join('').toUpperCase() || <User className="w-10 h-10" />}
+                      </div>
+                    )}
+                    {/* Glow Effect */}
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-orange-400/30 to-blue-500/30 blur-xl"></div>
                   </div>
                 </div>
-                <div className="pt-10 pb-2 flex flex-col items-center">
-                  <CardTitle className="flex flex-col items-center gap-1 text-lg font-semibold text-gray-800 dark:text-white">
+                <div className="pt-32 pb-4 flex flex-col items-center">
+                  <CardTitle className="flex flex-col items-center gap-2 text-xl font-bold text-gray-800 dark:text-white">
                     {item.employee.name}
-                    <span className="text-xs text-gray-400 font-normal">{item.employee.employeeId}</span>
+                    <span className="text-sm text-orange-600 dark:text-orange-400 font-semibold bg-orange-100 dark:bg-orange-900/30 px-3 py-1 rounded-full">
+                      {item.employee.employeeId}
+                    </span>
                   </CardTitle>
-                  <CardDescription className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  <CardDescription className="mt-2 text-base text-gray-600 dark:text-gray-300 font-medium">
                     {item.employee.designation || 'Employee'}
                   </CardDescription>
                 </div>
@@ -484,16 +549,16 @@ const EmployeeAdvance = () => {
                     </div>
                   </div>
                   {/* Action Buttons */}
-                  <div className="flex gap-2 pt-2">
+                  <div className="flex gap-3 pt-4">
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => navigate("/admin/employee-detail", { 
+                      onClick={() => navigate("/employee/employee-detail", { 
                         state: { employeeId: item.employee.employeeId } 
                       })}
-                      className="flex-1 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 transition"
+                      className="flex-1 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 text-blue-700 border-blue-300 hover:border-blue-400 font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
                     >
-                      <Eye className="w-4 h-4 mr-1" />
+                      <Eye className="w-4 h-4 mr-2" />
                       View Details
                     </Button>
                     <Button
@@ -503,9 +568,9 @@ const EmployeeAdvance = () => {
                         setAdvanceForm(prev => ({ ...prev, employeeId: item.employee.employeeId }));
                         setShowAddDialog(true);
                       }}
-                      className="flex-1 group-hover:bg-orange-50 dark:group-hover:bg-orange-900/20 transition"
+                      className="flex-1 bg-gradient-to-r from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 text-orange-700 border-orange-300 hover:border-orange-400 font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
                     >
-                      <Plus className="w-4 h-4 mr-1" />
+                      <Plus className="w-4 h-4 mr-2" />
                       Add Advance
                     </Button>
                   </div>
@@ -513,8 +578,12 @@ const EmployeeAdvance = () => {
               </Card>
             ))
           ) : (
-            <div className="col-span-full text-center py-10 text-gray-500">
-              No employees found
+            <div className="col-span-full text-center py-16">
+              <div className="w-24 h-24 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">
+                <User className="w-12 h-12 text-gray-400 dark:text-gray-500" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">No employees found</h3>
+              <p className="text-gray-500 dark:text-gray-400">Try adjusting your search criteria or add new employees</p>
             </div>
           )}
         </div>

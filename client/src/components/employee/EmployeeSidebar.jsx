@@ -359,12 +359,12 @@ const EmployeeSidebar = () => {
         </div>
         {/* Footer */}
         <div className="flex-shrink-0 w-full border-t border-[#EB811F]/20 bg-white/90 backdrop-blur-xl py-2 lg:py-3 px-3 lg:px-4 text-center text-xs text-[#EB811F] shadow-lg" style={{boxShadow: "0 -2px 16px 0 rgba(31,38,135,0.04)"}}>
-          <div className="truncate">© 2025 JAI MATA DI STITCHING</div>
+          <div className="truncate">© 2025 JMD STITCHING</div>
         </div>
       </div>
       
       {/* Main Content */}
-      <div className="flex-1 min-h-screen bg-gradient-to-br from-orange-50 to-white lg:ml-[250px] pt-16 lg:pt-20">
+      <div className="flex-1 min-h-screen min-w-0 bg-gradient-to-br from-orange-50 to-white lg:ml-[250px] pt-16 lg:pt-20">
         <div className="w-full px-4 lg:px-8 md:pt-20 pt-8">
           <Outlet />
         </div>

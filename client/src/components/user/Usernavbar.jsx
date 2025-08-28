@@ -30,45 +30,7 @@ const UserNavbar = () => {
     <div className="fixed top-0 left-0 right-0 z-50">
       {/* Top Bar - Enhanced contrast and professional look */}
       <div className="bg-black border-b border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Desktop Top Bar */}
-          {/* <div className="hidden md:flex items-center justify-between h-10 text-sm">
-            <div className="flex items-center space-x-8">
-              <div className="flex items-center space-x-2">
-                <Phone className="w-3 h-3 text-yellow-400" />
-                <span className="text-gray-300">+852 2234 5678</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Mail className="w-3 h-3 text-yellow-400" />
-                <span className="text-gray-300">info@jmdtailors.com</span>
-              </div>
-            </div>
-            <div className="flex items-center space-x-8">
-              <div className="flex items-center space-x-2">
-                <Clock className="w-3 h-3 text-yellow-400" />
-                <span className="text-gray-300">Mon-Sat: 9AM-7PM</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <MapPin className="w-3 h-3 text-yellow-400" />
-                <span className="text-gray-300">108, Business park,Dombivali</span>
-              </div>
-            </div>
-          </div> */}
-
-          {/* Mobile Top Bar */}
-          {/* <div className="md:hidden flex items-center justify-center h-9">
-            <div className="flex items-center space-x-4 text-xs">
-              <div className="flex items-center space-x-1">
-                <Clock className="w-3 h-3 text-yellow-400" />
-                <span className="text-gray-300">Mon-Sat: 9AM-7PM</span>
-              </div>
-              <div className="w-px h-3 bg-gray-600"></div>
-              <div className="flex items-center space-x-1">
-                <Phone className="w-3 h-3 text-yellow-400" />
-                <span className="text-gray-300">+852 2234 5678</span>
-              </div>
-            </div>
-          </div> */}
+        <div className="  mx-autopx-4 sm:px-8 md:px-12 lg:px-20 xl:px-40">
         </div>
       </div>
             
@@ -78,7 +40,7 @@ const UserNavbar = () => {
       <div className={`transition-all duration-300 ${
         isScrolled ? 'bg-white border-b border-gray-200 shadow-md' : 'bg-white border-b border-gray-200'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className=" mx-auto px-4 sm:px-8 md:px-12 lg:px-20 xl:px-40">
           <div className="flex items-center justify-between h-20">
 
             

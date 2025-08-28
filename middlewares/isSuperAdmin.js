@@ -1,8 +1,7 @@
-
 export const isSuperAdmin = (req, res, next) => {
-  if (req.user?.role !== "superAdmin") {
-    console.log(req.user)
-    return res.status(403).json({ message: "Access denied" });
+  const role = req.user?.role;
+  if (role === "superAdmin" || role === "director") {
+    return next();
   }
-  next();
+  return res.status(403).json({ message: "Access denied" });
 };

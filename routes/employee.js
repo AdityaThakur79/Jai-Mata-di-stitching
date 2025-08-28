@@ -5,7 +5,6 @@ import {
   getEmployeeById,
   updateEmployee,
   deleteEmployee,
-  generateEmployeeIdCardPdf,
   addEmployeeAdvance,
   getEmployeeAdvances,
   getAllEmployeeAdvances,
@@ -16,6 +15,7 @@ import {
   getEmployeeProfile,
   getEmployeeSalarySlips,
   downloadEmployeeSalarySlip,
+  getFilteredEmployeeDetails,
 } from "../controllers/employee.js";
 import { isAuthenticated, isEmployeeAuthenticated } from "../middlewares/isAuthenticated.js";
 import upload from "../utils/common/Uploads.js";
@@ -45,9 +45,6 @@ router.put("/update",isAuthenticated,upload, updateEmployee);
 // Delete Employee
 router.delete("/delete",isAuthenticated, deleteEmployee);
 
-// Generate Employee ID Card PDF
-router.post("/idcard-pdf",isAuthenticated, generateEmployeeIdCardPdf);
-
 // Employee Advance Payment Routes
 router.post("/advance", isAuthenticated, addEmployeeAdvance);
 router.post("/get-advance", isAuthenticated, getEmployeeAdvances);
@@ -55,5 +52,8 @@ router.get("/advances", isAuthenticated, getAllEmployeeAdvances);
 router.delete("/delete-advance", isAuthenticated, deleteEmployeeAdvance);
 router.post("/generate-salary-slip", isAuthenticated, generateSalarySlip);
 router.post("/send-salary-slip-email", isAuthenticated, sendSalarySlipEmailController);
+
+// Filtered Employee Details Route
+router.post("/filtered-details", isAuthenticated, getFilteredEmployeeDetails);
 
 export default router; 
