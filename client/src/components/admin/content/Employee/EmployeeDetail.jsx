@@ -35,6 +35,7 @@ import {
 import toast from "react-hot-toast";
 import {
   useGetEmployeeByIdMutation,
+  useGetFilteredEmployeeDetailsQuery,
   useAddEmployeeAdvanceMutation,
   useDeleteEmployeeAdvanceMutation,
   useGenerateSalarySlipMutation,
@@ -93,6 +94,7 @@ import {
 } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { useDebounce } from "@/hooks/Debounce";
 
 const EmployeeDetail = () => {
   const navigate = useNavigate();
@@ -105,6 +107,17 @@ const EmployeeDetail = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [slipFilter, setSlipFilter] = useState("all"); // all, generated, not-generated
   const [advanceFilter, setAdvanceFilter] = useState("all"); // all, with-advance, no-advance
+  
+  // Reset all filters
+  const resetFilters = () => {
+    setSelectedMonth("all");
+    setSearchQuery("");
+    setSlipFilter("all");
+    setAdvanceFilter("all");
+    // Clear local monthly data and refetch from backend
+    setMonthlyData({});
+    refetchFiltered();
+  };
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [emailForm, setEmailForm] = useState({
@@ -129,18 +142,39 @@ const EmployeeDetail = () => {
   const [sendSalarySlipEmail, { isLoading: isSendingEmail }] = useSendSalarySlipEmailMutation();
   const [downloadSalarySlip, { isLoading: isDownloadingSlip }] = useDownloadEmployeeSalarySlipMutation();
 
+  // Create debounced search query for smooth filtering
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+
+  // Backend filtered data hook - sends all filter parameters to backend for efficient filtering
+  const { data: filteredData, isLoading: isLoadingFiltered, refetch: refetchFiltered } = useGetFilteredEmployeeDetailsQuery({
+    employeeId,
+    year: selectedYear,
+    month: selectedMonth,
+    search: debouncedSearchQuery,
+    slipFilter,
+    advanceFilter,
+  }, {
+    skip: !employeeId,
+    refetchOnMountOrArgChange: true,
+  });
+
   // Data states
   const [employeeData, setEmployeeData] = useState(null);
   const [monthlyData, setMonthlyData] = useState({});
 
-  // Get years for filter (current year + 10 years back)
+  // Get years for filter (from joining year to current year)
   const getYearOptions = () => {
     const currentYear = new Date().getFullYear();
+    const joiningYear = employeeData ? new Date(employeeData.joiningDate).getFullYear() : currentYear;
     const years = [];
-    for (let i = 0; i <= 10; i++) {
-      years.push(currentYear - i);
+    
+    // Start from joining year, go up to current year
+    for (let year = joiningYear; year <= currentYear; year++) {
+      years.push(year);
     }
-    return years;
+    
+    // Reverse to show most recent years first
+    return years.reverse();
   };
 
   // Get months for filter
@@ -185,23 +219,38 @@ const EmployeeDetail = () => {
           }
           
           setEmployeeData(result.employee);
+          
+          // Set the selected year to the joining year if it's available
+          const joiningYear = new Date(result.employee.joiningDate).getFullYear();
+          setSelectedYear(joiningYear);
+          
           processMonthlyData(result.employee);
         } catch (error) {
           console.error("Error fetching employee:", error);
           toast.error(error?.data?.message || "Failed to fetch employee data");
-          navigate("/admin/employee-advance");
+          navigate("/employee/employee-advance");
         }
       } else {
         console.error("No employeeId provided");
         toast.error("No employee ID provided");
-        navigate("/admin/employee-advance");
+        navigate("/employee/employee-advance");
       }
     };
     
     fetchEmployee();
   }, [employeeId, getEmployeeById, navigate]);
 
-  // Process monthly data for the selected year
+  // Effect to handle year changes and trigger backend refetch
+  useEffect(() => {
+    if (employeeId && selectedYear) {
+      // Clear local monthly data when year changes
+      setMonthlyData({});
+      // Manually refetch backend data with the new year
+      refetchFiltered();
+    }
+  }, [selectedYear, employeeId, refetchFiltered]);
+
+  // Process monthly data for the selected year (used for initial load and fallback)
   const processMonthlyData = (employee) => {
     if (!employee) {
       console.error("No employee data provided to processMonthlyData");
@@ -210,8 +259,27 @@ const EmployeeDetail = () => {
 
     const monthlyData = {};
     
-    // Initialize all 12 months
-    for (let i = 0; i < 12; i++) {
+    // Get joining month and year
+    const joiningDate = new Date(employee.joiningDate);
+    const joiningYear = joiningDate.getFullYear();
+    const joiningMonth = joiningDate.getMonth();
+    
+    // Check if the selected year is before the joining year
+    if (selectedYear < joiningYear) {
+      // Employee wasn't working in this year, return empty data
+      setMonthlyData({});
+      return;
+    }
+    
+    // Initialize months starting from joining month if it's the joining year
+    let startMonth = 0;
+    let endMonth = 11;
+    
+    if (selectedYear === joiningYear) {
+      startMonth = joiningMonth;
+    }
+    
+    for (let i = startMonth; i <= endMonth; i++) {
       const monthKey = `${selectedYear}-${String(i + 1).padStart(2, '0')}`;
       const monthName = getMonthName(i);
       
@@ -226,7 +294,8 @@ const EmployeeDetail = () => {
         remainingAmount: employee.baseSalary || 0,
         salarySlip: null,
         advanceCount: 0,
-        salarySlipGenerated: false // New field to track if slip is generated
+        salarySlipGenerated: false,
+        isJoiningMonth: (selectedYear === joiningYear && i === joiningMonth)
       };
     }
 
@@ -269,7 +338,7 @@ const EmployeeDetail = () => {
     setMonthlyData(monthlyData);
   };
 
-  // Filter monthly data based on current filters
+  // Local filtering fallback (used when backend filtering is not available)
   const getFilteredMonthlyData = () => {
     let filtered = Object.values(monthlyData);
 
@@ -278,13 +347,24 @@ const EmployeeDetail = () => {
       filtered = filtered.filter(month => month.monthIndex === parseInt(selectedMonth));
     }
 
-    // Search filter
+    // Search filter - search in month name, advances reason, and employee details
     if (searchQuery) {
-      filtered = filtered.filter(month => 
-        month.advances.some(advance => 
-          advance.reason.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-      );
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(month => {
+        // Search in month name
+        if (month.month.toLowerCase().includes(query)) return true;
+        
+        // Search in advances reason
+        if (month.advances.some(advance => 
+          advance.reason.toLowerCase().includes(query)
+        )) return true;
+        
+        // Search in employee name and ID
+        if (employeeData?.name?.toLowerCase().includes(query)) return true;
+        if (employeeData?.employeeId?.toLowerCase().includes(query)) return true;
+        
+        return false;
+      });
     }
 
     // Slip filter
@@ -307,9 +387,9 @@ const EmployeeDetail = () => {
   // Handle year change
   const handleYearChange = (year) => {
     setSelectedYear(year);
-    if (employeeData) {
-      processMonthlyData(employeeData);
-    }
+    // Clear local monthly data when year changes to force backend filtering
+    setMonthlyData({});
+    // The backend will automatically refetch data for the new year
   };
 
   // Handle add advance
@@ -360,10 +440,15 @@ const EmployeeDetail = () => {
     if (monthlyData[monthKey]?.salarySlipGenerated) return; // Prevent duplicate generation
     setGeneratingSlipMonthKey(monthKey);
     try {
-      const monthName = `${monthlyData[monthKey]?.month} ${monthlyData[monthKey]?.year}`;
+      // Extract month index and year from monthKey
+      const monthData = monthlyData[monthKey];
+      const monthIndex = monthData?.monthIndex; // 0-11
+      const year = monthData?.year; // 2025, 2026, etc.
+      
       const result = await generateSalarySlip({ 
         employeeId, 
-        month: monthName 
+        month: monthIndex, // Send month as number (0-11)
+        year: year         // Send year as number
       }).unwrap();
       toast.success(result.message || "Salary slip generated successfully");
       
@@ -387,10 +472,10 @@ const EmployeeDetail = () => {
     }
 
     try {
-      const monthName = emailForm.month;
+      // emailForm.month now contains the monthKey (e.g., "2025-08")
       const result = await sendSalarySlipEmail({ 
         employeeId, 
-        month: monthName,
+        month: emailForm.month, // Send monthKey directly
         email: emailForm.email
       }).unwrap();
       toast.success(result.message || "Salary slip sent successfully");
@@ -435,10 +520,15 @@ const EmployeeDetail = () => {
     return variants[role] || "secondary";
   };
 
-  if (isLoadingEmployee) {
+  if (isLoadingEmployee || isLoadingFiltered) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin" />
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-orange-500 mb-4" />
+          <p className="text-gray-600 dark:text-gray-400">
+            {isLoadingEmployee ? "Loading employee data..." : "Filtering data..."}
+          </p>
+        </div>
       </div>
     );
   }
@@ -450,7 +540,7 @@ const EmployeeDetail = () => {
           <AlertCircle className="w-12 h-12 mx-auto text-gray-400 mb-4" />
           <p className="text-gray-500">Employee not found</p>
           <Button 
-            onClick={() => navigate("/admin/employee-advance")}
+            onClick={() => navigate("/employee/employee-advance")}
             className="mt-4"
           >
             Back to Employees
@@ -478,27 +568,33 @@ const EmployeeDetail = () => {
     ...employeeData
   };
 
-  const filteredMonthlyData = getFilteredMonthlyData();
+  // Use backend filtered data if available, otherwise fall back to local filtering
+  // When backend filtering is active, we should use that data directly
+  const filteredMonthlyData = filteredData?.monthlyData || getFilteredMonthlyData();
 
   return (
     <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
       <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
-        <div className="mb-8 rounded-2xl shadow-xl bg-gradient-to-br from-orange-50 via-white to-blue-50 dark:from-orange-900/30 dark:via-gray-900 dark:to-blue-900/30 px-6 py-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6 relative overflow-hidden">
+        <div className="mb-8 rounded-3xl shadow-2xl bg-gradient-to-br from-orange-100 via-white to-blue-100 dark:from-orange-900/40 dark:via-gray-900 dark:to-blue-900/40 px-8 py-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6 relative overflow-hidden border border-orange-200/50 dark:border-orange-800/30">
+          {/* Decorative Elements */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-200/30 to-transparent rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-200/30 to-transparent rounded-full blur-2xl"></div>
+          
           <div className="flex items-center gap-6">
-            <Button
-              onClick={() => navigate("/admin/employee-advance")}
-              className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-orange-400 text-white font-semibold shadow-lg rounded-full px-5 py-2 hover:from-blue-600 hover:to-orange-500 transition"
+            {/* <Button
+              onClick={() => navigate("/employee/employee-advance")}
+              className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold shadow-xl rounded-full px-6 py-3 hover:from-blue-700 hover:to-blue-800 hover:scale-105 transition-all duration-300 border-0"
               size="lg"
             >
-              <ArrowLeft className="w-5 h-5 mr-2" />
-              Back to Employees
-            </Button>
+              <ArrowLeft className="w-5 h-5 " />
+          
+            </Button> */}
             <div>
-              <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-1">
+              <h1 className="text-3xl md:text-4xl font-extrabold text-orange-600 dark:text-orange-400 tracking-tight mb-2">
                 Employee Details
               </h1>
-              <p className="text-lg text-gray-600 dark:text-gray-300 font-medium">
+              <p className="text-lg text-gray-600 dark:text-gray-300 font-semibold">
                 Salary & Advance Management
               </p>
             </div>
@@ -508,38 +604,45 @@ const EmployeeDetail = () => {
               setAdvanceForm(prev => ({ ...prev, employeeId }));
               setShowAddDialog(true);
             }}
-            className="flex items-center gap-2 bg-gradient-to-r from-orange-400 to-blue-500 text-white font-semibold shadow-lg rounded-full px-6 py-3 hover:from-orange-500 hover:to-blue-600 transition"
+            className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold shadow-xl rounded-2xl px-8 py-4 hover:from-orange-600 hover:to-orange-700 hover:scale-105 transition-all duration-300 border-0"
             size="lg"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-6 h-6" />
             Add Advance
           </Button>
         </div>
 
         {/* Profile Header Card */}
-        <Card className="mb-6 relative overflow-hidden shadow-xl border border-gray-200 dark:border-gray-800 rounded-2xl bg-gradient-to-br from-orange-50 via-white to-blue-50 dark:from-orange-900/30 dark:via-gray-900 dark:to-blue-900/30">
-          <div className="absolute inset-0 z-0" />
+        <Card className="mb-6 relative overflow-hidden shadow-2xl border border-orange-200/50 dark:border-orange-800/30 rounded-3xl bg-gradient-to-br from-orange-50 via-white to-blue-50 dark:from-orange-900/40 dark:via-gray-900 dark:to-blue-900/40">
+          {/* Decorative Background */}
+          <div className="absolute inset-0 z-0">
+            <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-orange-200/20 to-transparent rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-blue-200/20 to-transparent rounded-full blur-2xl"></div>
+          </div>
+          
           <CardHeader className="z-10 relative">
-            <CardTitle className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-400 to-blue-700 flex items-center justify-center text-white text-3xl font-bold shadow-lg border-4 border-white dark:border-gray-950 -mt-4">
+            <CardTitle className="flex items-center gap-6">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-500 to-blue-600 flex items-center justify-center text-white text-4xl font-bold shadow-2xl border-4 border-white dark:border-gray-950 -mt-6 relative">
                 {safeEmployeeData.profileImage ? (
-                  <Avatar className="w-20 h-20">
+                  <Avatar className="w-24 h-24">
                     <AvatarImage src={safeEmployeeData.profileImage} />
-                    <AvatarFallback className="text-2xl">
+                    <AvatarFallback className="text-3xl">
                       {safeEmployeeData.name.split(' ').map(n => n[0]).join('')}
                     </AvatarFallback>
                   </Avatar>
                 ) : (
                   safeEmployeeData.name.split(' ').map(n => n[0]).join('')
                 )}
+                {/* Glow Effect */}
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-orange-400/30 to-blue-500/30 blur-xl"></div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-gray-900 dark:text-white">{safeEmployeeData.name}</div>
-                <div className="flex items-center gap-2 mt-1">
-                  <Badge variant={getRoleVariant(safeEmployeeData.role)} className="text-xs px-2 py-1">
-                    {safeEmployeeData.role}
+                <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-2">{safeEmployeeData.name}</div>
+                <div className="flex items-center gap-3">
+                  <Badge variant={getRoleVariant(safeEmployeeData.role)} className="text-sm px-3 py-1.5 font-semibold shadow-lg">
+                    {safeEmployeeData.role.toUpperCase()}
                   </Badge>
-                  <Badge variant={getStatusVariant(safeEmployeeData.status)} className="text-xs px-2 py-1">
+                  <Badge variant={getStatusVariant(safeEmployeeData.status)} className="text-sm px-3 py-1.5 font-semibold shadow-lg">
                     {safeEmployeeData.status}
                   </Badge>
                 </div>
@@ -558,7 +661,7 @@ const EmployeeDetail = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Designation:</span>
-                    <span className="font-medium">{safeEmployeeData.designation}</span>
+                    <span className="font-medium">{safeEmployeeData.role.toUpperCase()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Joining Date:</span>
@@ -640,16 +743,40 @@ const EmployeeDetail = () => {
         </Card>
 
         {/* Filters Panel */}
-        <Card className="mb-6 relative overflow-hidden shadow-xl border border-gray-200 dark:border-gray-800 rounded-2xl bg-gradient-to-br from-orange-50 via-white to-blue-50 dark:from-orange-900/30 dark:via-gray-900 dark:to-blue-900/30">
-          <div className="absolute inset-0 z-0" />
+        <Card className="mb-6 relative overflow-hidden shadow-2xl border border-orange-200/50 dark:border-orange-800/30 rounded-3xl bg-gradient-to-br from-orange-50 via-white to-blue-50 dark:from-orange-900/40 dark:via-gray-900 dark:to-blue-900/40">
+          {/* Decorative Background */}
+          <div className="absolute inset-0 z-0">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-200/20 to-transparent rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-200/20 to-transparent rounded-full blur-2xl"></div>
+          </div>
+          
           <CardHeader className="z-10 relative">
-            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-800 dark:text-white">
-              <Filter className="w-5 h-5 text-orange-500" />
-              Filters & Search
-            </CardTitle>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <CardTitle className="flex items-center gap-3 text-xl font-bold text-gray-800 dark:text-white">
+                  <div className="p-2 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl">
+                    <Filter className="w-6 h-6 text-white" />
+                  </div>
+                  Filters & Search
+                </CardTitle>
+                {employeeData && (
+                  <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-lg">
+                    Valid years: {new Date(employeeData.joiningDate).getFullYear()} - {new Date().getFullYear()}
+                  </div>
+                )}
+              </div>
+              <Button
+                onClick={resetFilters}
+                variant="outline"
+                size="sm"
+                className="bg-white/80 hover:bg-white text-orange-600 border-orange-300 hover:border-orange-400 font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-300 w-full sm:w-auto"
+              >
+                Reset Filters
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="z-10 relative">
-            <div className="bg-white/80 dark:bg-gray-950/80 rounded-xl shadow p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="bg-white/90 dark:bg-gray-950/90 rounded-2xl shadow-lg p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
               {/* Year Filter */}
               <div>
                 <Label>Year</Label>
@@ -690,7 +817,7 @@ const EmployeeDetail = () => {
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
-                    placeholder="Search advances..."
+                    placeholder="Search month, advances, employee..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10"
@@ -731,21 +858,61 @@ const EmployeeDetail = () => {
           </CardContent>
         </Card>
 
+        {/* Filter Summary */}
+        <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            Showing <span className="font-semibold text-orange-600 dark:text-orange-400">{filteredMonthlyData.length}</span> month{filteredMonthlyData.length !== 1 ? 's' : ''} 
+            {searchQuery && ` for "${searchQuery}"`}
+            {slipFilter !== "all" && ` (${slipFilter === "generated" ? "Slip Generated" : "No Slip"})`}
+            {advanceFilter !== "all" && ` (${advanceFilter === "with-advance" ? "With Advances" : "No Advances"})`}
+            {isLoadingFiltered && (
+              <span className="ml-2 text-orange-500">
+                <Loader2 className="w-3 h-3 animate-spin inline mr-1" />
+                Filtering...
+              </span>
+            )}
+          </div>
+          {filteredMonthlyData.length !== (filteredData?.monthlyData ? filteredData.monthlyData.length : Object.keys(monthlyData).length) && (
+            <Button
+              onClick={resetFilters}
+              variant="ghost"
+              size="sm"
+              className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 w-full sm:w-auto"
+            >
+              Clear Filters
+            </Button>
+          )}
+        </div>
+
         {/* Monthly Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {filteredMonthlyData.map((month) => (
-            <Card key={month.monthKey} className="relative overflow-hidden shadow-xl border border-gray-200 dark:border-gray-800 rounded-2xl bg-gradient-to-br from-orange-50 via-white to-blue-50 dark:from-orange-900/30 dark:via-gray-900 dark:to-blue-900/30 transition-transform hover:scale-[1.02] group">
-              <CardHeader>
+            <Card key={month.monthKey} className="relative overflow-hidden shadow-2xl border border-orange-200/50 dark:border-orange-800/30 rounded-3xl bg-gradient-to-br from-orange-50 via-white to-blue-50 dark:from-orange-900/40 dark:via-gray-900 dark:to-blue-900/40 transition-all duration-300 hover:scale-[1.03] hover:shadow-3xl group">
+              {/* Joining Month Indicator */}
+              {month.isJoiningMonth && (
+                <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-center py-2 text-sm font-bold z-10">
+                  🎉 Joining Month
+                </div>
+              )}
+              
+              {/* Decorative Corner */}
+              <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-orange-200/30 to-transparent rounded-bl-full"></div>
+              
+              <CardHeader className={month.isJoiningMonth ? "pt-12" : ""}>
                 <div className="flex justify-between items-start">
                   <div>
-                    <CardTitle className="text-lg">{month.month}</CardTitle>
-                    <CardDescription>{month.year}</CardDescription>
+                    <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">{month.month}</CardTitle>
+                    <CardDescription className="text-gray-600 dark:text-gray-400 font-medium">{month.year}</CardDescription>
                   </div>
                   <div className="flex items-center gap-1">
                     {month.salarySlip ? (
-                      <CheckCircle className="w-5 h-5 text-green-500" />
+                      <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-full">
+                        <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+                      </div>
                     ) : (
-                      <XCircle className="w-5 h-5 text-gray-400" />
+                      <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full">
+                        <XCircle className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                      </div>
                     )}
                   </div>
                 </div>
@@ -784,12 +951,12 @@ const EmployeeDetail = () => {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {!month.salarySlipGenerated && (
                       <Button
                         variant="outline"
                         size="sm"
-                        className="w-full"
+                        className="w-full bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 text-blue-700 border-blue-300 hover:border-blue-400 font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
                         onClick={() => {
                           setAdvanceForm(prev => ({ ...prev, employeeId, date: `${selectedYear}-${String(month.monthIndex + 1).padStart(2, '0')}-01` }));
                           setShowAddDialog(true);
@@ -803,10 +970,9 @@ const EmployeeDetail = () => {
                       <Button
                         variant="secondary"
                         size="sm"
-                        className="w-full"
+                        className="w-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-300 dark:border-gray-600 font-medium rounded-xl cursor-not-allowed"
                         disabled
                         title="Cannot add advance after salary slip is generated for this month"
-                        style={{ opacity: 0.5 }}
                       >
                         Add Advance
                       </Button>
@@ -815,7 +981,7 @@ const EmployeeDetail = () => {
                     {month.advanceCount > 0 && (
                       <Sheet>
                         <SheetTrigger asChild>
-                          <Button variant="outline" size="sm" className="w-full">
+                          <Button variant="outline" size="sm" className="w-full bg-gradient-to-r from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 text-orange-700 border-orange-300 hover:border-orange-400 font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105">
                             <Eye className="w-4 h-4 mr-2" />
                             View Advances ({month.advanceCount})
                           </Button>
@@ -888,7 +1054,7 @@ const EmployeeDetail = () => {
                             variant="outline"
                             onClick={async () => {
                               try {
-                                const blob = await downloadSalarySlip({ employeeId, month: `${month.month} ${month.year}` }).unwrap();
+                                const blob = await downloadSalarySlip({ employeeId, month: month.monthKey }).unwrap();
                                 const url = window.URL.createObjectURL(blob);
                                 const link = document.createElement('a');
                                 link.href = url;
@@ -909,11 +1075,27 @@ const EmployeeDetail = () => {
                             )}
                             Download Slip
                           </Button>
+                          
+                          {/* Send Email Button */}
+                          <Button
+                            size="sm"
+                            className="w-full mt-2 flex items-center justify-center bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold rounded-xl px-4 py-3 hover:from-green-600 hover:to-green-700 hover:scale-105 transition-all duration-300 border-0"
+                            onClick={() => {
+                              setEmailForm({
+                                email: employeeData?.email || "",
+                                month: month.monthKey,
+                              });
+                              setShowEmailDialog(true);
+                            }}
+                          >
+                            <Mail className="w-4 h-4 mr-2" />
+                            Send Email
+                          </Button>
                         </>
                       ) : (
                         <Button 
                           size="sm" 
-                          className="w-full bg-gradient-to-r from-orange-400 to-blue-500 text-white font-semibold shadow-lg rounded-full px-6 py-3 hover:from-orange-500 hover:to-blue-600 transition"
+                          className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold shadow-xl rounded-xl px-4 py-3 hover:from-orange-600 hover:to-orange-700 hover:scale-105 transition-all duration-300 border-0"
                           onClick={() => handleGenerateSalarySlip(month.monthKey)}
                           disabled={generatingSlipMonthKey === month.monthKey}
                         >
@@ -938,10 +1120,14 @@ const EmployeeDetail = () => {
           <div className="text-center py-12">
             <Calendar className="w-12 h-12 mx-auto text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              No data found
+              {selectedYear < (employeeData ? new Date(employeeData.joiningDate).getFullYear() : selectedYear) 
+                ? "Employee not yet joined" 
+                : "No data found"}
             </h3>
             <p className="text-gray-500">
-              Try adjusting your filters or select a different year.
+              {selectedYear < (employeeData ? new Date(employeeData.joiningDate).getFullYear() : selectedYear)
+                ? `${employeeData?.name} joined in ${new Date(employeeData?.joiningDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}. Select ${new Date(employeeData?.joiningDate).getFullYear()} or later to view data.`
+                : "Try adjusting your filters or select a different year."}
             </p>
           </div>
         )}
@@ -1005,7 +1191,7 @@ const EmployeeDetail = () => {
           <DialogHeader>
             <DialogTitle>Send Salary Slip via Email</DialogTitle>
             <DialogDescription>
-              Send the salary slip for {emailForm.month} to the employee.
+              Send the salary slip for {emailForm.month ? `${getMonthName(parseInt(emailForm.month.split('-')[1]) - 1)} ${emailForm.month.split('-')[0]}` : ''} to the employee.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSendEmail} className="space-y-4">
@@ -1022,7 +1208,7 @@ const EmployeeDetail = () => {
             <div>
               <Label>Month</Label>
               <Input
-                value={emailForm.month}
+                value={emailForm.month ? `${getMonthName(parseInt(emailForm.month.split('-')[1]) - 1)} ${emailForm.month.split('-')[0]}` : ''}
                 disabled
                 className="bg-gray-50 dark:bg-gray-800"
               />

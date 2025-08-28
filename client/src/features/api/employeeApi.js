@@ -107,6 +107,30 @@ export const employeeApi = createApi({
             providesTags: ["Employee"],
         }),
 
+        // Get filtered employee details with backend filtering
+        getFilteredEmployeeDetails: builder.query({
+            query: ({ 
+                employeeId, 
+                year, 
+                month = "all", 
+                search = "", 
+                slipFilter = "all", 
+                advanceFilter = "all" 
+            }) => ({
+                url: "/filtered-details",
+                method: "POST",
+                body: { 
+                    employeeId, 
+                    year, 
+                    month, 
+                    search, 
+                    slipFilter, 
+                    advanceFilter 
+                },
+            }),
+            providesTags: ["Employee"],
+        }),
+
         updateEmployee: builder.mutation({
             query: (formData) => ({
                 url: "/update",
@@ -198,6 +222,7 @@ export const {
     useCreateEmployeeMutation,
     useGetAllEmployeesQuery,
     useGetEmployeeByIdMutation,
+    useGetFilteredEmployeeDetailsQuery,
     useUpdateEmployeeMutation,
     useDeleteEmployeeMutation,
     useDownloadEmployeeIdCardMutation,

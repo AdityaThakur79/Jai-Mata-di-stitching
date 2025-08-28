@@ -123,7 +123,7 @@ const Branches = () => {
 
   return (
     <section className="min-h-screen bg-gradient-to-br from-orange-50 to-white dark:from-gray-900 dark:to-gray-800">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 ">
         {/* Header Section */}
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-6 lg:space-y-0">
@@ -132,7 +132,7 @@ const Branches = () => {
                 <Building2 className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                <h1 className="md:text-3xl text-xl font-bold text-gray-900 dark:text-white">
                   Branch Management
                 </h1>
                 <p className="text-gray-600 dark:text-gray-300 mt-1">
@@ -173,7 +173,7 @@ const Branches = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center justify-center space-x-3">
               <Select value={limit.toString()} onValueChange={handleLimitChange}>
                 <SelectTrigger className="w-20 border-gray-200 dark:border-gray-600">
                   <SelectValue />
@@ -196,36 +196,37 @@ const Branches = () => {
                 Refresh
               </Button>
 
-              <Button 
-                onClick={() => navigate("/admin/create-branch")}
+            
+            </div>
+            <Button 
+                onClick={() => navigate("/employee/create-branch")}
                 className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Branch
               </Button>
-            </div>
           </div>
         </div>
 
         {/* Table Section */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-orange-100 dark:border-gray-700 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
+          <div className="overflow-x-auto w-full">
+            <table className="min-w-[820px] md:min-w-full table-auto">
               <thead>
                 <tr className="bg-gradient-to-r from-orange-50 to-red-50 dark:from-gray-700 dark:to-gray-800 border-b border-orange-100 dark:border-gray-600">
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                  <th className="px-4 md:px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
                     #
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                  <th className="px-4 md:px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
                     Branch Details
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                  <th className="px-4 md:px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider hidden sm:table-cell">
                     Contact
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                  <th className="px-4 md:px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider hidden sm:table-cell">
                     Status
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                  <th className="px-4 md:px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -243,42 +244,42 @@ const Branches = () => {
                 ) : data?.branches?.length > 0 ? (
                   data.branches.map((branch, i) => (
                     <tr key={branch._id} className="hover:bg-orange-25 dark:hover:bg-gray-750 transition-colors">
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                      <td className="px-4 md:px-6 py-4 text-xs md:text-sm font-medium text-gray-900 dark:text-white">
                         <div className="w-8 h-8 bg-gradient-to-r from-orange-100 to-red-100 dark:from-orange-900 dark:to-red-900 rounded-lg flex items-center justify-center text-orange-600 dark:text-orange-400 font-semibold">
                           {data.limit * (data.page - 1) + (i + 1)}
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 md:px-6 py-4">
                         <div className="flex items-center space-x-3">
                           <div className="p-2 bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900 dark:to-indigo-900 rounded-lg">
                             <Building2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                           </div>
                           <div>
-                            <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                            <div className="text-xs md:text-sm font-semibold text-gray-900 dark:text-white">
                               {branch.branchName}
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                            <div className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">
                               ID: {branch._id?.slice(-8)}
                             </div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 md:px-6 py-4 hidden sm:table-cell">
                         <div className="space-y-1">
-                          <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
+                          <div className="flex items-center space-x-2 text-xs md:text-sm text-gray-600 dark:text-gray-300">
                             <Phone className="w-4 h-4" />
                             <span>{branch.phone || "Not provided"}</span>
                           </div>
-                          <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
+                          <div className="flex items-center space-x-2 text-xs md:text-sm text-gray-600 dark:text-gray-300">
                             <Mail className="w-4 h-4" />
                             <span>{branch.email || "Not provided"}</span>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 md:px-6 py-4 hidden sm:table-cell">
                         {getStatusBadge(branch.status)}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 md:px-6 py-4">
                         <div className="flex space-x-2">
                           <Button
                             size="sm"
@@ -293,7 +294,7 @@ const Branches = () => {
                             variant="ghost"
                             className="h-8 w-8 p-0 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
                             onClick={() =>
-                              navigate("/admin/update-branch", {
+                              navigate("/employee/update-branch", {
                                 state: { branchId: branch._id },
                               })
                             }
@@ -348,7 +349,7 @@ const Branches = () => {
                           </p>
                         </div>
                         <Button 
-                          onClick={() => navigate("/admin/create-branch")}
+                          onClick={() => navigate("/employee/create-branch")}
                           className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
                         >
                           <Plus className="w-4 h-4 mr-2" />
@@ -536,7 +537,7 @@ const Branches = () => {
               {/* Action Button */}
               <div className="pt-4">
                 <Button 
-                  onClick={() => navigate("/admin/update-branch", {
+                  onClick={() => navigate("/employee/update-branch", {
                     state: { branchId: selectedBranch._id },
                   })}
                   className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"

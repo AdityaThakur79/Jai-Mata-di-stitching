@@ -10,19 +10,54 @@ import {
   SelectContent,
 } from "@/components/ui/select";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Loader2, User, FileImage, X } from "lucide-react";
+import { 
+  Loader2, 
+  User, 
+  FileImage, 
+  X, 
+  Upload,
+  Building2,
+  UserCheck
+} from "lucide-react";
 import toast from "react-hot-toast";
 import { useUpdateEmployeeMutation, useGetEmployeeByIdMutation } from "@/features/api/employeeApi.js";
+import { useSelector } from "react-redux";
+import { useGetAllBranchesQuery } from "@/features/api/branchApi";
+import { selectUserRole } from "@/features/authSlice";
 
 const genderOptions = ["male", "female", "other"];
 const roleOptions = ["tailor", "manager", "biller", "director", "admin", "other"];
 const bloodGroupOptions = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 const gradeOptions = ["A", "B", "C", "D"];
 
+const FormSection = ({ title, icon: Icon, children, className = "" }) => (
+  <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${className}`}>
+    <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100">
+      <Icon className="w-4 h-4 text-gray-600" />
+      <h3 className="font-semibold text-gray-800 text-sm">{title}</h3>
+    </div>
+    {children}
+  </div>
+);
+
+const FormField = ({ label, required, children, className = "" }) => (
+  <div className={`space-y-1 ${className}`}>
+    <Label className="text-xs font-medium text-gray-700">
+      {label} {required && <span className="text-red-500">*</span>}
+    </Label>
+    {children}
+  </div>
+);
+
 const UpdateEmployee = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const employeeId = location.state?.employeeId;
+  const userRole = useSelector(selectUserRole);
+  const showBranchDropdown = !["branchAdmin", "billing", "operation"].includes(userRole);
+  const [branchId, setBranchId] = useState("");
+  const { data: branchData, isLoading: branchLoading } = useGetAllBranchesQuery({ page: 1, limit: 100 });
+  
   const [form, setForm] = useState({
     name: "",
     mobile: "",
@@ -64,14 +99,14 @@ const UpdateEmployee = () => {
       } else {
         console.error("No employeeId provided");
         toast.error("No employee ID provided");
-        navigate("/admin/employees");
+        navigate("/employee/employees");
       }
     };
     
     fetchEmployee();
   }, [employeeId, getEmployeeById, navigate]);
 
-    useEffect(() => {
+  useEffect(() => {
     console.log("employeeData received:", employeeData);
     if (employeeData?.employee) {
       const employee = employeeData.employee;
@@ -93,6 +128,11 @@ const UpdateEmployee = () => {
         bankDetails: employee.bankDetails || { bankName: "", accountNumber: "", ifsc: "" },
         emergencyContact: employee.emergencyContact || { name: "", mobile: "" },
       });
+      
+      // Set branch ID if available
+      if (employee.branchId) {
+        setBranchId(employee.branchId);
+      }
       
       // Set profile image preview
       if (employee.profileImage) {
@@ -131,6 +171,11 @@ const UpdateEmployee = () => {
         emergencyContact: employee.emergencyContact || { name: "", mobile: "" },
       });
       
+      // Set branch ID if available
+      if (employee.branchId) {
+        setBranchId(employee.branchId);
+      }
+      
       // Set profile image preview
       if (employee.profileImage) {
         setPreviewImage(employee.profileImage);
@@ -147,30 +192,34 @@ const UpdateEmployee = () => {
     }
   }, [employeeData]);
 
-
-
   useEffect(() => {
     if (isSuccess) {
       toast.success(data?.message || "Employee updated successfully");
-      navigate("/admin/employees");
+      navigate("/employee/employees");
     } else if (isError) {
       toast.error(error?.data?.message || "Failed to update employee");
     }
-  }, [isSuccess, isError]);
+  }, [isSuccess, isError, data, error, navigate]);
 
+  // Update handleChange to support nested fields
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleBankChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, bankDetails: { ...prev.bankDetails, [name]: value } }));
-  };
-
-  const handleEmergencyChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, emergencyContact: { ...prev.emergencyContact, [name]: value } }));
+    // Handle nested fields using name convention: e.g., 'bankDetails_bankName'
+    if (name.startsWith("bankDetails_")) {
+      const field = name.replace("bankDetails_", "");
+      setForm((prev) => ({
+        ...prev,
+        bankDetails: { ...prev.bankDetails, [field]: value },
+      }));
+    } else if (name.startsWith("emergencyContact_")) {
+      const field = name.replace("emergencyContact_", "");
+      setForm((prev) => ({
+        ...prev,
+        emergencyContact: { ...prev.emergencyContact, [field]: value },
+      }));
+    } else {
+      setForm((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleImageChange = (e) => {
@@ -198,30 +247,49 @@ const UpdateEmployee = () => {
       toast.error("Name, Mobile, and Role are required.");
       return;
     }
+    if (showBranchDropdown && !branchId) {
+      toast.error("Please select a branch.");
+      return;
+    }
+    
     const formData = new FormData();
     formData.append("employeeId", employeeId);
     formData.append("name", form.name);
     formData.append("mobile", form.mobile);
-    if (form.password) formData.append("password", form.password);
-    if (form.email) formData.append("email", form.email);
-    if (form.gender) formData.append("gender", form.gender);
-    if (form.address) formData.append("address", form.address);
-    if (form.aadhaarNumber) formData.append("aadhaarNumber", form.aadhaarNumber);
+    if (form.password && form.password.trim() !== "") formData.append("password", form.password);
+    if (form.email !== undefined) formData.append("email", form.email);
+    if (form.gender !== undefined) formData.append("gender", form.gender);
+    if (form.address !== undefined) formData.append("address", form.address);
+    if (form.aadhaarNumber !== undefined) formData.append("aadhaarNumber", form.aadhaarNumber);
     formData.append("role", form.role);
-    if (form.joiningDate) formData.append("joiningDate", form.joiningDate);
-    if (form.bloodGroup) formData.append("bloodGroup", form.bloodGroup);
-    if (form.grade) formData.append("grade", form.grade);
-    if (form.dob) formData.append("dob", form.dob);
-    if (form.baseSalary) formData.append("baseSalary", form.baseSalary);
+    if (form.joiningDate !== undefined) formData.append("joiningDate", form.joiningDate);
+    if (form.bloodGroup !== undefined) formData.append("bloodGroup", form.bloodGroup);
+    if (form.grade !== undefined) formData.append("grade", form.grade);
+    if (form.dob !== undefined) formData.append("dob", form.dob);
+    if (form.baseSalary !== undefined && form.baseSalary !== "") formData.append("baseSalary", form.baseSalary);
     if (profileImage) formData.append("profileImage", profileImage);
     if (aadhaarImage) formData.append("aadhaarImage", aadhaarImage);
     if (existingAadhaarPublicId) formData.append("existingAadhaarPublicId", existingAadhaarPublicId);
-    if (form.bankDetails.bankName || form.bankDetails.accountNumber || form.bankDetails.ifsc) {
-      formData.append("bankDetails", JSON.stringify(form.bankDetails));
+    
+    // Handle bank details - send even if empty to allow clearing
+    const bankDetailsToSend = {
+      bankName: form.bankDetails.bankName || "",
+      accountNumber: form.bankDetails.accountNumber || "",
+      ifsc: form.bankDetails.ifsc || ""
+    };
+    formData.append("bankDetails", JSON.stringify(bankDetailsToSend));
+    
+    // Handle emergency contact - send even if empty to allow clearing
+    const emergencyContactToSend = {
+      name: form.emergencyContact.name || "",
+      mobile: form.emergencyContact.mobile || ""
+    };
+    formData.append("emergencyContact", JSON.stringify(emergencyContactToSend));
+    
+    if (showBranchDropdown) {
+      formData.append("branchId", branchId);
     }
-    if (form.emergencyContact.name || form.emergencyContact.mobile) {
-      formData.append("emergencyContact", JSON.stringify(form.emergencyContact));
-    }
+    
     await updateEmployee(formData);
   };
 
@@ -243,192 +311,330 @@ const UpdateEmployee = () => {
   }
 
   return (
-    <div className="relative px-6 py-12 min-h-[100vh] bg-gradient-to-tr from-[#fdfbff] via-[#f8e1d9] to-[#fef9f9] dark:from-gray-900 dark:to-[#7d3c3c] flex items-center justify-center overflow-x-hidden">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-5xl mx-auto bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-3xl shadow-2xl p-10 space-y-12 border border-gray-200 dark:border-gray-800 animate-fade-in drop-shadow-xl"
-        style={{ boxShadow: '0 8px 32px 0 rgba(247, 127, 47, 0.15)' }}
-      >
-        <div className="text-center mb-8">
-          <div className="inline-block bg-gradient-to-r from-[#f77f2f] to-[#fca16a] rounded-full p-2 shadow-lg mb-2 animate-fade-in">
-            <User className="w-10 h-10 text-white" />
+    <div className="min-h-screen py-4 px-2 sm:px-4">
+      <div className="container mx-auto">
+        {/* Header */}
+        <div className="mb-4">
+          <div className="inline-flex items-center justify-center w-12 h-12 bg-orange-600 rounded-full shadow-lg mb-3">
+            <User className="w-6 h-6 text-white" />
           </div>
-          <h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#f77f2f] to-[#fca16a] tracking-wider uppercase drop-shadow-lg">Update Employee</h2>
-          <p className="text-gray-500 dark:text-gray-400 mt-2">Update employee information below.</p>
-          {employeeId && <p className="text-sm text-gray-400">Employee ID: {employeeId}</p>}
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">Update Employee</h1>
+          <p className="text-gray-600 text-sm">Update employee information below</p>
+          {employeeId && <p className="text-xs text-gray-400 mt-1">Employee ID: {employeeId}</p>}
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 animate-fade-in-up">
-          <div>
-            <Label>Name *</Label>
-            <Input name="name" value={form.name} onChange={handleChange} placeholder="Employee Name" required className="rounded-xl" />
-          </div>
-          <div>
-            <Label>Mobile *</Label>
-            <Input name="mobile" value={form.mobile} onChange={handleChange} placeholder="Mobile Number" required className="rounded-xl" />
-          </div>
-          <div>
-            <Label>Email</Label>
-            <Input name="email" value={form.email} onChange={handleChange} placeholder="Email Address" className="rounded-xl" />
-          </div>
-          <div>
-            <Label>New Password (Leave blank to keep current)</Label>
-            <Input name="password" type="password" value={form.password} onChange={handleChange} placeholder="New Password" className="rounded-xl" />
-          </div>
-          <div>
-            <Label>Gender</Label>
-            <Select value={form.gender} onValueChange={(val) => setForm((prev) => ({ ...prev, gender: val }))}>
-              <SelectTrigger className="rounded-xl">
-                <SelectValue placeholder="Select Gender" />
-              </SelectTrigger>
-              <SelectContent>
-                {genderOptions.map((g) => (
-                  <SelectItem key={g} value={g}>{g}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Blood Group</Label>
-            <Select value={form.bloodGroup} onValueChange={(val) => setForm((prev) => ({ ...prev, bloodGroup: val }))}>
-              <SelectTrigger className="rounded-xl">
-                <SelectValue placeholder="Select Blood Group" />
-              </SelectTrigger>
-              <SelectContent>
-                {bloodGroupOptions.map((bg) => (
-                  <SelectItem key={bg} value={bg}>{bg}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Grade</Label>
-            <Select value={form.grade} onValueChange={(val) => setForm((prev) => ({ ...prev, grade: val }))}>
-              <SelectTrigger className="rounded-xl">
-                <SelectValue placeholder="Select Grade" />
-              </SelectTrigger>
-              <SelectContent>
-                {gradeOptions.map((g) => (
-                  <SelectItem key={g} value={g}>{g}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Date of Birth</Label>
-            <Input name="dob" type="date" value={form.dob} onChange={handleChange} className="rounded-xl" />
-          </div>
-          <div>
-            <Label>Base Salary</Label>
-            <Input name="baseSalary" type="number" value={form.baseSalary} onChange={handleChange} placeholder="Base Salary" className="rounded-xl" />
-          </div>
-          <div>
-            <Label>Address</Label>
-            <Input name="address" value={form.address} onChange={handleChange} placeholder="Address" className="rounded-xl" />
-          </div>
-          <div>
-            <Label>Aadhaar Number</Label>
-            <Input name="aadhaarNumber" value={form.aadhaarNumber} onChange={handleChange} placeholder="Aadhaar Number" className="rounded-xl" />
-          </div>
-          <div>
-            <Label>Role *</Label>
-            <Select value={form.role} onValueChange={(val) => setForm((prev) => ({ ...prev, role: val }))}>
-              <SelectTrigger className="rounded-xl">
-                <SelectValue placeholder="Select Role" />
-              </SelectTrigger>
-              <SelectContent>
-                {roleOptions.map((r) => (
-                  <SelectItem key={r} value={r}>{r}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Joining Date</Label>
-            <Input name="joiningDate" type="date" value={form.joiningDate} onChange={handleChange} className="rounded-xl" />
-          </div>
-          <div>
-            <Label>Profile Image</Label>
-            <Input type="file" accept="image/*" onChange={handleImageChange} className="rounded-xl" />
-            {previewImage && (
-              <img src={previewImage} alt="Preview" className="mt-2 w-20 h-20 rounded-full object-cover border-2 border-[#f8a977] shadow-md" />
-            )}
-          </div>
-        </div>
-
-        {/* Aadhaar Card Image Section */}
-        <div className="bg-white/70 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl p-8 shadow-lg border border-[#f8a977]/30 animate-fade-in-up">
-          <h3 className="font-bold text-lg text-[#f77f2f] dark:text-[#f8b78a] mb-4 flex items-center gap-2 uppercase tracking-wide">
-            <FileImage className="w-5 h-5" />
-            Aadhaar Card Image
-          </h3>
-          <div className="space-y-4">
-    <div>
-              <Label>Aadhaar Card Image</Label>
-              <div className="flex items-center gap-4">
+        <div className="space-y-4">
+          {/* Personal Information */}
+          <FormSection title="Personal Information" icon={User}>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+              <FormField label="Full Name" required>
                 <Input 
-                  type="file" 
-                  accept="image/*" 
-                  onChange={handleAadhaarImageChange} 
-                  className="rounded-xl border-2 border-dashed border-[#f8a977] bg-white/60 hover:bg-[#fff6f2] transition-all duration-200 cursor-pointer" 
+                  name="name" 
+                  value={form.name} 
+                  onChange={handleChange} 
+                  placeholder="Enter full name"
+                  className="h-8 text-sm"
                 />
-                {previewAadhaarImage && (
-                  <div className="relative inline-block animate-fade-in">
-                    <img 
-                      src={previewAadhaarImage} 
-                      alt="Aadhaar Preview" 
-                      className="w-40 h-28 object-cover border-2 border-[#f8a977] shadow-lg rounded-xl backdrop-blur-md" 
+              </FormField>
+              
+              <FormField label="Mobile Number" required>
+                <Input 
+                  name="mobile" 
+                  value={form.mobile} 
+                  onChange={handleChange} 
+                  placeholder="Enter mobile number"
+                  className="h-8 text-sm"
+                />
+              </FormField>
+              
+              <FormField label="Email Address">
+                <Input 
+                  name="email" 
+                  value={form.email} 
+                  onChange={handleChange} 
+                  placeholder="Enter email address"
+                  type="email"
+                  className="h-8 text-sm"
+                />
+              </FormField>
+              
+              <FormField label="New Password">
+                <Input 
+                  name="password" 
+                  type="password" 
+                  value={form.password} 
+                  onChange={handleChange} 
+                  placeholder="Leave blank to keep current"
+                  className="h-8 text-sm"
+                />
+              </FormField>
+              
+              <FormField label="Gender">
+                <Select value={form.gender} onValueChange={(val) => setForm((prev) => ({ ...prev, gender: val }))}>
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {genderOptions.map((g) => (
+                      <SelectItem key={g} value={g} className="capitalize text-sm">{g}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormField>
+              
+              <FormField label="Date of Birth">
+                <Input 
+                  name="dob" 
+                  type="date" 
+                  value={form.dob} 
+                  onChange={handleChange}
+                  className="h-8 text-sm"
+                />
+              </FormField>
+              
+              <FormField label="Aadhaar Number">
+                <Input 
+                  name="aadhaarNumber" 
+                  value={form.aadhaarNumber} 
+                  onChange={handleChange} 
+                  placeholder="Enter Aadhaar number"
+                  className="h-8 text-sm"
+                />
+              </FormField>
+              
+              <FormField label="Blood Group">
+                <Select value={form.bloodGroup} onValueChange={(val) => setForm((prev) => ({ ...prev, bloodGroup: val }))}>
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue placeholder="Select blood group" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {bloodGroupOptions.map((bg) => (
+                      <SelectItem key={bg} value={bg} className="text-sm">{bg}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormField>
+              
+              <FormField label="Address" className="md:col-span-2">
+                <Input 
+                  name="address" 
+                  value={form.address} 
+                  onChange={handleChange} 
+                  placeholder="Enter address"
+                  className="h-8 text-sm"
+                />
+              </FormField>
+            </div>
+            
+            {/* Profile Image */}
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border-2 border-gray-200">
+                  {previewImage ? (
+                    <img src={previewImage} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-5 h-5 text-gray-400" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <FormField label="Profile Image">
+                    <Input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleImageChange}
+                      className="h-8 text-sm file:mr-3 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-orange-50 file:text-orange-700"
                     />
-                    <button
-                      type="button"
-                      onClick={removeAadhaarImage}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors shadow-md"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
+                  </FormField>
+                </div>
               </div>
             </div>
+          </FormSection>
+
+          {/* Employment & Documents */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <FormSection title="Employment Details" icon={Building2}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <FormField label="Role" required>
+                  <Select value={form.role} onValueChange={(val) => setForm((prev) => ({ ...prev, role: val }))}>
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {roleOptions.map((r) => (
+                        <SelectItem key={r} value={r} className="capitalize text-sm">{r}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormField>
+                
+                <FormField label="Joining Date">
+                  <Input 
+                    name="joiningDate" 
+                    type="date" 
+                    value={form.joiningDate} 
+                    onChange={handleChange}
+                    className="h-8 text-sm"
+                  />
+                </FormField>
+                
+                <FormField label="Grade">
+                  <Select value={form.grade} onValueChange={(val) => setForm((prev) => ({ ...prev, grade: val }))}>
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder="Select grade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {gradeOptions.map((g) => (
+                        <SelectItem key={g} value={g} className="text-sm">Grade {g}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormField>
+                
+                <FormField label="Base Salary">
+                  <Input 
+                    name="baseSalary" 
+                    type="number" 
+                    value={form.baseSalary} 
+                    onChange={handleChange} 
+                    placeholder="Enter base salary"
+                    className="h-8 text-sm"
+                  />
+                </FormField>
+                
+                {showBranchDropdown && (
+                  <FormField label="Branch" required>
+                    <Select value={branchId} onValueChange={setBranchId}>
+                      <SelectTrigger className="h-8 text-sm">
+                        <SelectValue placeholder={branchLoading ? "Loading..." : "Select branch"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {branchData?.branches?.map((b) => (
+                          <SelectItem key={b._id} value={b._id}>{b.branchName}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormField>
+                )}
+              </div>
+            </FormSection>
+
+            <FormSection title="Document Upload" icon={Upload}>
+              <FormField label="Aadhaar Card Image">
+                <div className="space-y-2">
+                  <Input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleAadhaarImageChange}
+                    className="h-8 text-sm file:mr-3 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-orange-50 file:text-orange-700"
+                  />
+                  {previewAadhaarImage && (
+                    <div className="relative inline-block">
+                      <img 
+                        src={previewAadhaarImage} 
+                        alt="Aadhaar" 
+                        className="w-20 h-12 object-cover rounded border" 
+                      />
+                      <button
+                        type="button"
+                        onClick={removeAadhaarImage}
+                        className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600"
+                      >
+                        <X className="w-2 h-2" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </FormField>
+            </FormSection>
+          </div>
+
+          {/* Bank Details & Emergency Contact */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <FormSection title="Bank Details" icon={Building2}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <FormField label="Bank Name">
+                  <Input 
+                    name="bankDetails_bankName" 
+                    value={form.bankDetails.bankName} 
+                    onChange={handleChange} 
+                    placeholder="Enter bank name"
+                    className="h-8 text-sm"
+                  />
+                </FormField>
+                
+                <FormField label="Account Number">
+                  <Input 
+                    name="bankDetails_accountNumber" 
+                    value={form.bankDetails.accountNumber} 
+                    onChange={handleChange} 
+                    placeholder="Enter account number"
+                    className="h-8 text-sm"
+                  />
+                </FormField>
+                
+                <FormField label="IFSC Code" className="sm:col-span-2">
+                  <Input 
+                    name="bankDetails_ifsc" 
+                    value={form.bankDetails.ifsc} 
+                    onChange={handleChange} 
+                    placeholder="Enter IFSC code"
+                    className="h-8 text-sm"
+                  />
+                </FormField>
+              </div>
+            </FormSection>
+
+            <FormSection title="Emergency Contact" icon={UserCheck}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <FormField label="Contact Name">
+                  <Input 
+                    name="emergencyContact_name" 
+                    value={form.emergencyContact.name} 
+                    onChange={handleChange} 
+                    placeholder="Enter contact name"
+                    className="h-8 text-sm"
+                  />
+                </FormField>
+                
+                <FormField label="Contact Mobile">
+                  <Input 
+                    name="emergencyContact_mobile" 
+                    value={form.emergencyContact.mobile} 
+                    onChange={handleChange} 
+                    placeholder="Enter contact mobile"
+                    className="h-8 text-sm"
+                  />
+                </FormField>
+              </div>
+            </FormSection>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-start pt-2 space-x-3">
+            <Button
+              type="button"
+              onClick={() => navigate("/employee/employees")}
+              className="h-9 px-6 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-md shadow-sm transition-colors text-sm"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={isUpdating}
+              className="h-9 px-6 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-md shadow-sm transition-colors text-sm"
+            >
+              {isUpdating ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                "Update Employee"
+              )}
+            </Button>
           </div>
         </div>
-
-        <div className="grid md:grid-cols-2 gap-8 animate-fade-in-up">
-          <div className="bg-white/70 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl p-8 shadow-lg border border-[#f8a977]/30">
-            <h3 className="font-bold text-lg text-[#f77f2f] dark:text-[#f8b78a] mb-4 uppercase tracking-wide">Bank Details</h3>
-            <div className="space-y-3">
-              <Input name="bankName" value={form.bankDetails.bankName} onChange={handleBankChange} placeholder="Bank Name" className="rounded-xl" />
-              <Input name="accountNumber" value={form.bankDetails.accountNumber} onChange={handleBankChange} placeholder="Account Number" className="rounded-xl" />
-              <Input name="ifsc" value={form.bankDetails.ifsc} onChange={handleBankChange} placeholder="IFSC Code" className="rounded-xl" />
-            </div>
-          </div>
-
-          <div className="bg-white/70 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl p-8 shadow-lg border border-[#f8a977]/30">
-            <h3 className="font-bold text-lg text-[#f77f2f] dark:text-[#f8b78a] mb-4 uppercase tracking-wide">Emergency Contact</h3>
-            <div className="space-y-3">
-              <Input name="name" value={form.emergencyContact.name} onChange={handleEmergencyChange} placeholder="Contact Name" className="rounded-xl" />
-              <Input name="mobile" value={form.emergencyContact.mobile} onChange={handleEmergencyChange} placeholder="Contact Mobile" className="rounded-xl" />
-            </div>
-          </div>
-        </div>
-
-        <div className="flex justify-end mt-8 space-x-4 animate-fade-in-up">
-          <Button
-            type="button"
-            onClick={() => navigate("/admin/employees")}
-            className="px-10 py-3 text-lg rounded-2xl bg-gray-500 hover:bg-gray-600 text-white font-bold shadow-xl transition-all duration-200 focus:ring-4 focus:ring-[#f8a977]/40 focus:outline-none"
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            className="px-10 py-3 text-lg rounded-2xl bg-gradient-to-r from-[#f77f2f] to-[#fca16a] hover:from-[#e96b12] hover:to-[#f98c3f] text-white font-bold shadow-xl transition-all duration-200 focus:ring-4 focus:ring-[#f8a977]/40 focus:outline-none"
-            disabled={isUpdating}
-          >
-            {isUpdating ? <Loader2 className="w-5 h-5 animate-spin" /> : "Update Employee"}
-          </Button>
-        </div>
-      </form>
+      </div>
     </div>
   );
 };

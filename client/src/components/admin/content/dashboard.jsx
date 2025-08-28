@@ -192,7 +192,7 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen mt-8 bg-white">
+    <div className="min-h-screen">
       {/* Main Content */}
       <main className="container mx-auto md:px-4 ">
         {/* Welcome Section */}

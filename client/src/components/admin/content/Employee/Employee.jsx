@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { MdOutlineEdit } from "react-icons/md";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,6 @@ import {
   useGetAllEmployeesQuery,
   useDeleteEmployeeMutation,
   useGetEmployeeByIdMutation,
-  useDownloadEmployeeIdCardMutation,
 } from "@/features/api/employeeApi";
 import {
   Pagination,
@@ -37,10 +36,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Loader2, EyeIcon, DollarSign, ExternalLink } from "lucide-react";
+import { Loader2, EyeIcon, DollarSign, ExternalLink, FileText, Download, Plus } from "lucide-react";
 import { useDebounce } from "@/hooks/Debounce";
 import { Drawer } from "antd";
 import EmployeeIdCard from "./EmployeeIdCard";
+import EmployeeIdCardPreview from "./EmployeeIdCardPreview";
+import { PDFDownloadLink } from "@react-pdf/renderer";
 import axios from "axios";
 
 const Employee = () => {
@@ -50,7 +51,6 @@ const Employee = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
-  const [downloading, setDownloading] = useState(false);
 
   const { data, isLoading, refetch } = useGetAllEmployeesQuery({
     page: currentPage,
@@ -67,6 +67,10 @@ const Employee = () => {
   const [getEmployeeById, { isLoading: getEmployeeLoading }] =
     useGetEmployeeByIdMutation();
 
+  // Preview modal state
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewEmployee, setPreviewEmployee] = useState(null);
+
   const handleViewEmployee = async (employeeId) => {
     setDrawerOpen(true);
     setSelectedEmployee(null);
@@ -78,6 +82,83 @@ const Employee = () => {
     } catch (error) {
       console.error("Error fetching employee:", error);
     }
+  };
+
+  const handlePreviewIdCard = (employee) => {
+    setPreviewEmployee(employee);
+    setPreviewOpen(true);
+    setDrawerOpen(false); // Close drawer when opening preview
+  };
+
+  const handleClosePreview = () => {
+    setPreviewOpen(false);
+    setPreviewEmployee(null);
+  };
+
+  // Memoize the PDF document to prevent unnecessary re-renders
+  const pdfDocument = useMemo(() => {
+    if (!selectedEmployee) return null;
+    return <EmployeeIdCard employee={selectedEmployee} />;
+  }, [selectedEmployee]);
+
+  // Create a function that returns the document for PDFDownloadLink
+  const createPdfDocument = () => {
+    if (!selectedEmployee) return null;
+    
+    // Create logo data URL (you can replace this with your actual logo)
+    const logoDataUrl = "data:image/svg+xml;base64," + btoa(`
+      <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <rect width="120" height="120" fill="#FF6B35" rx="60"/>
+        <text x="60" y="75" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="white">JMD</text>
+      </svg>
+    `);
+    
+    // Create barcode data URL (placeholder)
+    // const barcodeDataUrl = "data:image/svg+xml;base64," + btoa(`
+    //   <svg width="300" height="80" viewBox="0 0 300 80" xmlns="http://www.w3.org/2000/svg">
+    //     <rect width="300" height="80" fill="white"/>
+    //     <rect x="10" y="10" width="8" height="60" fill="black"/>
+    //     <rect x="25" y="10" width="2" height="60" fill="black"/>
+    //     <rect x="30" y="10" width="6" height="60" fill="black"/>
+    //     <rect x="40" y="10" width="2" height="60" fill="black"/>
+    //     <rect x="45" y="10" width="4" height="60" fill="black"/>
+    //     <rect x="55" y="10" width="8" height="60" fill="black"/>
+    //     <rect x="70" y="10" width="2" height="60" fill="black"/>
+    //     <rect x="75" y="10" width="6" height="60" fill="black"/>
+    //     <rect x="85" y="10" width="2" height="60" fill="black"/>
+    //     <rect x="90" y="10" width="4" height="60" fill="black"/>
+    //     <rect x="100" y="10" width="8" height="60" fill="black"/>
+    //     <rect x="115" y="10" width="2" height="60" fill="black"/>
+    //     <rect x="120" y="10" width="6" height="60" fill="black"/>
+    //     <rect x="130" y="10" width="2" height="60" fill="black"/>
+    //     <rect x="135" y="10" width="4" height="60" fill="black"/>
+    //     <rect x="145" y="10" width="8" height="60" fill="black"/>
+    //     <rect x="160" y="10" width="2" height="60" fill="black"/>
+    //     <rect x="165" y="10" width="6" height="60" fill="black"/>
+    //     <rect x="175" y="10" width="2" height="60" fill="black"/>
+    //     <rect x="180" y="10" width="4" height="60" fill="black"/>
+    //     <rect x="190" y="10" width="8" height="60" fill="black"/>
+    //     <rect x="205" y="10" width="2" height="60" fill="black"/>
+    //     <rect x="210" y="10" width="6" height="60" fill="black"/>
+    //     <rect x="220" y="10" width="2" height="60" fill="black"/>
+    //     <rect x="225" y="10" width="4" height="60" fill="black"/>
+    //     <rect x="235" y="10" width="8" height="60" fill="black"/>
+    //     <rect x="250" y="10" width="2" height="60" fill="black"/>
+    //     <rect x="255" y="10" width="6" height="60" fill="black"/>
+    //     <rect x="265" y="10" width="2" height="60" fill="black"/>
+    //     <rect x="270" y="10" width="4" height="60" fill="black"/>
+    //     <rect x="280" y="10" width="8" height="60" fill="black"/>
+    //     <rect x="295" y="10" width="2" height="60" fill="black"/>
+    //   </svg>
+    // `);
+    
+    return (
+      <EmployeeIdCard 
+        employee={selectedEmployee} 
+        logoDataUrl={logoDataUrl}
+        // barcodeDataUrl={barcodeDataUrl}
+      />
+    );
   };
 
   const handleDelete = async (employeeId) => {
@@ -131,7 +212,7 @@ const Employee = () => {
     return (
       <div className="space-y-8 md:px-6 md:py-6 px-4">
         {/* Enhanced Header Section */}
-        <div className="relative bg-gradient-to-br from-orange-50 via-white to-orange-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 rounded-2xl p-8 shadow-xl border border-orange-100 dark:border-gray-700 overflow-hidden">
+        <div className="relative dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 rounded-2xl p-8 shadow-xl border border-orange-100 dark:border-gray-700 overflow-hidden">
           {/* Background Pattern */}
           <div className="absolute inset-0 opacity-5">
             <div className="absolute top-0 right-0 w-64 h-64 bg-orange-300 rounded-full -translate-y-32 translate-x-32"></div>
@@ -278,11 +359,31 @@ const Employee = () => {
                   label: "Aadhaar Number",
                   value: emp.aadhaarNumber,
                 },
-                { icon: "calendar", label: "Date of Birth", value: emp.dob ? new Date(emp.dob).toLocaleDateString() : null },
-                { icon: "droplet", label: "Blood Group", value: emp.bloodGroup },
+                {
+                  icon: "calendar",
+                  label: "Date of Birth",
+                  value: emp.dob
+                    ? new Date(emp.dob).toLocaleDateString()
+                    : null,
+                },
+                {
+                  icon: "droplet",
+                  label: "Blood Group",
+                  value: emp.bloodGroup,
+                },
                 { icon: "star", label: "Grade", value: emp.grade },
-                { icon: "dollar", label: "Base Salary", value: emp.baseSalary ? `₹${emp.baseSalary}` : null },
-                { icon: "calendar-check", label: "Validity Date", value: emp.validityDate ? new Date(emp.validityDate).toLocaleDateString() : null },
+                {
+                  icon: "dollar",
+                  label: "Base Salary",
+                  value: emp.baseSalary ? `₹${emp.baseSalary}` : null,
+                },
+                {
+                  icon: "calendar-check",
+                  label: "Validity Date",
+                  value: emp.validityDate
+                    ? new Date(emp.validityDate).toLocaleDateString()
+                    : null,
+                },
               ].map((item, idx) => (
                 <div
                   key={idx}
@@ -818,46 +919,9 @@ const Employee = () => {
       </div>
     );
   };
-  
-  const [downloadEmployeeIdCard] = useDownloadEmployeeIdCardMutation();
-
-  const handleDownloadIdCard = async () => {
-    if (!selectedEmployee?.employeeId) return;
-    setDownloading(true);
-    try {
-      console.log("Downloading ID card for:", selectedEmployee.employeeId);
-      const blob = await downloadEmployeeIdCard(
-        selectedEmployee?.employeeId
-      ).unwrap();
-      console.log("Received blob:", blob);
-
-      if (!blob || blob.size === 0) {
-        throw new Error("Received empty blob");
-      }
-
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute(
-        "download",
-        `JMD-Employee-ID-${selectedEmployee.employeeId}.pdf`
-      );
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      toast.success("ID card downloaded successfully!");
-    } catch (err) {
-      console.error("Download error:", err);
-      toast.error(err?.data?.message || "Failed to download ID card PDF");
-    } finally {
-      setDownloading(false);
-    }
-  };
 
   return (
-    <section className="bg-gray-50 dark:bg-gray-900 min-h-[100vh] rounded-md">
+    <section className="  dark:bg-gray-900 min-h-[100vh] rounded-md">
       <div className="md:p-6 p-2">
         <div className="mb-6 flex flex-col md:flex-row md:justify-between md:items-center space-y-2 md:space-y-0">
           <h2 className="md:text-xl font-semibold text-gray-700 text-center dark:text-white">
@@ -872,25 +936,24 @@ const Employee = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm w-full sm:w-64 bg-white dark:bg-gray-800 text-gray-800 dark:text-white placeholder:text-gray-500"
             />
+            <div className="flex">
+              <Select
+                value={statusFilter}
+                onValueChange={(value) => {
+                  setStatusFilter(value);
+                  setCurrentPage(1);
+                }}
+              >
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Filter by Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
 
-            <Select
-              value={statusFilter}
-              onValueChange={(value) => {
-                setStatusFilter(value);
-                setCurrentPage(1);
-              }}
-            >
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Filter by Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <div className="flex gap-4 justify-center items-center">
               <Select
                 value={limit.toString()}
                 onValueChange={handleLimitChange}
@@ -906,18 +969,31 @@ const Employee = () => {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
 
-              <Button onClick={() => navigate("/admin/create-employee")}>Add Employee</Button>
+            <div className="flex md:gap-4 gap-2 justify-center items-center">
               <Button 
-                onClick={() => navigate("/admin/employee-advance")}
-                variant="outline"
-                className="flex items-center gap-2"
+                onClick={() => navigate("/employee/create-employee")}
+                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0"
               >
-                <DollarSign className="w-4 h-4" />
+                <Plus className="w-5 h-5 mr-2" />
+                Add Employee
+              </Button>
+              
+              <Button
+                onClick={() => navigate("/employee/employee-advance")}
+                variant="outline"
+                className="flex items-center gap-2 bg-white hover:bg-orange-50 text-orange-600 hover:text-orange-700 border-2 border-orange-500 hover:border-orange-600 font-semibold px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+              >
+                <DollarSign className="w-5 h-5" />
                 Manage Advances
               </Button>
-              <Button className="p-2" onClick={() => refetch()}>
-                <GrPowerCycle />
+              
+              <Button 
+                className="p-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 border-0" 
+                onClick={() => refetch()}
+              >
+                <GrPowerCycle className="w-5 h-5" />
               </Button>
             </div>
           </div>
@@ -926,7 +1002,7 @@ const Employee = () => {
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50 dark:bg-gray-900 text-left">
-              <tr >
+              <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
                   No
                 </th>
@@ -1007,7 +1083,7 @@ const Employee = () => {
                         size="icon"
                         variant="ghost"
                         onClick={() =>
-                          navigate("/admin/employee-detail", {
+                          navigate("/employee/employee-detail", {
                             state: { employeeId: employee.employeeId },
                           })
                         }
@@ -1026,7 +1102,7 @@ const Employee = () => {
                         size="icon"
                         variant="ghost"
                         onClick={() =>
-                          navigate("/admin/update-employee", {
+                          navigate("/employee/update-employee", {
                             state: { employeeId: employee.employeeId },
                           })
                         }
@@ -1150,14 +1226,37 @@ const Employee = () => {
         width={800}
         footer={
           selectedEmployee && (
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
               <Button
-                onClick={handleDownloadIdCard}
-                disabled={downloading}
-                className="bg-[#f77f2f] hover:bg-[#ff943f] text-white font-semibold rounded-lg px-6 py-2 shadow"
+                onClick={() => handlePreviewIdCard(selectedEmployee)}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg px-6 py-2 shadow"
               >
-                {downloading ? "Generating..." : "Print Employee ID Card"}
+                Preview ID Card
               </Button>
+              
+              {pdfDocument && (
+                <PDFDownloadLink
+                  document={createPdfDocument()}
+                  fileName={`JMD-Employee-ID-${selectedEmployee.employeeId}.pdf`}
+                  className="inline-block"
+                >
+                  {({ loading, error }) => (
+                    <Button
+                      disabled={loading}
+                      className="bg-[#f77f2f] hover:bg-[#ff943f] text-white font-semibold rounded-lg px-6 py-2 shadow"
+                      onClick={() => {
+                        console.log("Download button clicked");
+                        if (error) {
+                          console.error("PDF generation error:", error);
+                          toast.error("Failed to generate PDF");
+                        }
+                      }}
+                    >
+                      {loading ? "Generating..." : error ? "Error - Retry" : "Download ID Card"}
+                    </Button>
+                  )}
+                </PDFDownloadLink>
+              )}
             </div>
           )
         }
@@ -1169,12 +1268,17 @@ const Employee = () => {
         ) : (
           <>
             {renderEmployeeDetails(selectedEmployee)}
-            <div className="mt-8 flex justify-center">
-              <EmployeeIdCard employee={selectedEmployee} />
-            </div>
           </>
         )}
       </Drawer>
+
+      {/* Preview Modal */}
+      {previewOpen && (
+        <EmployeeIdCardPreview
+          employee={previewEmployee}
+          onClose={handleClosePreview}
+        />
+      )}
     </section>
   );
 };
