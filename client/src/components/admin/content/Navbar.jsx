@@ -41,7 +41,7 @@ const Navbar = () => {
 
   const logoutHandler = async () => {
     // Implement employee logout logic if available
-    navigate("/employee/login");
+    navigate("/login");
   };
   useEffect(() => {
     // No isSuccess check for employee logout shown

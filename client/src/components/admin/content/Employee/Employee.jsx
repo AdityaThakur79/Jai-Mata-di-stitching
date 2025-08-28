@@ -70,6 +70,8 @@ const Employee = () => {
   // Preview modal state
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewEmployee, setPreviewEmployee] = useState(null);
+  const [profileImageDataUrl, setProfileImageDataUrl] = useState(null);
+  const [isConvertingImage, setIsConvertingImage] = useState(false);
 
   const handleViewEmployee = async (employeeId) => {
     setDrawerOpen(true);
@@ -88,6 +90,20 @@ const Employee = () => {
     setPreviewEmployee(employee);
     setPreviewOpen(true);
     setDrawerOpen(false); // Close drawer when opening preview
+    
+    // Convert profile image to base64 for preview if it exists
+    if (employee.profileImage && employee.profileImage.startsWith('http')) {
+      setIsConvertingImage(true);
+      convertImageToBase64(employee.profileImage).then((dataUrl) => {
+        setProfileImageDataUrl(dataUrl);
+        setIsConvertingImage(false);
+      }).catch(() => {
+        setIsConvertingImage(false);
+      });
+    } else {
+      setProfileImageDataUrl(null);
+      setIsConvertingImage(false);
+    }
   };
 
   const handleClosePreview = () => {
@@ -104,6 +120,26 @@ const Employee = () => {
 
 
   // Create a function that returns the document for PDFDownloadLink
+  // Function to convert image URL to base64
+  const convertImageToBase64 = async (imageUrl) => {
+    try {
+      const response = await fetch(imageUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error('Error converting image to base64:', error);
+      return null;
+    }
+  };
+
   const createPdfDocument = () => {
     if (!selectedEmployee) return null;
     
@@ -115,51 +151,13 @@ const Employee = () => {
       </svg>
     `);
     
-    // Profile image conversion is handled in the preview component
-    
-    // Create barcode data URL (placeholder)
-    // const barcodeDataUrl = "data:image/svg+xml;base64," + btoa(`
-    //   <svg width="300" height="80" viewBox="0 0 300 80" xmlns="http://www.w3.org/2000/svg">
-    //     <rect width="300" height="80" fill="white"/>
-    //     <rect x="10" y="10" width="8" height="60" fill="black"/>
-    //     <rect x="25" y="10" width="2" height="60" fill="black"/>
-    //     <rect x="30" y="10" width="6" height="60" fill="black"/>
-    //     <rect x="40" y="10" width="2" height="60" fill="black"/>
-    //     <rect x="45" y="10" width="4" height="60" fill="black"/>
-    //     <rect x="55" y="10" width="8" height="60" fill="black"/>
-    //     <rect x="70" y="10" width="2" height="60" fill="black"/>
-    //     <rect x="75" y="10" width="6" height="60" fill="black"/>
-    //     <rect x="85" y="10" width="2" height="60" fill="black"/>
-    //     <rect x="90" y="10" width="4" height="60" fill="black"/>
-    //     <rect x="100" y="10" width="8" height="60" fill="black"/>
-    //     <rect x="115" y="10" width="2" height="60" fill="black"/>
-    //     <rect x="120" y="10" width="6" height="60" fill="black"/>
-    //     <rect x="130" y="10" width="2" height="60" fill="black"/>
-    //     <rect x="135" y="10" width="4" height="60" fill="black"/>
-    //     <rect x="145" y="10" width="8" height="60" fill="black"/>
-    //     <rect x="160" y="10" width="2" height="60" fill="black"/>
-    //     <rect x="165" y="10" width="6" height="60" fill="black"/>
-    //     <rect x="175" y="10" width="2" height="60" fill="black"/>
-    //     <rect x="180" y="10" width="4" height="60" fill="black"/>
-    //     <rect x="190" y="10" width="8" height="60" fill="black"/>
-    //     <rect x="205" y="10" width="2" height="60" fill="black"/>
-    //     <rect x="210" y="10" width="6" height="60" fill="black"/>
-    //     <rect x="220" y="10" width="2" height="60" fill="black"/>
-    //     <rect x="225" y="10" width="4" height="60" fill="black"/>
-    //     <rect x="235" y="10" width="8" height="60" fill="black"/>
-    //     <rect x="250" y="10" width="2" height="60" fill="black"/>
-    //     <rect x="255" y="10" width="6" height="60" fill="black"/>
-    //     <rect x="265" y="10" width="2" height="60" fill="black"/>
-    //     <rect x="270" y="10" width="4" height="60" fill="black"/>
-    //     <rect x="280" y="10" width="8" height="60" fill="black"/>
-    //     <rect x="295" y="10" width="2" height="60" fill="black"/>
-    //   </svg>
-    // `);
+    // Use the pre-converted profile image from state
     
     return (
       <EmployeeIdCard 
         employee={selectedEmployee} 
         logoDataUrl={logoDataUrl}
+        profileImageDataUrl={profileImageDataUrl}
         // barcodeDataUrl={barcodeDataUrl}
       />
     );
@@ -198,6 +196,22 @@ const Employee = () => {
       toast.error("Failed to delete employee");
     }
   }, [isSuccess, isError]);
+
+  // Convert profile image to base64 when selected employee changes
+  useEffect(() => {
+    if (selectedEmployee?.profileImage && selectedEmployee.profileImage.startsWith('http')) {
+      setIsConvertingImage(true);
+      convertImageToBase64(selectedEmployee.profileImage).then((dataUrl) => {
+        setProfileImageDataUrl(dataUrl);
+        setIsConvertingImage(false);
+      }).catch(() => {
+        setIsConvertingImage(false);
+      });
+    } else {
+      setProfileImageDataUrl(null);
+      setIsConvertingImage(false);
+    }
+  }, [selectedEmployee]);
 
   const renderEmployeeDetails = (emp) => {
     if (!emp) return null;
