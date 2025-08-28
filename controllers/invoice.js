@@ -1,7 +1,6 @@
 import Invoice from "../models/Invoice.js";
 import PendingOrder from "../models/pendingOrder.js";
-import Customer from "../models/customer.js";
-import puppeteer from "puppeteer";
+import Customer from "../models/customer.js"; 
 import path from "path";
 import fs from "fs";
 
@@ -191,202 +190,202 @@ export const getAllInvoices = async (req, res) => {
 };
 
 // Update invoice
-export const updateInvoice = async (req, res) => {
-  try {
-    const { invoiceId } = req.params;
-    const updateData = req.body;
+// export const updateInvoice = async (req, res) => {
+//   try {
+//     const { invoiceId } = req.params;
+//     const updateData = req.body;
 
-    const invoice = await Invoice.findById(invoiceId);
-    if (!invoice) {
-      return res.status(404).json({ message: "Invoice not found." });
-    }
+//     const invoice = await Invoice.findById(invoiceId);
+//     if (!invoice) {
+//       return res.status(404).json({ message: "Invoice not found." });
+//     }
 
-    // Don't allow updates if invoice is already paid
-    if (invoice.status === "paid") {
-      return res.status(400).json({ message: "Cannot update paid invoice." });
-    }
+//     // Don't allow updates if invoice is already paid
+//     if (invoice.status === "paid") {
+//       return res.status(400).json({ message: "Cannot update paid invoice." });
+//     }
 
-    // Update invoice
-    Object.assign(invoice, updateData);
-    await invoice.save();
+//     // Update invoice
+//     Object.assign(invoice, updateData);
+//     await invoice.save();
 
-    // Populate references for response
-    await invoice.populate([
-      { path: "pendingOrder", select: "tokenNumber orderType" },
-      { path: "customer", select: "name mobile email" },
-      { path: "biller", select: "name" },
-      { path: "items.itemType", select: "name stitchingCharge" },
-      { path: "items.fabric", select: "name pricePerMeter" },
-      { path: "items.style", select: "name" },
-    ]);
+//     // Populate references for response
+//     await invoice.populate([
+//       { path: "pendingOrder", select: "tokenNumber orderType" },
+//       { path: "customer", select: "name mobile email" },
+//       { path: "biller", select: "name" },
+//       { path: "items.itemType", select: "name stitchingCharge" },
+//       { path: "items.fabric", select: "name pricePerMeter" },
+//       { path: "items.style", select: "name" },
+//     ]);
 
-    res.status(200).json({
-      message: "Invoice updated successfully",
-      invoice,
-    });
-  } catch (error) {
-    console.error("Error updating invoice:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
+//     res.status(200).json({
+//       message: "Invoice updated successfully",
+//       invoice,
+//     });
+//   } catch (error) {
+//     console.error("Error updating invoice:", error);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// };
 
 // Generate PDF invoice
-export const generateInvoicePDF = async (req, res) => {
-  try {
-    const { invoiceId } = req.params;
-    console.log('Generating PDF for invoice:', invoiceId);
+// export const generateInvoicePDF = async (req, res) => {
+//   try {
+//     const { invoiceId } = req.params;
+//     console.log('Generating PDF for invoice:', invoiceId);
 
-    const invoice = await Invoice.findById(invoiceId)
-      .populate("pendingOrder", "tokenNumber orderType")
-      .populate("customer", "name mobile email address")
-      .populate("biller", "name")
-      .populate("items.itemType", "name stitchingCharge")
-      .populate("items.fabric", "name pricePerMeter")
-      .populate("items.style", "name");
+//     const invoice = await Invoice.findById(invoiceId)
+//       .populate("pendingOrder", "tokenNumber orderType")
+//       .populate("customer", "name mobile email address")
+//       .populate("biller", "name")
+//       .populate("items.itemType", "name stitchingCharge")
+//       .populate("items.fabric", "name pricePerMeter")
+//       .populate("items.style", "name");
 
-    if (!invoice) {
-      console.log('Invoice not found:', invoiceId);
-      return res.status(404).json({ message: "Invoice not found." });
-    }
+//     if (!invoice) {
+//       console.log('Invoice not found:', invoiceId);
+//       return res.status(404).json({ message: "Invoice not found." });
+//     }
 
-    console.log('Invoice found, generating HTML...');
-    // Generate HTML content for PDF
-    const htmlContent = generateInvoiceHTML(invoice);
+//     console.log('Invoice found, generating HTML...');
+//     // Generate HTML content for PDF
+//     const htmlContent = generateInvoiceHTML(invoice);
 
-    // Check if PDF already exists and is recent (within 1 hour)
-    if (invoice.pdfUrl && invoice.pdfGeneratedAt) {
-      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-      if (invoice.pdfGeneratedAt > oneHourAgo) {
-        console.log('Using existing PDF:', invoice.pdfUrl);
-        const pdfPath = path.join(process.cwd(), invoice.pdfUrl.replace('/uploads', 'uploads'));
-        if (fs.existsSync(pdfPath)) {
-          const pdfBuffer = fs.readFileSync(pdfPath);
-          res.setHeader('Content-Type', 'application/pdf');
-          res.setHeader('Content-Disposition', `inline; filename="invoice-${invoice.invoiceNumber}.pdf"`);
-          res.setHeader('Content-Length', pdfBuffer.length);
-          return res.send(pdfBuffer);
-        }
-      }
-    }
+//     // Check if PDF already exists and is recent (within 1 hour)
+//     if (invoice.pdfUrl && invoice.pdfGeneratedAt) {
+//       const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+//       if (invoice.pdfGeneratedAt > oneHourAgo) {
+//         console.log('Using existing PDF:', invoice.pdfUrl);
+//         const pdfPath = path.join(process.cwd(), invoice.pdfUrl.replace('/uploads', 'uploads'));
+//         if (fs.existsSync(pdfPath)) {
+//           const pdfBuffer = fs.readFileSync(pdfPath);
+//           res.setHeader('Content-Type', 'application/pdf');
+//           res.setHeader('Content-Disposition', `inline; filename="invoice-${invoice.invoiceNumber}.pdf"`);
+//           res.setHeader('Content-Length', pdfBuffer.length);
+//           return res.send(pdfBuffer);
+//         }
+//       }
+//     }
 
-    // Launch puppeteer with Render deployment compatible settings
-    const browser = await puppeteer.launch({
-      headless: true,
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--no-zygote',
-        '--single-process',
-        '--disable-gpu',
-        '--disable-web-security',
-        '--disable-features=VizDisplayCompositor'
-      ]
-    });
+//     // Launch puppeteer with Render deployment compatible settings
+//     const browser = await puppeteer.launch({
+//       headless: true,
+//       executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+//       args: [
+//         '--no-sandbox',
+//         '--disable-setuid-sandbox',
+//         '--disable-dev-shm-usage',
+//         '--disable-accelerated-2d-canvas',
+//         '--no-first-run',
+//         '--no-zygote',
+//         '--single-process',
+//         '--disable-gpu',
+//         '--disable-web-security',
+//         '--disable-features=VizDisplayCompositor'
+//       ]
+//     });
 
-    let pdfBuffer;
-    try {
-      console.log('Launching browser...');
-      const page = await browser.newPage();
-      console.log('Setting content...');
-      await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+//     let pdfBuffer;
+//     try {
+//       console.log('Launching browser...');
+//       const page = await browser.newPage();
+//       console.log('Setting content...');
+//       await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
 
-      console.log('Generating PDF...');
-      // Generate PDF
-      pdfBuffer = await page.pdf({
-        format: 'A4',
-        printBackground: true,
-        margin: {
-          top: '20mm',
-          right: '20mm',
-          bottom: '20mm',
-          left: '20mm'
-        }
-      });
+//       console.log('Generating PDF...');
+//       // Generate PDF
+//       pdfBuffer = await page.pdf({
+//         format: 'A4',
+//         printBackground: true,
+//         margin: {
+//           top: '20mm',
+//           right: '20mm',
+//           bottom: '20mm',
+//           left: '20mm'
+//         }
+//       });
 
-      console.log('PDF generated, size:', pdfBuffer.length);
-      await browser.close();
-    } catch (puppeteerError) {
-      console.error('Puppeteer error:', puppeteerError);
-      await browser.close();
+//       console.log('PDF generated, size:', pdfBuffer.length);
+//       await browser.close();
+//     } catch (puppeteerError) {
+//       console.error('Puppeteer error:', puppeteerError);
+//       await browser.close();
       
-      // Fallback: Return HTML content instead of PDF
-      console.log('Falling back to HTML response...');
-      res.setHeader('Content-Type', 'text/html');
-      res.setHeader('Content-Disposition', `inline; filename="invoice-${invoice.invoiceNumber}.html"`);
-      return res.send(htmlContent);
-    }
+//       // Fallback: Return HTML content instead of PDF
+//       console.log('Falling back to HTML response...');
+//       res.setHeader('Content-Type', 'text/html');
+//       res.setHeader('Content-Disposition', `inline; filename="invoice-${invoice.invoiceNumber}.html"`);
+//       return res.send(htmlContent);
+//     }
 
-    // Save PDF to file system (optional)
-    const pdfFileName = `invoice-${invoice.invoiceNumber}.pdf`;
-    const pdfPath = path.join(process.cwd(), 'uploads', 'invoices', pdfFileName);
+//     // Save PDF to file system (optional)
+//     const pdfFileName = `invoice-${invoice.invoiceNumber}.pdf`;
+//     const pdfPath = path.join(process.cwd(), 'uploads', 'invoices', pdfFileName);
     
-    console.log('Saving PDF to:', pdfPath);
-    // Ensure directory exists
-    const dir = path.dirname(pdfPath);
-    if (!fs.existsSync(dir)) {
-      console.log('Creating directory:', dir);
-      fs.mkdirSync(dir, { recursive: true });
-    }
+//     console.log('Saving PDF to:', pdfPath);
+//     // Ensure directory exists
+//     const dir = path.dirname(pdfPath);
+//     if (!fs.existsSync(dir)) {
+//       console.log('Creating directory:', dir);
+//       fs.mkdirSync(dir, { recursive: true });
+//     }
 
-    try {
-      fs.writeFileSync(pdfPath, pdfBuffer);
-      console.log('PDF saved successfully to:', pdfPath);
+//     try {
+//       fs.writeFileSync(pdfPath, pdfBuffer);
+//       console.log('PDF saved successfully to:', pdfPath);
       
-      // Verify file exists and has content
-      if (fs.existsSync(pdfPath)) {
-        const stats = fs.statSync(pdfPath);
-        console.log('PDF file size:', stats.size, 'bytes');
-        if (stats.size === 0) {
-          console.error('Warning: PDF file is empty!');
-        }
-      } else {
-        console.error('Warning: PDF file was not created!');
-      }
-    } catch (fileError) {
-      console.error('Error saving PDF file:', fileError);
-      // Continue even if file save fails
-    }
+//       // Verify file exists and has content
+//       if (fs.existsSync(pdfPath)) {
+//         const stats = fs.statSync(pdfPath);
+//         console.log('PDF file size:', stats.size, 'bytes');
+//         if (stats.size === 0) {
+//           console.error('Warning: PDF file is empty!');
+//         }
+//       } else {
+//         console.error('Warning: PDF file was not created!');
+//       }
+//     } catch (fileError) {
+//       console.error('Error saving PDF file:', fileError);
+//       // Continue even if file save fails
+//     }
 
-    // Update invoice with PDF details
-    try {
-      invoice.pdfUrl = `/uploads/invoices/${pdfFileName}`;
-      invoice.pdfGeneratedAt = new Date();
-      invoice.status = "generated";
-      await invoice.save();
-      console.log('Invoice updated with PDF details');
-    } catch (updateError) {
-      console.error('Error updating invoice:', updateError);
-      // Continue even if update fails
-    }
+//     // Update invoice with PDF details
+//     try {
+//       invoice.pdfUrl = `/uploads/invoices/${pdfFileName}`;
+//       invoice.pdfGeneratedAt = new Date();
+//       invoice.status = "generated";
+//       await invoice.save();
+//       console.log('Invoice updated with PDF details');
+//     } catch (updateError) {
+//       console.error('Error updating invoice:', updateError);
+//       // Continue even if update fails
+//     }
 
-    // Send PDF as response
-    console.log('Sending PDF response...');
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename="${pdfFileName}"`);
-    res.setHeader('Content-Length', pdfBuffer.length);
-    res.send(pdfBuffer);
+//     // Send PDF as response
+//     console.log('Sending PDF response...');
+//     res.setHeader('Content-Type', 'application/pdf');
+//     res.setHeader('Content-Disposition', `inline; filename="${pdfFileName}"`);
+//     res.setHeader('Content-Length', pdfBuffer.length);
+//     res.send(pdfBuffer);
 
-  } catch (error) {
-    console.error("Error generating PDF:", error);
+//   } catch (error) {
+//     console.error("Error generating PDF:", error);
     
-    // More detailed error logging
-    if (error.message) {
-      console.error("Error message:", error.message);
-    }
-    if (error.stack) {
-      console.error("Error stack:", error.stack);
-    }
+//     // More detailed error logging
+//     if (error.message) {
+//       console.error("Error message:", error.message);
+//     }
+//     if (error.stack) {
+//       console.error("Error stack:", error.stack);
+//     }
     
-    res.status(500).json({ 
-      message: "Error generating PDF",
-      error: error.message 
-    });
-  }
-};
+//     res.status(500).json({ 
+//       message: "Error generating PDF",
+//       error: error.message 
+//     });
+//   }
+// };
 
 // Get invoice HTML (fallback when PDF generation fails)
 export const getInvoiceHTML = async (req, res) => {

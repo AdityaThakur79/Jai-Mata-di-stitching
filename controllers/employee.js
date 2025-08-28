@@ -1,6 +1,5 @@
 import Employee from "../models/employee.js";
 import moment from "moment";
-import puppeteer from "puppeteer";
 import path from "path";
 import fs from "fs";
 import bcrypt from "bcryptjs";
@@ -910,126 +909,126 @@ export const getEmployeeProfile = async (req, res) => {
   }
 };
 
-export const getEmployeeSalarySlips = async (req, res) => {
-  try {
-    const { employeeId } = req.employee;
+// export const getEmployeeSalarySlips = async (req, res) => {
+//   try {
+//     const { employeeId } = req.employee;
     
-    const employee = await Employee.findOne({ employeeId }).select("salarySlips advancePayments baseSalary name employeeId");
-    if (!employee) {
-      return res.status(404).json({ success: false, message: "Employee not found" });
-    }
+//     const employee = await Employee.findOne({ employeeId }).select("salarySlips advancePayments baseSalary name employeeId");
+//     if (!employee) {
+//       return res.status(404).json({ success: false, message: "Employee not found" });
+//     }
     
-    res.status(200).json({
-      success: true,
-      message: "Salary slips fetched successfully",
-      salarySlips: employee.salarySlips || [],
-      advancePayments: employee.advancePayments || [],
-      baseSalary: employee.baseSalary,
-      employeeName: employee.name,
-      employeeId: employee.employeeId
-    });
-  } catch (err) {
-    console.error("Error fetching employee salary slips:", err);
-    res.status(500).json({ success: false, message: "Internal server error", error: err.message });
-  }
-};
+//     res.status(200).json({
+//       success: true,
+//       message: "Salary slips fetched successfully",
+//       salarySlips: employee.salarySlips || [],
+//       advancePayments: employee.advancePayments || [],
+//       baseSalary: employee.baseSalary,
+//       employeeName: employee.name,
+//       employeeId: employee.employeeId
+//     });
+//   } catch (err) {
+//     console.error("Error fetching employee salary slips:", err);
+//     res.status(500).json({ success: false, message: "Internal server error", error: err.message });
+//   }
+// };
 
-export const downloadEmployeeSalarySlip = async (req, res) => {
-  try {
-    const { employeeId } = req.employee;
-    const { month } = req.body;
+// export const downloadEmployeeSalarySlip = async (req, res) => {
+//   try {
+//     const { employeeId } = req.employee;
+//     const { month } = req.body;
     
-    if (!month) {
-      return res.status(400).json({ success: false, message: "Month is required" });
-    }
+//     if (!month) {
+//       return res.status(400).json({ success: false, message: "Month is required" });
+//     }
     
-    const employee = await Employee.findOne({ employeeId });
-    if (!employee) {
-      return res.status(404).json({ success: false, message: "Employee not found" });
-    }
+//     const employee = await Employee.findOne({ employeeId });
+//     if (!employee) {
+//       return res.status(404).json({ success: false, message: "Employee not found" });
+//     }
     
-    // Find the salary slip for the specified month
-    const salarySlip = employee.salarySlips.find(slip => slip.monthKey === month);
-    if (!salarySlip) {
-      return res.status(404).json({ success: false, message: "Salary slip not found for this month" });
-    }
+//     // Find the salary slip for the specified month
+//     const salarySlip = employee.salarySlips.find(slip => slip.monthKey === month);
+//     if (!salarySlip) {
+//       return res.status(404).json({ success: false, message: "Salary slip not found for this month" });
+//     }
     
-    // Generate PDF for the salary slip
-    const pdfBuffer = await generateSalarySlipPDF(employee, salarySlip);
+//     // Generate PDF for the salary slip
+//     const pdfBuffer = await generateSalarySlipPDF(employee, salarySlip);
     
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="salary-slip-${employee.name}-${month}.pdf"`);
-    res.send(pdfBuffer);
+//     res.setHeader('Content-Type', 'application/pdf');
+//     res.setHeader('Content-Disposition', `attachment; filename="salary-slip-${employee.name}-${month}.pdf"`);
+//     res.send(pdfBuffer);
     
-  } catch (err) {
-    console.error("Error downloading salary slip:", err);
-    res.status(500).json({ success: false, message: "Internal server error", error: err.message });
-  }
-};
+//   } catch (err) {
+//     console.error("Error downloading salary slip:", err);
+//     res.status(500).json({ success: false, message: "Internal server error", error: err.message });
+//   }
+// };
 
 // Helper function to generate salary slip PDF
-const generateSalarySlipPDF = async (employee, salarySlip) => {
-  // 1. Load your HTML template (inline for now, you can move to a separate file)
-  let html = `
-  <div style="padding:40px; font-family:Arial, sans-serif; color:#222;">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <img src="https://dummyimage.com/200x60/222/fff&text=COMPANY+LOGO" style="height:60px;">
-      <div style="text-align:right;">
-        <h2 style="margin:0;">Your Company Name Pvt. Ltd.</h2>
-        <div>Address line 1<br>City, State, ZIP<br>Phone | Email</div>
-      </div>
-    </div>
-    <hr style="margin:30px 0;">
-    <h1 style="text-align:center; letter-spacing:2px;">Salary Slip</h1>
-    <table style="width:100%; margin-bottom:20px;">
-      <tr>
-        <td><b>Employee Name:</b> ${employee.name}</td>
-        <td><b>Employee ID:</b> ${employee.employeeId}</td>
-      </tr>
-      <tr>
-        <td><b>Designation:</b> ${employee.designation || ''}</td>
-        <td><b>Pay Period:</b> ${salarySlip.monthKey}</td>
-      </tr>
-    </table>
-    <table style="width:100%; border-collapse:collapse; margin-bottom:30px;">
-      <tr style="background:#f5f5f5;">
-        <th style="padding:8px; border:1px solid #ddd;">Earnings</th>
-        <th style="padding:8px; border:1px solid #ddd;">Amount</th>
-        <th style="padding:8px; border:1px solid #ddd;">Deductions</th>
-        <th style="padding:8px; border:1px solid #ddd;">Amount</th>
-      </tr>
-      <tr>
-        <td style="padding:8px; border:1px solid #ddd;">Basic Salary</td>
-        <td style="padding:8px; border:1px solid #ddd;">₹${salarySlip.basicSalary?.toLocaleString('en-IN', {minimumFractionDigits:2}) || '0.00'}</td>
-        <td style="padding:8px; border:1px solid #ddd;">Advances</td>
-        <td style="padding:8px; border:1px solid #ddd;">₹${salarySlip.totalAdvances?.toLocaleString('en-IN', {minimumFractionDigits:2}) || '0.00'}</td>
-      </tr>
-      <tr style="font-weight:bold;">
-        <td style="padding:8px; border:1px solid #ddd;">Final Payable</td>
-        <td style="padding:8px; border:1px solid #ddd;">₹${salarySlip.finalPayable?.toLocaleString('en-IN', {minimumFractionDigits:2}) || '0.00'}</td>
-        <td colspan="2"></td>
-      </tr>
-    </table>
-    <div style="text-align:right; margin-top:40px;">
-      <div>Authorized Signature</div>
-      <img src="https://dummyimage.com/120x40/aaa/fff&text=SIGNATURE" style="height:40px;">
-    </div>
-    <hr style="margin:30px 0;">
-    <div style="font-size:12px; color:#888; text-align:center;">
-      This is a computer-generated document. No signature required.
-    </div>
-  </div>
-  `;
+// const generateSalarySlipPDF = async (employee, salarySlip) => {
+//   // 1. Load your HTML template (inline for now, you can move to a separate file)
+//   let html = `
+//   <div style="padding:40px; font-family:Arial, sans-serif; color:#222;">
+//     <div style="display:flex; justify-content:space-between; align-items:center;">
+//       <img src="https://dummyimage.com/200x60/222/fff&text=COMPANY+LOGO" style="height:60px;">
+//       <div style="text-align:right;">
+//         <h2 style="margin:0;">Your Company Name Pvt. Ltd.</h2>
+//         <div>Address line 1<br>City, State, ZIP<br>Phone | Email</div>
+//       </div>
+//     </div>
+//     <hr style="margin:30px 0;">
+//     <h1 style="text-align:center; letter-spacing:2px;">Salary Slip</h1>
+//     <table style="width:100%; margin-bottom:20px;">
+//       <tr>
+//         <td><b>Employee Name:</b> ${employee.name}</td>
+//         <td><b>Employee ID:</b> ${employee.employeeId}</td>
+//       </tr>
+//       <tr>
+//         <td><b>Designation:</b> ${employee.designation || ''}</td>
+//         <td><b>Pay Period:</b> ${salarySlip.monthKey}</td>
+//       </tr>
+//     </table>
+//     <table style="width:100%; border-collapse:collapse; margin-bottom:30px;">
+//       <tr style="background:#f5f5f5;">
+//         <th style="padding:8px; border:1px solid #ddd;">Earnings</th>
+//         <th style="padding:8px; border:1px solid #ddd;">Amount</th>
+//         <th style="padding:8px; border:1px solid #ddd;">Deductions</th>
+//         <th style="padding:8px; border:1px solid #ddd;">Amount</th>
+//       </tr>
+//       <tr>
+//         <td style="padding:8px; border:1px solid #ddd;">Basic Salary</td>
+//         <td style="padding:8px; border:1px solid #ddd;">₹${salarySlip.basicSalary?.toLocaleString('en-IN', {minimumFractionDigits:2}) || '0.00'}</td>
+//         <td style="padding:8px; border:1px solid #ddd;">Advances</td>
+//         <td style="padding:8px; border:1px solid #ddd;">₹${salarySlip.totalAdvances?.toLocaleString('en-IN', {minimumFractionDigits:2}) || '0.00'}</td>
+//       </tr>
+//       <tr style="font-weight:bold;">
+//         <td style="padding:8px; border:1px solid #ddd;">Final Payable</td>
+//         <td style="padding:8px; border:1px solid #ddd;">₹${salarySlip.finalPayable?.toLocaleString('en-IN', {minimumFractionDigits:2}) || '0.00'}</td>
+//         <td colspan="2"></td>
+//       </tr>
+//     </table>
+//     <div style="text-align:right; margin-top:40px;">
+//       <div>Authorized Signature</div>
+//       <img src="https://dummyimage.com/120x40/aaa/fff&text=SIGNATURE" style="height:40px;">
+//     </div>
+//     <hr style="margin:30px 0;">
+//     <div style="font-size:12px; color:#888; text-align:center;">
+//       This is a computer-generated document. No signature required.
+//     </div>
+//   </div>
+//   `;
 
-  // 2. Launch Puppeteer and generate PDF
-  const browser = await puppeteer.launch({ headless: true });
-  const page = await browser.newPage();
-  await page.setContent(html, { waitUntil: 'networkidle0' });
-  const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
-  await browser.close();
+//   // 2. Launch Puppeteer and generate PDF
+//   const browser = await puppeteer.launch({ headless: true });
+//   const page = await browser.newPage();
+//   await page.setContent(html, { waitUntil: 'networkidle0' });
+//   const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
+//   await browser.close();
 
-  return pdfBuffer;
-};
+//   return pdfBuffer;
+// };
 
 export const getFilteredEmployeeDetails = async (req, res) => {
   try {
