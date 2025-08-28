@@ -306,8 +306,8 @@ export const updateEmployee = async (req, res) => {
 
 export const deleteEmployee = async (req, res) => {
   try {
-    const { employeeId, branchId } = req.body;
-    const employee = await Employee.findOneAndDelete({ employeeId, branchId });
+    const { employeeId } = req.body;
+    const employee = await Employee.findOneAndDelete({ employeeId });
     if (!employee) {
       return res.status(404).json({ success: false, message: "Employee not found" });
     }

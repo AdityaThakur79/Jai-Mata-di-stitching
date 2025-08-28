@@ -7,9 +7,10 @@ import {
   Image,
 } from "@react-pdf/renderer";
 
+
 // Note: Use built-in fonts (Helvetica) for maximum compatibility with react-pdf
 
-const EmployeeIdCard = ({ employee, logoDataUrl }) => {
+const EmployeeIdCard = ({ employee, logoDataUrl, profileImageDataUrl = null }) => {
   // Sample employee data with better defaults
   const defaultEmployee = {
     name: "John Doe",
@@ -44,11 +45,35 @@ const EmployeeIdCard = ({ employee, logoDataUrl }) => {
 
   // Function to get profile image
   const getProfileImage = () => {
+    // If we have a converted base64 profile image, use it
+    if (profileImageDataUrl) {
+      return profileImageDataUrl;
+    }
+    
     if (emp.profileImage) {
-      if (emp.profileImage.startsWith('data:') || emp.profileImage.startsWith('http')) {
+      // If it's already a data URL, return as is
+      if (emp.profileImage.startsWith('data:')) {
         return emp.profileImage;
       }
-      return emp.profileImage;
+      
+      // If it's a URL (Cloudinary or other), we need to convert to base64
+      // This should be handled by the parent component
+      if (emp.profileImage.startsWith('http')) {
+        return null; // Return null to show fallback
+      }
+      
+      // If it's a relative path, construct the full backend URL
+      // Remove any leading slash to avoid double slashes
+      const cleanPath = emp.profileImage.startsWith('/') ? emp.profileImage.slice(1) : emp.profileImage;
+      
+      // Use backend URL for local files
+      // Development (localhost)
+      const fullUrl = `http://localhost:8080/${cleanPath}`;
+      
+      // Production (uncomment the line below and comment the line above)
+      // const fullUrl = `https://jai-mata-di-stitching-1mic.onrender.com/${cleanPath}`;
+      
+      return fullUrl;
     }
     return null;
   };
@@ -178,11 +203,14 @@ const EmployeeIdCard = ({ employee, logoDataUrl }) => {
                 overflow: "hidden",
               }}>
                 {getProfileImage() ? (
-                  <Image src={getProfileImage()} style={{
-                    width: mm(18),
-                    height: mm(18),
-                    borderRadius: mm(6),
-                  }} />
+                  <Image 
+                    src={getProfileImage()} 
+                    style={{
+                      width: mm(18),
+                      height: mm(18),
+                      borderRadius: mm(6),
+                    }}
+                  />
                 ) : (
                   <View style={{
                     width: mm(18),

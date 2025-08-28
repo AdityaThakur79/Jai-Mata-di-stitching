@@ -101,6 +101,8 @@ const Employee = () => {
     return <EmployeeIdCard employee={selectedEmployee} />;
   }, [selectedEmployee]);
 
+
+
   // Create a function that returns the document for PDFDownloadLink
   const createPdfDocument = () => {
     if (!selectedEmployee) return null;
@@ -112,6 +114,8 @@ const Employee = () => {
         <text x="60" y="75" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="white">JMD</text>
       </svg>
     `);
+    
+    // Profile image conversion is handled in the preview component
     
     // Create barcode data URL (placeholder)
     // const barcodeDataUrl = "data:image/svg+xml;base64," + btoa(`
