@@ -5,6 +5,8 @@ const EmployeeIdCardPreview = ({ employee, onClose }) => {
   if (!employee) return null;
 
   const [logoDataUrl, setLogoDataUrl] = useState(null);
+  const [profileImageDataUrl, setProfileImageDataUrl] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
@@ -12,6 +14,9 @@ const EmployeeIdCardPreview = ({ employee, onClose }) => {
     const toDataUrl = async (url) => {
       try {
         const response = await fetch(url, { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const blob = await response.blob();
         const reader = new FileReader();
         return await new Promise((resolve, reject) => {
@@ -20,6 +25,7 @@ const EmployeeIdCardPreview = ({ employee, onClose }) => {
           reader.readAsDataURL(blob);
         });
       } catch (e) {
+        console.error('Error converting image to base64:', e);
         return null;
       }
     };
@@ -29,10 +35,22 @@ const EmployeeIdCardPreview = ({ employee, onClose }) => {
       if (isMounted) setLogoDataUrl(dataUrl || null);
     });
 
+    // Convert profile image to base64 if it exists
+    if (employee.profileImage && employee.profileImage.startsWith('http')) {
+      toDataUrl(employee.profileImage).then((dataUrl) => {
+        if (isMounted) setProfileImageDataUrl(dataUrl || null);
+      });
+    }
+
+    // Set loading to false after a short delay to ensure images are processed
+    setTimeout(() => {
+      if (isMounted) setIsLoading(false);
+    }, 1000);
+
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [employee.profileImage]);
 
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
@@ -51,7 +69,16 @@ const EmployeeIdCardPreview = ({ employee, onClose }) => {
         </div>
         
         {/* PDF Viewer */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden relative">
+          {isLoading && (
+            <div className="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center z-10">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                <p className="text-gray-600">Converting images to base64...</p>
+                <p className="text-sm text-gray-500 mt-2">This may take a few seconds</p>
+              </div>
+            </div>
+          )}
           <PDFViewer
             style={{
               width: "100%",
@@ -61,7 +88,11 @@ const EmployeeIdCardPreview = ({ employee, onClose }) => {
             showToolbar={true}
             showNavbar={false}
           >
-            <EmployeeIdCard employee={employee} logoDataUrl={logoDataUrl} />
+            <EmployeeIdCard 
+              employee={employee} 
+              logoDataUrl={logoDataUrl} 
+              profileImageDataUrl={profileImageDataUrl}
+            />
           </PDFViewer>
         </div>
         
