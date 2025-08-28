@@ -13,8 +13,8 @@ import {
   sendSalarySlipEmailController,
   employeeLogin,
   getEmployeeProfile,
-  getEmployeeSalarySlips,
-  downloadEmployeeSalarySlip,
+  // getEmployeeSalarySlips,
+  // downloadEmployeeSalarySlip,
   getFilteredEmployeeDetails,
 } from "../controllers/employee.js";
 import { isAuthenticated, isEmployeeAuthenticated } from "../middlewares/isAuthenticated.js";
@@ -27,8 +27,8 @@ router.post("/login", employeeLogin);
 
 // Employee-specific routes (require employee authentication)
 router.get("/profile", isEmployeeAuthenticated, getEmployeeProfile);
-router.get("/salary-slips", isEmployeeAuthenticated, getEmployeeSalarySlips);
-router.post("/download-salary-slip", isEmployeeAuthenticated, downloadEmployeeSalarySlip);
+// router.get("/salary-slips", isEmployeeAuthenticated, getEmployeeSalarySlips);
+// router.post("/download-salary-slip", isEmployeeAuthenticated, downloadEmployeeSalarySlip);
 
 // Admin routes (require admin authentication)
 router.post("/create",isAuthenticated,upload, createEmployee);
