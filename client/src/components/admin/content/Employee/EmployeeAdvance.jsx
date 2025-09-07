@@ -231,7 +231,7 @@ const EmployeeAdvance = () => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-gray-50 via-blue-50 to-orange-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-orange-900/20 min-h-[100vh] rounded-md pt-8 md:pt-12">
+    <div className=" dark:from-gray-900 dark:via-blue-900/20 dark:to-orange-900/20 min-h-[100vh] rounded-md pt-8 md:pt-12">
       <div className="md:p-6 p-2">
         {/* Enhanced Header */}
         <div className="mb-8 rounded-3xl shadow-2xl bg-gradient-to-br from-orange-100 via-white to-blue-100 dark:from-orange-900/40 dark:via-gray-900 dark:to-blue-900/40 px-8 py-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6 relative overflow-hidden border border-orange-200/50 dark:border-orange-800/30">
