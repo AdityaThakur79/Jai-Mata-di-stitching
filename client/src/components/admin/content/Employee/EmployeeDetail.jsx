@@ -10,18 +10,18 @@ import {
   SelectContent,
 } from "@/components/ui/select";
 import { useNavigate, useLocation } from "react-router-dom";
-import { 
-  Loader2, 
-  Plus, 
-  Trash2, 
-  Eye, 
-  DollarSign, 
-  FileText, 
-  Calendar, 
-  User, 
-  Download, 
-  Receipt, 
-  Mail, 
+import {
+  Loader2,
+  Plus,
+  Trash2,
+  Eye,
+  DollarSign,
+  FileText,
+  Calendar,
+  User,
+  Download,
+  Receipt,
+  Mail,
   ArrowLeft,
   Search,
   Filter,
@@ -30,7 +30,7 @@ import {
   CreditCard,
   AlertCircle,
   CheckCircle,
-  XCircle
+  XCircle,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import {
@@ -86,15 +86,13 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { useDebounce } from "@/hooks/Debounce";
+import SalarySlipPreview from "./SalarySlipPreview";
+import { pdf } from '@react-pdf/renderer';
+import SalarySlip from "./SalarySlip";
 
 const EmployeeDetail = () => {
   const navigate = useNavigate();
@@ -107,7 +105,7 @@ const EmployeeDetail = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [slipFilter, setSlipFilter] = useState("all"); // all, generated, not-generated
   const [advanceFilter, setAdvanceFilter] = useState("all"); // all, with-advance, no-advance
-  
+
   // Reset all filters
   const resetFilters = () => {
     setSelectedMonth("all");
@@ -120,6 +118,8 @@ const EmployeeDetail = () => {
   };
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEmailDialog, setShowEmailDialog] = useState(false);
+  const [showSalarySlipPreview, setShowSalarySlipPreview] = useState(false);
+  const [previewSalarySlip, setPreviewSalarySlip] = useState(null);
   const [emailForm, setEmailForm] = useState({
     email: "",
     month: "",
@@ -131,32 +131,44 @@ const EmployeeDetail = () => {
     employeeId: "",
     amount: "",
     reason: "",
-    date: new Date().toISOString().split('T')[0],
+    date: new Date().toISOString().split("T")[0],
   });
 
   // API hooks
-  const [getEmployeeById, { isLoading: isLoadingEmployee }] = useGetEmployeeByIdMutation();
+  const [getEmployeeById, { isLoading: isLoadingEmployee }] =
+    useGetEmployeeByIdMutation();
   const [addAdvance, { isLoading: isAdding }] = useAddEmployeeAdvanceMutation();
-  const [deleteAdvance, { isLoading: isDeleting }] = useDeleteEmployeeAdvanceMutation();
-  const [generateSalarySlip, { isLoading: isGeneratingSlip }] = useGenerateSalarySlipMutation();
-  const [sendSalarySlipEmail, { isLoading: isSendingEmail }] = useSendSalarySlipEmailMutation();
-  const [downloadSalarySlip, { isLoading: isDownloadingSlip }] = useDownloadEmployeeSalarySlipMutation();
+  const [deleteAdvance, { isLoading: isDeleting }] =
+    useDeleteEmployeeAdvanceMutation();
+  const [generateSalarySlip, { isLoading: isGeneratingSlip }] =
+    useGenerateSalarySlipMutation();
+  const [sendSalarySlipEmail, { isLoading: isSendingEmail }] =
+    useSendSalarySlipEmailMutation();
+  const [downloadSalarySlip, { isLoading: isDownloadingSlip }] =
+    useDownloadEmployeeSalarySlipMutation();
 
   // Create debounced search query for smooth filtering
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
   // Backend filtered data hook - sends all filter parameters to backend for efficient filtering
-  const { data: filteredData, isLoading: isLoadingFiltered, refetch: refetchFiltered } = useGetFilteredEmployeeDetailsQuery({
-    employeeId,
-    year: selectedYear,
-    month: selectedMonth,
-    search: debouncedSearchQuery,
-    slipFilter,
-    advanceFilter,
-  }, {
-    skip: !employeeId,
-    refetchOnMountOrArgChange: true,
-  });
+  const {
+    data: filteredData,
+    isLoading: isLoadingFiltered,
+    refetch: refetchFiltered,
+  } = useGetFilteredEmployeeDetailsQuery(
+    {
+      employeeId,
+      year: selectedYear,
+      month: selectedMonth,
+      search: debouncedSearchQuery,
+      slipFilter,
+      advanceFilter,
+    },
+    {
+      skip: !employeeId,
+      refetchOnMountOrArgChange: true,
+    }
+  );
 
   // Data states
   const [employeeData, setEmployeeData] = useState(null);
@@ -165,14 +177,16 @@ const EmployeeDetail = () => {
   // Get years for filter (from joining year to current year)
   const getYearOptions = () => {
     const currentYear = new Date().getFullYear();
-    const joiningYear = employeeData ? new Date(employeeData.joiningDate).getFullYear() : currentYear;
+    const joiningYear = employeeData
+      ? new Date(employeeData.joiningDate).getFullYear()
+      : currentYear;
     const years = [];
-    
+
     // Start from joining year, go up to current year
     for (let year = joiningYear; year <= currentYear; year++) {
       years.push(year);
     }
-    
+
     // Reverse to show most recent years first
     return years.reverse();
   };
@@ -199,8 +213,18 @@ const EmployeeDetail = () => {
   // Get month name by index
   const getMonthName = (monthIndex) => {
     const months = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
     ];
     return months[monthIndex];
   };
@@ -213,17 +237,19 @@ const EmployeeDetail = () => {
         try {
           const result = await getEmployeeById(employeeId).unwrap();
           console.log("Employee data received:", result);
-          
+
           if (!result.employee) {
             throw new Error("No employee data in response");
           }
-          
+
           setEmployeeData(result.employee);
-          
+
           // Set the selected year to the joining year if it's available
-          const joiningYear = new Date(result.employee.joiningDate).getFullYear();
+          const joiningYear = new Date(
+            result.employee.joiningDate
+          ).getFullYear();
           setSelectedYear(joiningYear);
-          
+
           processMonthlyData(result.employee);
         } catch (error) {
           console.error("Error fetching employee:", error);
@@ -236,7 +262,7 @@ const EmployeeDetail = () => {
         navigate("/employee/employee-advance");
       }
     };
-    
+
     fetchEmployee();
   }, [employeeId, getEmployeeById, navigate]);
 
@@ -258,31 +284,31 @@ const EmployeeDetail = () => {
     }
 
     const monthlyData = {};
-    
+
     // Get joining month and year
     const joiningDate = new Date(employee.joiningDate);
     const joiningYear = joiningDate.getFullYear();
     const joiningMonth = joiningDate.getMonth();
-    
+
     // Check if the selected year is before the joining year
     if (selectedYear < joiningYear) {
       // Employee wasn't working in this year, return empty data
       setMonthlyData({});
       return;
     }
-    
+
     // Initialize months starting from joining month if it's the joining year
     let startMonth = 0;
     let endMonth = 11;
-    
+
     if (selectedYear === joiningYear) {
       startMonth = joiningMonth;
     }
-    
+
     for (let i = startMonth; i <= endMonth; i++) {
-      const monthKey = `${selectedYear}-${String(i + 1).padStart(2, '0')}`;
+      const monthKey = `${selectedYear}-${String(i + 1).padStart(2, "0")}`;
       const monthName = getMonthName(i);
-      
+
       monthlyData[monthKey] = {
         month: monthName,
         monthIndex: i,
@@ -295,24 +321,29 @@ const EmployeeDetail = () => {
         salarySlip: null,
         advanceCount: 0,
         salarySlipGenerated: false,
-        isJoiningMonth: (selectedYear === joiningYear && i === joiningMonth)
+        isJoiningMonth: selectedYear === joiningYear && i === joiningMonth,
       };
     }
 
     // Process advances (handle case where advancePayments might not exist)
     if (employee.advancePayments && Array.isArray(employee.advancePayments)) {
-      employee.advancePayments.forEach(advance => {
+      employee.advancePayments.forEach((advance) => {
         const advanceDate = new Date(advance.date);
         const advanceYear = advanceDate.getFullYear();
         const advanceMonth = advanceDate.getMonth();
-        
+
         if (advanceYear === selectedYear) {
-          const monthKey = `${advanceYear}-${String(advanceMonth + 1).padStart(2, '0')}`;
+          const monthKey = `${advanceYear}-${String(advanceMonth + 1).padStart(
+            2,
+            "0"
+          )}`;
           if (monthlyData[monthKey]) {
             monthlyData[monthKey].advances.push(advance);
             monthlyData[monthKey].totalAdvance += advance.amount;
-            monthlyData[monthKey].remainingAmount = employee.baseSalary - monthlyData[monthKey].totalAdvance;
-            monthlyData[monthKey].advanceCount = monthlyData[monthKey].advances.length;
+            monthlyData[monthKey].remainingAmount =
+              employee.baseSalary - monthlyData[monthKey].totalAdvance;
+            monthlyData[monthKey].advanceCount =
+              monthlyData[monthKey].advances.length;
           }
         }
       });
@@ -320,16 +351,43 @@ const EmployeeDetail = () => {
 
     // Process salary slips (handle case where salarySlips might not exist)
     if (employee.salarySlips && Array.isArray(employee.salarySlips)) {
-      employee.salarySlips.forEach(slip => {
-        const slipDate = new Date(slip.generatedAt);
-        const slipYear = slipDate.getFullYear();
-        const slipMonth = slipDate.getMonth();
+      employee.salarySlips.forEach((slip) => {
+        let slipYear, slipMonth;
         
-        if (slipYear === selectedYear) {
-          const monthKey = `${slipYear}-${String(slipMonth + 1).padStart(2, '0')}`;
-          if (monthlyData[monthKey]) {
-            monthlyData[monthKey].salarySlip = slip;
-            monthlyData[monthKey].salarySlipGenerated = true; // Mark as generated
+        // Try different ways to determine the month
+        if (slip.generatedAt) {
+          // Use generatedAt if available
+          const slipDate = new Date(slip.generatedAt);
+          slipYear = slipDate.getFullYear();
+          slipMonth = slipDate.getMonth();
+        } else if (slip.year && slip.month) {
+          // Use year and month fields if available
+          slipYear = slip.year;
+          if (typeof slip.month === 'string') {
+            // If month is a month name like "August", convert to month index
+            const monthNames = [
+              'January', 'February', 'March', 'April', 'May', 'June',
+              'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            slipMonth = monthNames.indexOf(slip.month);
+          } else {
+            // If month is a number, use it directly
+            slipMonth = typeof slip.month === 'number' ? slip.month : parseInt(slip.month) - 1;
+          }
+        } else if (slip.monthKey) {
+          // Use monthKey if available (e.g., "2025-08")
+          const [year, month] = slip.monthKey.split('-');
+          slipYear = parseInt(year);
+          slipMonth = parseInt(month) - 1;
+        }
+        
+        if (slipYear && slipMonth !== undefined && slipMonth >= 0 && slipMonth <= 11) {
+          if (slipYear === selectedYear) {
+            const monthKey = `${slipYear}-${String(slipMonth + 1).padStart(2, "0")}`;
+            if (monthlyData[monthKey]) {
+              monthlyData[monthKey].salarySlip = slip;
+              monthlyData[monthKey].salarySlipGenerated = true; // Mark as generated
+            }
           }
         }
       });
@@ -344,41 +402,47 @@ const EmployeeDetail = () => {
 
     // Month filter
     if (selectedMonth !== "all") {
-      filtered = filtered.filter(month => month.monthIndex === parseInt(selectedMonth));
+      filtered = filtered.filter(
+        (month) => month.monthIndex === parseInt(selectedMonth)
+      );
     }
 
     // Search filter - search in month name, advances reason, and employee details
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(month => {
+      filtered = filtered.filter((month) => {
         // Search in month name
         if (month.month.toLowerCase().includes(query)) return true;
-        
+
         // Search in advances reason
-        if (month.advances.some(advance => 
-          advance.reason.toLowerCase().includes(query)
-        )) return true;
-        
+        if (
+          month.advances.some((advance) =>
+            advance.reason.toLowerCase().includes(query)
+          )
+        )
+          return true;
+
         // Search in employee name and ID
         if (employeeData?.name?.toLowerCase().includes(query)) return true;
-        if (employeeData?.employeeId?.toLowerCase().includes(query)) return true;
-        
+        if (employeeData?.employeeId?.toLowerCase().includes(query))
+          return true;
+
         return false;
       });
     }
 
     // Slip filter
     if (slipFilter === "generated") {
-      filtered = filtered.filter(month => month.salarySlipGenerated);
+      filtered = filtered.filter((month) => month.salarySlipGenerated);
     } else if (slipFilter === "not-generated") {
-      filtered = filtered.filter(month => !month.salarySlipGenerated);
+      filtered = filtered.filter((month) => !month.salarySlipGenerated);
     }
 
     // Advance filter
     if (advanceFilter === "with-advance") {
-      filtered = filtered.filter(month => month.advanceCount > 0);
+      filtered = filtered.filter((month) => month.advanceCount > 0);
     } else if (advanceFilter === "no-advance") {
-      filtered = filtered.filter(month => month.advanceCount === 0);
+      filtered = filtered.filter((month) => month.advanceCount === 0);
     }
 
     return filtered.sort((a, b) => a.monthIndex - b.monthIndex);
@@ -408,9 +472,9 @@ const EmployeeDetail = () => {
         employeeId: employeeId,
         amount: "",
         reason: "",
-        date: new Date().toISOString().split('T')[0],
+        date: new Date().toISOString().split("T")[0],
       });
-      
+
       // Refresh employee data
       const updatedResult = await getEmployeeById(employeeId).unwrap();
       setEmployeeData(updatedResult.employee);
@@ -425,7 +489,7 @@ const EmployeeDetail = () => {
     try {
       const result = await deleteAdvance({ employeeId, advanceId }).unwrap();
       toast.success(result.message || "Advance deleted successfully");
-      
+
       // Refresh employee data
       const updatedResult = await getEmployeeById(employeeId).unwrap();
       setEmployeeData(updatedResult.employee);
@@ -444,14 +508,14 @@ const EmployeeDetail = () => {
       const monthData = monthlyData[monthKey];
       const monthIndex = monthData?.monthIndex; // 0-11
       const year = monthData?.year; // 2025, 2026, etc.
-      
-      const result = await generateSalarySlip({ 
-        employeeId, 
+
+      const result = await generateSalarySlip({
+        employeeId,
         month: monthIndex, // Send month as number (0-11)
-        year: year         // Send year as number
+        year: year, // Send year as number
       }).unwrap();
       toast.success(result.message || "Salary slip generated successfully");
-      
+
       // Refresh employee data
       const updatedResult = await getEmployeeById(employeeId).unwrap();
       setEmployeeData(updatedResult.employee);
@@ -473,10 +537,10 @@ const EmployeeDetail = () => {
 
     try {
       // emailForm.month now contains the monthKey (e.g., "2025-08")
-      const result = await sendSalarySlipEmail({ 
-        employeeId, 
+      const result = await sendSalarySlipEmail({
+        employeeId,
         month: emailForm.month, // Send monthKey directly
-        email: emailForm.email
+        email: emailForm.email,
       }).unwrap();
       toast.success(result.message || "Salary slip sent successfully");
       setShowEmailDialog(false);
@@ -489,17 +553,71 @@ const EmployeeDetail = () => {
     }
   };
 
+  // Handle download salary slip
+  const handleDownloadSalarySlip = async (monthKey) => {
+    try {
+      const monthData = monthlyData[monthKey];
+      if (!monthData || !monthData.salarySlip) {
+        toast.error("Salary slip not found for this month");
+        return;
+      }
+
+      // Convert logo to base64
+      let logoDataUrl = null;
+      try {
+        const logoUrl = "/images/jmd_logo.jpeg";
+        const response = await fetch(logoUrl, { cache: "no-store" });
+        
+        if (response.ok) {
+          const blob = await response.blob();
+          const reader = new FileReader();
+          
+          logoDataUrl = await new Promise((resolve, reject) => {
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+        }
+      } catch (logoError) {
+        console.warn('Error loading logo for download:', logoError);
+        // Continue without logo if there's an error
+      }
+
+      // Create the PDF blob
+      const blob = await pdf(SalarySlip({ 
+        employee: employeeData, 
+        salarySlip: monthData.salarySlip,
+        logoDataUrl: logoDataUrl
+      })).toBlob();
+
+      // Create download link
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Salary_Slip_${employeeData.name}_${monthData.month}_${monthData.year}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success("Salary slip downloaded successfully");
+    } catch (error) {
+      console.error("Error downloading salary slip:", error);
+      toast.error("Failed to download salary slip");
+    }
+  };
+
   // Format currency
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
     }).format(amount);
   };
 
   // Format date
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-IN');
+    return new Date(dateString).toLocaleDateString("en-IN");
   };
 
   // Get status badge variant
@@ -510,12 +628,12 @@ const EmployeeDetail = () => {
   // Get role badge variant
   const getRoleVariant = (role) => {
     const variants = {
-      "admin": "destructive",
-      "manager": "default",
-      "tailor": "secondary",
-      "biller": "outline",
-      "director": "destructive",
-      "other": "secondary"
+      admin: "destructive",
+      manager: "default",
+      tailor: "secondary",
+      biller: "outline",
+      director: "destructive",
+      other: "secondary",
     };
     return variants[role] || "secondary";
   };
@@ -526,7 +644,9 @@ const EmployeeDetail = () => {
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto text-orange-500 mb-4" />
           <p className="text-gray-600 dark:text-gray-400">
-            {isLoadingEmployee ? "Loading employee data..." : "Filtering data..."}
+            {isLoadingEmployee
+              ? "Loading employee data..."
+              : "Filtering data..."}
           </p>
         </div>
       </div>
@@ -539,7 +659,7 @@ const EmployeeDetail = () => {
         <div className="text-center">
           <AlertCircle className="w-12 h-12 mx-auto text-gray-400 mb-4" />
           <p className="text-gray-500">Employee not found</p>
-          <Button 
+          <Button
             onClick={() => navigate("/employee/employee-advance")}
             className="mt-4"
           >
@@ -565,22 +685,23 @@ const EmployeeDetail = () => {
     profileImage: employeeData.profileImage || "",
     bankDetails: employeeData.bankDetails || {},
     emergencyContact: employeeData.emergencyContact || {},
-    ...employeeData
+    ...employeeData,
   };
 
   // Use backend filtered data if available, otherwise fall back to local filtering
   // When backend filtering is active, we should use that data directly
-  const filteredMonthlyData = filteredData?.monthlyData || getFilteredMonthlyData();
+  const filteredMonthlyData =
+    filteredData?.monthlyData || getFilteredMonthlyData();
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className=" dark:bg-gray-900 min-h-screen">
       <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8 rounded-3xl shadow-2xl bg-gradient-to-br from-orange-100 via-white to-blue-100 dark:from-orange-900/40 dark:via-gray-900 dark:to-blue-900/40 px-8 py-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6 relative overflow-hidden border border-orange-200/50 dark:border-orange-800/30">
           {/* Decorative Elements */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-200/30 to-transparent rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-200/30 to-transparent rounded-full blur-2xl"></div>
-          
+
           <div className="flex items-center gap-6">
             {/* <Button
               onClick={() => navigate("/employee/employee-advance")}
@@ -601,7 +722,7 @@ const EmployeeDetail = () => {
           </div>
           <Button
             onClick={() => {
-              setAdvanceForm(prev => ({ ...prev, employeeId }));
+              setAdvanceForm((prev) => ({ ...prev, employeeId }));
               setShowAddDialog(true);
             }}
             className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold shadow-xl rounded-2xl px-8 py-4 hover:from-orange-600 hover:to-orange-700 hover:scale-105 transition-all duration-300 border-0"
@@ -619,7 +740,7 @@ const EmployeeDetail = () => {
             <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-orange-200/20 to-transparent rounded-full blur-3xl"></div>
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-blue-200/20 to-transparent rounded-full blur-2xl"></div>
           </div>
-          
+
           <CardHeader className="z-10 relative">
             <CardTitle className="flex items-center gap-6">
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-500 to-blue-600 flex items-center justify-center text-white text-4xl font-bold shadow-2xl border-4 border-white dark:border-gray-950 -mt-6 relative">
@@ -627,22 +748,36 @@ const EmployeeDetail = () => {
                   <Avatar className="w-24 h-24">
                     <AvatarImage src={safeEmployeeData.profileImage} />
                     <AvatarFallback className="text-3xl">
-                      {safeEmployeeData.name.split(' ').map(n => n[0]).join('')}
+                      {safeEmployeeData.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")}
                     </AvatarFallback>
                   </Avatar>
                 ) : (
-                  safeEmployeeData.name.split(' ').map(n => n[0]).join('')
+                  safeEmployeeData.name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
                 )}
                 {/* Glow Effect */}
                 <div className="absolute inset-0 rounded-full bg-gradient-to-br from-orange-400/30 to-blue-500/30 blur-xl"></div>
               </div>
               <div>
-                <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-2">{safeEmployeeData.name}</div>
+                <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-2">
+                  {safeEmployeeData.name}
+                </div>
                 <div className="flex items-center gap-3">
-                  <Badge variant={getRoleVariant(safeEmployeeData.role)} className="text-sm px-3 py-1.5 font-semibold shadow-lg">
+                  <Badge
+                    variant={getRoleVariant(safeEmployeeData.role)}
+                    className="text-sm px-3 py-1.5 font-semibold shadow-lg"
+                  >
                     {safeEmployeeData.role.toUpperCase()}
                   </Badge>
-                  <Badge variant={getStatusVariant(safeEmployeeData.status)} className="text-sm px-3 py-1.5 font-semibold shadow-lg">
+                  <Badge
+                    variant={getStatusVariant(safeEmployeeData.status)}
+                    className="text-sm px-3 py-1.5 font-semibold shadow-lg"
+                  >
                     {safeEmployeeData.status}
                   </Badge>
                 </div>
@@ -653,22 +788,38 @@ const EmployeeDetail = () => {
             <div className="bg-white/80 dark:bg-gray-950/80 rounded-xl shadow p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* Basic Info */}
               <div className="space-y-3">
-                <h4 className="font-medium text-gray-900 dark:text-white">Basic Information</h4>
+                <h4 className="font-medium text-gray-900 dark:text-white">
+                  Basic Information
+                </h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Employee ID:</span>
-                    <span className="font-medium">{safeEmployeeData.employeeId}</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Employee ID:
+                    </span>
+                    <span className="font-medium">
+                      {safeEmployeeData.employeeId}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Designation:</span>
-                    <span className="font-medium">{safeEmployeeData.role.toUpperCase()}</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Designation:
+                    </span>
+                    <span className="font-medium">
+                      {safeEmployeeData.role.toUpperCase()}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Joining Date:</span>
-                    <span className="font-medium">{formatDate(safeEmployeeData.joiningDate)}</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Joining Date:
+                    </span>
+                    <span className="font-medium">
+                      {formatDate(safeEmployeeData.joiningDate)}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Base Salary:</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Base Salary:
+                    </span>
                     <span className="font-medium text-blue-600 dark:text-blue-400">
                       {formatCurrency(safeEmployeeData.baseSalary)}
                     </span>
@@ -678,37 +829,59 @@ const EmployeeDetail = () => {
 
               {/* Contact Info */}
               <div className="space-y-3">
-                <h4 className="font-medium text-gray-900 dark:text-white">Contact Information</h4>
+                <h4 className="font-medium text-gray-900 dark:text-white">
+                  Contact Information
+                </h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Mobile:</span>
-                    <span className="font-medium">{safeEmployeeData.mobile}</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Mobile:
+                    </span>
+                    <span className="font-medium">
+                      {safeEmployeeData.mobile}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Email:</span>
-                    <span className="font-medium">{safeEmployeeData.email}</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Email:
+                    </span>
+                    <span className="font-medium">
+                      {safeEmployeeData.email}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Address:</span>
-                    <span className="font-medium">{safeEmployeeData.address}</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Address:
+                    </span>
+                    <span className="font-medium">
+                      {safeEmployeeData.address}
+                    </span>
                   </div>
                 </div>
               </div>
 
               {/* Emergency Contact */}
               <div className="space-y-3">
-                <h4 className="font-medium text-gray-900 dark:text-white">Emergency Contact</h4>
+                <h4 className="font-medium text-gray-900 dark:text-white">
+                  Emergency Contact
+                </h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Name:</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Name:
+                    </span>
                     <span className="font-medium">
-                      {safeEmployeeData.emergencyContact?.name || "Not provided"}
+                      {safeEmployeeData.emergencyContact?.name ||
+                        "Not provided"}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Mobile:</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Mobile:
+                    </span>
                     <span className="font-medium">
-                      {safeEmployeeData.emergencyContact?.mobile || "Not provided"}
+                      {safeEmployeeData.emergencyContact?.mobile ||
+                        "Not provided"}
                     </span>
                   </div>
                 </div>
@@ -716,22 +889,31 @@ const EmployeeDetail = () => {
 
               {/* Bank Details */}
               <div className="space-y-3">
-                <h4 className="font-medium text-gray-900 dark:text-white">Bank Details</h4>
+                <h4 className="font-medium text-gray-900 dark:text-white">
+                  Bank Details
+                </h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Bank:</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Bank:
+                    </span>
                     <span className="font-medium">
                       {safeEmployeeData.bankDetails?.bankName || "Not provided"}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Account:</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Account:
+                    </span>
                     <span className="font-medium">
-                      {safeEmployeeData.bankDetails?.accountNumber || "Not provided"}
+                      {safeEmployeeData.bankDetails?.accountNumber ||
+                        "Not provided"}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">IFSC:</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      IFSC:
+                    </span>
                     <span className="font-medium">
                       {safeEmployeeData.bankDetails?.ifsc || "Not provided"}
                     </span>
@@ -749,7 +931,7 @@ const EmployeeDetail = () => {
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-200/20 to-transparent rounded-full blur-3xl"></div>
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-200/20 to-transparent rounded-full blur-2xl"></div>
           </div>
-          
+
           <CardHeader className="z-10 relative">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -761,7 +943,9 @@ const EmployeeDetail = () => {
                 </CardTitle>
                 {employeeData && (
                   <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-lg">
-                    Valid years: {new Date(employeeData.joiningDate).getFullYear()} - {new Date().getFullYear()}
+                    Valid years:{" "}
+                    {new Date(employeeData.joiningDate).getFullYear()} -{" "}
+                    {new Date().getFullYear()}
                   </div>
                 )}
               </div>
@@ -780,7 +964,10 @@ const EmployeeDetail = () => {
               {/* Year Filter */}
               <div>
                 <Label>Year</Label>
-                <Select value={selectedYear.toString()} onValueChange={(value) => handleYearChange(parseInt(value))}>
+                <Select
+                  value={selectedYear.toString()}
+                  onValueChange={(value) => handleYearChange(parseInt(value))}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -833,9 +1020,15 @@ const EmployeeDetail = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem key="all-slips" value="all">All Months</SelectItem>
-                    <SelectItem key="generated-slips" value="generated">Slip Generated</SelectItem>
-                    <SelectItem key="not-generated-slips" value="not-generated">No Slip</SelectItem>
+                    <SelectItem key="all-slips" value="all">
+                      All Months
+                    </SelectItem>
+                    <SelectItem key="generated-slips" value="generated">
+                      Slip Generated
+                    </SelectItem>
+                    <SelectItem key="not-generated-slips" value="not-generated">
+                      No Slip
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -848,9 +1041,15 @@ const EmployeeDetail = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem key="all-advances" value="all">All Months</SelectItem>
-                    <SelectItem key="with-advances" value="with-advance">With Advances</SelectItem>
-                    <SelectItem key="no-advances" value="no-advance">No Advances</SelectItem>
+                    <SelectItem key="all-advances" value="all">
+                      All Months
+                    </SelectItem>
+                    <SelectItem key="with-advances" value="with-advance">
+                      With Advances
+                    </SelectItem>
+                    <SelectItem key="no-advances" value="no-advance">
+                      No Advances
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -861,10 +1060,20 @@ const EmployeeDetail = () => {
         {/* Filter Summary */}
         <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="text-sm text-gray-600 dark:text-gray-400">
-            Showing <span className="font-semibold text-orange-600 dark:text-orange-400">{filteredMonthlyData.length}</span> month{filteredMonthlyData.length !== 1 ? 's' : ''} 
+            Showing{" "}
+            <span className="font-semibold text-orange-600 dark:text-orange-400">
+              {filteredMonthlyData.length}
+            </span>{" "}
+            month{filteredMonthlyData.length !== 1 ? "s" : ""}
             {searchQuery && ` for "${searchQuery}"`}
-            {slipFilter !== "all" && ` (${slipFilter === "generated" ? "Slip Generated" : "No Slip"})`}
-            {advanceFilter !== "all" && ` (${advanceFilter === "with-advance" ? "With Advances" : "No Advances"})`}
+            {slipFilter !== "all" &&
+              ` (${slipFilter === "generated" ? "Slip Generated" : "No Slip"})`}
+            {advanceFilter !== "all" &&
+              ` (${
+                advanceFilter === "with-advance"
+                  ? "With Advances"
+                  : "No Advances"
+              })`}
             {isLoadingFiltered && (
               <span className="ml-2 text-orange-500">
                 <Loader2 className="w-3 h-3 animate-spin inline mr-1" />
@@ -872,7 +1081,10 @@ const EmployeeDetail = () => {
               </span>
             )}
           </div>
-          {filteredMonthlyData.length !== (filteredData?.monthlyData ? filteredData.monthlyData.length : Object.keys(monthlyData).length) && (
+          {filteredMonthlyData.length !==
+            (filteredData?.monthlyData
+              ? filteredData.monthlyData.length
+              : Object.keys(monthlyData).length) && (
             <Button
               onClick={resetFilters}
               variant="ghost"
@@ -887,22 +1099,29 @@ const EmployeeDetail = () => {
         {/* Monthly Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {filteredMonthlyData.map((month) => (
-            <Card key={month.monthKey} className="relative overflow-hidden shadow-2xl border border-orange-200/50 dark:border-orange-800/30 rounded-3xl bg-gradient-to-br from-orange-50 via-white to-blue-50 dark:from-orange-900/40 dark:via-gray-900 dark:to-blue-900/40 transition-all duration-300 hover:scale-[1.03] hover:shadow-3xl group">
+            <Card
+              key={month.monthKey}
+              className="relative overflow-hidden shadow-2xl border border-orange-200/50 dark:border-orange-800/30 rounded-3xl bg-gradient-to-br from-orange-50 via-white to-blue-50 dark:from-orange-900/40 dark:via-gray-900 dark:to-blue-900/40 transition-all duration-300 hover:scale-[1.03] hover:shadow-3xl group"
+            >
               {/* Joining Month Indicator */}
               {month.isJoiningMonth && (
                 <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-center py-2 text-sm font-bold z-10">
                   🎉 Joining Month
                 </div>
               )}
-              
+
               {/* Decorative Corner */}
               <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-orange-200/30 to-transparent rounded-bl-full"></div>
-              
+
               <CardHeader className={month.isJoiningMonth ? "pt-12" : ""}>
                 <div className="flex justify-between items-start">
                   <div>
-                    <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">{month.month}</CardTitle>
-                    <CardDescription className="text-gray-600 dark:text-gray-400 font-medium">{month.year}</CardDescription>
+                    <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">
+                      {month.month}
+                    </CardTitle>
+                    <CardDescription className="text-gray-600 dark:text-gray-400 font-medium">
+                      {month.year}
+                    </CardDescription>
                   </div>
                   <div className="flex items-center gap-1">
                     {month.salarySlip ? (
@@ -923,13 +1142,17 @@ const EmployeeDetail = () => {
                   {/* Salary Summary */}
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600 dark:text-gray-400">Base Salary:</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Base Salary:
+                      </span>
                       <span className="font-medium text-blue-600 dark:text-blue-400">
                         {formatCurrency(month.baseSalary)}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600 dark:text-gray-400">Advances:</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Advances:
+                      </span>
                       <span className="font-medium text-orange-500 dark:text-orange-400">
                         {formatCurrency(month.totalAdvance)}
                       </span>
@@ -937,7 +1160,13 @@ const EmployeeDetail = () => {
                     <Separator />
                     <div className="flex justify-between font-medium">
                       <span>Final Payable:</span>
-                      <span className={`${month.remainingAmount >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                      <span
+                        className={`${
+                          month.remainingAmount >= 0
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-red-600 dark:text-red-400"
+                        }`}
+                      >
                         {formatCurrency(month.remainingAmount)}
                       </span>
                     </div>
@@ -945,8 +1174,11 @@ const EmployeeDetail = () => {
 
                   {/* Advance Count */}
                   <div className="text-center">
-                    <Badge variant={month.advanceCount > 0 ? "default" : "secondary"}>
-                      {month.advanceCount} Advance{month.advanceCount !== 1 ? 's' : ''}
+                    <Badge
+                      variant={month.advanceCount > 0 ? "default" : "secondary"}
+                    >
+                      {month.advanceCount} Advance
+                      {month.advanceCount !== 1 ? "s" : ""}
                     </Badge>
                   </div>
 
@@ -958,7 +1190,13 @@ const EmployeeDetail = () => {
                         size="sm"
                         className="w-full bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 text-blue-700 border-blue-300 hover:border-blue-400 font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
                         onClick={() => {
-                          setAdvanceForm(prev => ({ ...prev, employeeId, date: `${selectedYear}-${String(month.monthIndex + 1).padStart(2, '0')}-01` }));
+                          setAdvanceForm((prev) => ({
+                            ...prev,
+                            employeeId,
+                            date: `${selectedYear}-${String(
+                              month.monthIndex + 1
+                            ).padStart(2, "0")}-01`,
+                          }));
                           setShowAddDialog(true);
                         }}
                       >
@@ -981,14 +1219,20 @@ const EmployeeDetail = () => {
                     {month.advanceCount > 0 && (
                       <Sheet>
                         <SheetTrigger asChild>
-                          <Button variant="outline" size="sm" className="w-full bg-gradient-to-r from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 text-orange-700 border-orange-300 hover:border-orange-400 font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full bg-gradient-to-r from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 text-orange-700 border-orange-300 hover:border-orange-400 font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
+                          >
                             <Eye className="w-4 h-4 mr-2" />
                             View Advances ({month.advanceCount})
                           </Button>
                         </SheetTrigger>
                         <SheetContent>
                           <SheetHeader>
-                            <SheetTitle>{month.month} {month.year} - Advances</SheetTitle>
+                            <SheetTitle>
+                              {month.month} {month.year} - Advances
+                            </SheetTitle>
                             <SheetDescription>
                               {employeeData.name} ({employeeData.employeeId})
                             </SheetDescription>
@@ -1017,15 +1261,23 @@ const EmployeeDetail = () => {
                                       </AlertDialogTrigger>
                                       <AlertDialogContent>
                                         <AlertDialogHeader>
-                                          <AlertDialogTitle>Delete Advance</AlertDialogTitle>
+                                          <AlertDialogTitle>
+                                            Delete Advance
+                                          </AlertDialogTitle>
                                           <AlertDialogDescription>
-                                            Are you sure you want to delete this advance payment of {formatCurrency(advance.amount)}?
+                                            Are you sure you want to delete this
+                                            advance payment of{" "}
+                                            {formatCurrency(advance.amount)}?
                                           </AlertDialogDescription>
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>
-                                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                          <AlertDialogCancel>
+                                            Cancel
+                                          </AlertDialogCancel>
                                           <AlertDialogAction
-                                            onClick={() => handleDeleteAdvance(advance._id)}
+                                            onClick={() =>
+                                              handleDeleteAdvance(advance._id)
+                                            }
                                           >
                                             Delete
                                           </AlertDialogAction>
@@ -1048,34 +1300,34 @@ const EmployeeDetail = () => {
                             <CheckCircle className="w-5 h-4 mr-2 text-green-500" />
                             Slip Generated
                           </Button>
-                          <Button
-                            size="sm"
-                            className="w-full mt-2 flex items-center justify-center"
-                            variant="outline"
-                            onClick={async () => {
-                              try {
-                                const blob = await downloadSalarySlip({ employeeId, month: month.monthKey }).unwrap();
-                                const url = window.URL.createObjectURL(blob);
-                                const link = document.createElement('a');
-                                link.href = url;
-                                link.setAttribute('download', `SalarySlip-${month.month}-${month.year}.pdf`);
-                                document.body.appendChild(link);
-                                link.click();
-                                link.parentNode.removeChild(link);
-                              } catch (error) {
-                                toast.error("Failed to download slip");
-                              }
-                            }}
-                            disabled={isDownloadingSlip}
-                          >
-                            {isDownloadingSlip ? (
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            ) : (
-                              <Download className="w-4 h-4 mr-2" />
-                            )}
-                            Download Slip
-                          </Button>
-                          
+                          <div className="flex flex-col gap-2">
+                            <Button
+                              size="sm"
+                              className="flex-1 flex items-center justify-center bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-xl px-4 py-3 hover:from-blue-600 hover:to-blue-700 hover:scale-105 transition-all duration-300 border-0"
+                              onClick={() => {
+                                setPreviewSalarySlip(month.salarySlip);
+                                setShowSalarySlipPreview(true);
+                              }}
+                            >
+                              <Eye className="w-4 h-4 mr-2" />
+                              View Slip
+                            </Button>
+                            
+                            <Button
+                              size="sm"
+                              className="flex-1 flex items-center justify-center bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-xl px-4 py-3 hover:from-orange-600 hover:to-orange-700 hover:scale-105 transition-all duration-300 border-0"
+                              onClick={() => handleDownloadSalarySlip(month.monthKey)}
+                              disabled={isDownloadingSlip}
+                            >
+                              {isDownloadingSlip ? (
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              ) : (
+                                <Download className="w-4 h-4 mr-2" />
+                              )}
+                              Download Slip
+                            </Button>
+                          </div>
+
                           {/* Send Email Button */}
                           <Button
                             size="sm"
@@ -1093,10 +1345,12 @@ const EmployeeDetail = () => {
                           </Button>
                         </>
                       ) : (
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold shadow-xl rounded-xl px-4 py-3 hover:from-orange-600 hover:to-orange-700 hover:scale-105 transition-all duration-300 border-0"
-                          onClick={() => handleGenerateSalarySlip(month.monthKey)}
+                          onClick={() =>
+                            handleGenerateSalarySlip(month.monthKey)
+                          }
                           disabled={generatingSlipMonthKey === month.monthKey}
                         >
                           {generatingSlipMonthKey === month.monthKey ? (
@@ -1120,13 +1374,26 @@ const EmployeeDetail = () => {
           <div className="text-center py-12">
             <Calendar className="w-12 h-12 mx-auto text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              {selectedYear < (employeeData ? new Date(employeeData.joiningDate).getFullYear() : selectedYear) 
-                ? "Employee not yet joined" 
+              {selectedYear <
+              (employeeData
+                ? new Date(employeeData.joiningDate).getFullYear()
+                : selectedYear)
+                ? "Employee not yet joined"
                 : "No data found"}
             </h3>
             <p className="text-gray-500">
-              {selectedYear < (employeeData ? new Date(employeeData.joiningDate).getFullYear() : selectedYear)
-                ? `${employeeData?.name} joined in ${new Date(employeeData?.joiningDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}. Select ${new Date(employeeData?.joiningDate).getFullYear()} or later to view data.`
+              {selectedYear <
+              (employeeData
+                ? new Date(employeeData.joiningDate).getFullYear()
+                : selectedYear)
+                ? `${employeeData?.name} joined in ${new Date(
+                    employeeData?.joiningDate
+                  ).toLocaleDateString("en-US", {
+                    month: "long",
+                    year: "numeric",
+                  })}. Select ${new Date(
+                    employeeData?.joiningDate
+                  ).getFullYear()} or later to view data.`
                 : "Try adjusting your filters or select a different year."}
             </p>
           </div>
@@ -1148,7 +1415,12 @@ const EmployeeDetail = () => {
               <Input
                 type="number"
                 value={advanceForm.amount}
-                onChange={(e) => setAdvanceForm(prev => ({ ...prev, amount: e.target.value }))}
+                onChange={(e) =>
+                  setAdvanceForm((prev) => ({
+                    ...prev,
+                    amount: e.target.value,
+                  }))
+                }
                 placeholder="Enter amount"
                 min="0"
                 step="0.01"
@@ -1159,7 +1431,12 @@ const EmployeeDetail = () => {
               <Label>Reason *</Label>
               <Input
                 value={advanceForm.reason}
-                onChange={(e) => setAdvanceForm(prev => ({ ...prev, reason: e.target.value }))}
+                onChange={(e) =>
+                  setAdvanceForm((prev) => ({
+                    ...prev,
+                    reason: e.target.value,
+                  }))
+                }
                 placeholder="Enter reason for advance"
               />
             </div>
@@ -1169,16 +1446,26 @@ const EmployeeDetail = () => {
               <Input
                 type="date"
                 value={advanceForm.date}
-                onChange={(e) => setAdvanceForm(prev => ({ ...prev, date: e.target.value }))}
+                onChange={(e) =>
+                  setAdvanceForm((prev) => ({ ...prev, date: e.target.value }))
+                }
               />
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setShowAddDialog(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowAddDialog(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={isAdding}>
-                {isAdding ? <Loader2 className="w-4 h-4 animate-spin" /> : "Add Advance"}
+                {isAdding ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  "Add Advance"
+                )}
               </Button>
             </DialogFooter>
           </form>
@@ -1191,7 +1478,13 @@ const EmployeeDetail = () => {
           <DialogHeader>
             <DialogTitle>Send Salary Slip via Email</DialogTitle>
             <DialogDescription>
-              Send the salary slip for {emailForm.month ? `${getMonthName(parseInt(emailForm.month.split('-')[1]) - 1)} ${emailForm.month.split('-')[0]}` : ''} to the employee.
+              Send the salary slip for{" "}
+              {emailForm.month
+                ? `${getMonthName(
+                    parseInt(emailForm.month.split("-")[1]) - 1
+                  )} ${emailForm.month.split("-")[0]}`
+                : ""}{" "}
+              to the employee.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSendEmail} className="space-y-4">
@@ -1200,7 +1493,9 @@ const EmployeeDetail = () => {
               <Input
                 type="email"
                 value={emailForm.email}
-                onChange={(e) => setEmailForm(prev => ({ ...prev, email: e.target.value }))}
+                onChange={(e) =>
+                  setEmailForm((prev) => ({ ...prev, email: e.target.value }))
+                }
                 placeholder="Enter email address"
               />
             </div>
@@ -1208,25 +1503,47 @@ const EmployeeDetail = () => {
             <div>
               <Label>Month</Label>
               <Input
-                value={emailForm.month ? `${getMonthName(parseInt(emailForm.month.split('-')[1]) - 1)} ${emailForm.month.split('-')[0]}` : ''}
+                value={
+                  emailForm.month
+                    ? `${getMonthName(
+                        parseInt(emailForm.month.split("-")[1]) - 1
+                      )} ${emailForm.month.split("-")[0]}`
+                    : ""
+                }
                 disabled
                 className="bg-gray-50 dark:bg-gray-800"
               />
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setShowEmailDialog(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowEmailDialog(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={isSendingEmail}>
-                {isSendingEmail ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send Email"}
+                {isSendingEmail ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  "Send Email"
+                )}
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Salary Slip Preview Dialog */}
+      <SalarySlipPreview
+        isOpen={showSalarySlipPreview}
+        onClose={() => setShowSalarySlipPreview(false)}
+        employee={employeeData}
+        salarySlip={previewSalarySlip}
+      />
     </div>
   );
 };
 
-export default EmployeeDetail; 
+export default EmployeeDetail;

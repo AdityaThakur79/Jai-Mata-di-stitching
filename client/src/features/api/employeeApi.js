@@ -58,24 +58,26 @@ export const employeeApi = createApi({
         // Download Salary Slip
         downloadEmployeeSalarySlip: builder.mutation({
             async queryFn({ employeeId, month }, _queryApi, _extraOptions, fetchWithBQ) {
+                // Extract year and month from monthKey (e.g., "2025-08" -> year: 2025, month: 08)
+                let year, monthNum;
+                if (month && month.includes('-')) {
+                    [year, monthNum] = month.split('-');
+                } else {
+                    // Fallback: use current year if monthKey format is invalid
+                    year = new Date().getFullYear();
+                    monthNum = month;
+                }
+                
                 const response = await fetchWithBQ({
                     url: "/download-salary-slip",
                     method: "POST",
-                    body: { employeeId, month },
+                    body: { employeeId, month, year },
                 });
                 if (response.error) {
-                    // Try to parse the error blob as JSON
-                    try {
-                        const errorText = await response.error.data.text();
-                        const errorJson = JSON.parse(errorText);
-                        return { error: errorJson };
-                    } catch {
-                        return { error: { message: "Unknown error" } };
-                    }
+                    return { error: response.error };
                 }
-                // If successful, convert to blob
-                const blob = new Blob([response.data], { type: "application/pdf" });
-                return { data: blob };
+                // Return the data for frontend PDF generation
+                return { data: response.data };
             },
         }),
 

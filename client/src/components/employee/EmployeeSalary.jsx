@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useGetEmployeeSalarySlipsQuery, useDownloadEmployeeSalarySlipMutation } from "@/features/api/employeeApi";
 import {
@@ -28,32 +28,74 @@ import {
   Eye,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { pdf } from '@react-pdf/renderer';
+import SalarySlip from '../admin/content/Employee/SalarySlip';
+import { PDFViewer } from '@react-pdf/renderer';
 
 const EmployeeSalary = () => {
   const { employee } = useSelector((state) => state.auth);
   const { data: salaryData, isLoading } = useGetEmployeeSalarySlipsQuery();
   const [downloadSalarySlip, { isLoading: isDownloading }] = useDownloadEmployeeSalarySlipMutation();
-  const [selectedMonth, setSelectedMonth] = useState(null);
+  const [selectedSlip, setSelectedSlip] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [logoDataUrl, setLogoDataUrl] = useState(null);
 
-  const handleDownload = async (month) => {
+  // Load logo on component mount
+  useEffect(() => {
+    const convertLogoToBase64 = async () => {
+      try {
+        const logoUrl = "/images/jmd_logo.jpeg";
+        const response = await fetch(logoUrl, { cache: "no-store" });
+        
+        if (response.ok) {
+          const blob = await response.blob();
+          const reader = new FileReader();
+          
+          const dataUrl = await new Promise((resolve, reject) => {
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+          
+          setLogoDataUrl(dataUrl);
+        }
+      } catch (error) {
+        console.warn('Error loading logo:', error);
+      }
+    };
+
+    convertLogoToBase64();
+  }, []);
+
+  const handleDownload = async (slip) => {
     try {
-      const blob = await downloadSalarySlip(month).unwrap();
-      const url = window.URL.createObjectURL(blob);
+      // Create the PDF blob using pre-loaded logo
+      const blob = await pdf(SalarySlip({ 
+        employee: employee, 
+        salarySlip: slip,
+        logoDataUrl: logoDataUrl
+      })).toBlob();
+
+      // Create download link
+      const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `salary-slip-${employee?.name}-${month}.pdf`;
+      link.download = `Salary_Slip_${employee?.name}_${slip.month}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      URL.revokeObjectURL(url);
+
       toast.success("Salary slip downloaded successfully");
     } catch (error) {
+      console.error("Error downloading salary slip:", error);
       toast.error("Failed to download salary slip");
     }
   };
 
-  const handleViewSlip = (month) => {
-    setSelectedMonth(selectedMonth === month ? null : month);
+  const handleViewSlip = (slip) => {
+    setSelectedSlip(slip);
+    setShowPreview(true);
   };
 
   if (isLoading) {
@@ -71,17 +113,17 @@ const EmployeeSalary = () => {
     );
   }
 
-  const currentMonth = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
-  const currentMonthSlip = salaryData?.salarySlips?.find(slip => slip.month === currentMonth);
+  // Filter only generated salary slips
+  const generatedSlips = salaryData?.salarySlips || [];
 
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Salary & Payments</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Salary Slips</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
-            View and download your salary slips
+            View and download your generated salary slips
           </p>
         </div>
       </div>
@@ -116,91 +158,31 @@ const EmployeeSalary = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Salary Slips</CardTitle>
+            <CardTitle className="text-sm font-medium">Generated Slips</CardTitle>
             <FileText className="w-4 h-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              {salaryData?.salarySlips?.length || 0}
+              {generatedSlips.length}
             </div>
-            <p className="text-xs text-gray-500">Generated slips</p>
+            <p className="text-xs text-gray-500">Available for download</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Current Month Status */}
-      {currentMonthSlip && (
-        <Card className="border-green-200 bg-green-50 dark:bg-green-900/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-green-800 dark:text-green-200">
-              <Calendar className="w-5 h-5" />
-              {currentMonth} - Salary Slip Available
-            </CardTitle>
-            <CardDescription className="text-green-700 dark:text-green-300">
-              Your salary slip for this month has been generated
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-              <div className="text-center">
-                <div className="text-sm text-green-600 dark:text-green-400">Basic Salary</div>
-                <div className="text-lg font-bold text-green-800 dark:text-green-200">
-                  ₹{currentMonthSlip.basicSalary?.toLocaleString()}
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-orange-600 dark:text-orange-400">Advances Deducted</div>
-                <div className="text-lg font-bold text-orange-800 dark:text-orange-200">
-                  ₹{currentMonthSlip.advancesDeducted?.toLocaleString()}
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-blue-600 dark:text-blue-400">Final Payable</div>
-                <div className="text-lg font-bold text-blue-800 dark:text-blue-200">
-                  ₹{currentMonthSlip.finalPayable?.toLocaleString()}
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-600 dark:text-gray-400">Generated On</div>
-                <div className="text-sm font-medium text-gray-800 dark:text-gray-200">
-                  {new Date(currentMonthSlip.generatedAt).toLocaleDateString()}
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                onClick={() => handleDownload(currentMonth)}
-                disabled={isDownloading}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                {isDownloading ? "Downloading..." : "Download Slip"}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleViewSlip(currentMonth)}
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                View Details
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Salary Slips Table */}
+      {/* Generated Salary Slips */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="w-5 h-5" />
-            All Salary Slips
+            Generated Salary Slips
           </CardTitle>
           <CardDescription>
-            View and download your salary slips by month
+            View and download your generated salary slips
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {salaryData?.salarySlips?.length > 0 ? (
+          {generatedSlips.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -213,7 +195,7 @@ const EmployeeSalary = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {salaryData.salarySlips.map((slip, index) => (
+                {generatedSlips.map((slip, index) => (
                   <TableRow key={index}>
                     <TableCell className="font-medium">{slip.month}</TableCell>
                     <TableCell>₹{slip.basicSalary?.toLocaleString()}</TableCell>
@@ -228,15 +210,16 @@ const EmployeeSalary = () => {
                       <div className="flex gap-2">
                         <Button
                           size="sm"
-                          onClick={() => handleDownload(slip.month)}
+                          onClick={() => handleDownload(slip)}
                           disabled={isDownloading}
+                          className="bg-green-600 hover:bg-green-700"
                         >
                           <Download className="w-4 h-4" />
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleViewSlip(slip.month)}
+                          onClick={() => handleViewSlip(slip)}
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
@@ -250,7 +233,7 @@ const EmployeeSalary = () => {
             <div className="text-center py-12">
               <FileText className="w-16 h-16 mx-auto text-gray-300 mb-4" />
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                No salary slips available
+                No salary slips generated yet
               </h3>
               <p className="text-gray-500 dark:text-gray-400">
                 Salary slips will appear here once they are generated by the administrator.
@@ -303,6 +286,45 @@ const EmployeeSalary = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Salary Slip Preview Modal */}
+      {showPreview && selectedSlip && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-6xl w-full max-h-[95vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-semibold">Salary Slip Preview - {selectedSlip.month}</h3>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => handleDownload(selectedSlip)}
+                  disabled={isDownloading}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  {isDownloading ? "Downloading..." : "Download PDF"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowPreview(false);
+                    setSelectedSlip(null);
+                  }}
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+            <div className="h-[calc(95vh-80px)]">
+              <PDFViewer width="100%" height="100%">
+                <SalarySlip 
+                  employee={employee} 
+                  salarySlip={selectedSlip}
+                  logoDataUrl={logoDataUrl}
+                />
+              </PDFViewer>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

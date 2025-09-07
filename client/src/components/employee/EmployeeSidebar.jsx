@@ -79,14 +79,171 @@ const EmployeeSidebar = () => {
     return "Good Evening";
   };
 
+  // Role-based access control configuration
+  const rolePermissions = {
+    // Define which roles can access which menu items
+    'director': ['*'], // Director can access everything
+    'manager': [
+      'dashboard',
+      'invoices',
+      'measurement', 
+      'stocks',
+      'delivery',
+      'order-details',
+      'employee-dashboard',
+      'create-order',
+      'profile',
+      'salary'
+    ],
+    'biller': [
+      'dashboard',
+      'invoices',
+      'measurement',
+      'stocks', 
+      'delivery',
+      'order-details',
+      'employee-dashboard',
+      'create-order',
+      'profile',
+      'salary'
+    ],
+    'tailor': [
+      'dashboard',
+      'measurement',
+      'stocks',
+      'delivery', 
+      'order-details',
+      'employee-dashboard',
+      'profile',
+      'salary'
+    ],
+    'admin': [
+      'dashboard',
+      'branches',
+      'invoices',
+      'measurement',
+      'stocks',
+      'delivery',
+      'order-details',
+      'employees',
+      'masters',
+      'employee-dashboard',
+      'website-management',
+      'enquiries',
+      'create-order',
+      'profile',
+      'salary'
+    ]
+  };
+
+  // Sub-item permissions (more granular control)
+  const subItemPermissions = {
+    'invoices': {
+      'director': ['*'],
+      'manager': ['All Invoices', 'Fabric Invoice', 'Stitching Invoice', 'Quotation'],
+      'biller': ['All Invoices', 'Fabric Invoice', 'Stitching Invoice', 'Quotation'],
+      'tailor': ['All Invoices'],
+      'admin': ['*']
+    },
+    'measurement': {
+      'director': ['*'],
+      'manager': ['Slip for Billing', 'Pending Slip', 'Printed Slip'],
+      'biller': ['Slip for Billing', 'Pending Slip', 'Printed Slip'],
+      'tailor': ['Pending Slip', 'Printed Slip'],
+      'admin': ['*']
+    },
+    'stocks': {
+      'director': ['*'],
+      'manager': ['Full Ready', 'Partial Ready'],
+      'biller': ['Full Ready', 'Partial Ready'],
+      'tailor': ['Full Ready', 'Partial Ready'],
+      'admin': ['*']
+    },
+    'delivery': {
+      'director': ['*'],
+      'manager': ['Full Delivery', 'Partial Delivery', 'All Delivery'],
+      'biller': ['Full Delivery', 'Partial Delivery', 'All Delivery'],
+      'tailor': ['Full Delivery', 'Partial Delivery'],
+      'admin': ['*']
+    },
+    'employees': {
+      'director': ['*'],
+      'admin': ['*']
+    },
+    'masters': {
+      'director': ['*'],
+      'admin': ['*']
+    },
+    'website-management': {
+      'director': ['*'],
+      'admin': ['*']
+    }
+  };
+
+  // Check if a role has permission to access an item
+  const hasPermission = (itemId, userRole) => {
+    if (!userRole || !rolePermissions[userRole]) return false;
+    
+    const permissions = rolePermissions[userRole];
+    
+    // If user has wildcard permission, allow everything
+    if (permissions.includes('*')) return true;
+    
+    // Check if item is in user's permissions
+    return permissions.includes(itemId);
+  };
+
+  // Check if a role has permission to access a sub-item
+  const hasSubItemPermission = (parentId, subItemTitle, userRole) => {
+    if (!userRole || !subItemPermissions[parentId]) return true; // Default allow if no specific config
+    
+    const permissions = subItemPermissions[parentId][userRole];
+    if (!permissions) return false;
+    
+    // If user has wildcard permission, allow everything
+    if (permissions.includes('*')) return true;
+    
+    // Check if sub-item is in user's permissions
+    return permissions.includes(subItemTitle);
+  };
+
+  // Filter menu items based on employee role
+  const filterMenuByRole = (menuItems) => {
+    if (!employee?.role) return [];
+    
+    return menuItems.filter(item => {
+      // Check if user has permission for this main item
+      if (!hasPermission(item.id, employee.role)) {
+        return false;
+      }
+      
+      // For subItems, filter them based on permissions
+      if (item.subItems) {
+        const filteredSubItems = item.subItems.filter(subItem => 
+          hasSubItemPermission(item.id, subItem.title, employee.role)
+        );
+        
+        // Update the subItems with filtered ones
+        item.subItems = filteredSubItems;
+        
+        // If no sub-items left, hide the parent item
+        return filteredSubItems.length > 0;
+      }
+      
+      return true;
+    });
+  };
+
   // Grouped menu items for accordions
   const groupedMenu = [
+    //Store/Company Dashboard
     {
       id: "dashboard",
       title: "Dashboard",
       icon: LayoutDashboard,
       path: "/employee/dashboard",
     },
+    //Branch management
     {
       id: "branches",
       title: "Branches",
@@ -148,6 +305,7 @@ const EmployeeSidebar = () => {
         { title: "Employee Salary Slip", icon: HandCoins, path: "/employee/employee-advance" },
       ],
     },
+    //Masters management
     {
       id: "masters",
       title: "Masters",
@@ -161,12 +319,14 @@ const EmployeeSidebar = () => {
         { title: "Style Master", icon: PaletteIcon, path: "/employee/styles" },
       ],
     },
+    //Employee Dashboard
     {
       id: "employee-dashboard",
       title: "Employee Dashboard",
       icon: LayoutDashboard,
       path: "/employee/employee-dashboard",
     },
+    //Website Management
     {
       id: "website-management",
       title: "Website Management",
@@ -278,7 +438,7 @@ const EmployeeSidebar = () => {
           }}
         >
           <div className="space-y-1 lg:space-y-2">
-            {groupedMenu.map((item) => {
+            {filterMenuByRole(groupedMenu).map((item) => {
               const IconComponent = item.icon;
               const isActive = isActiveRoute(item.path);
               if (item.isButton) {
