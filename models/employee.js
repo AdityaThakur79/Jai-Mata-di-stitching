@@ -15,8 +15,16 @@ const advanceSchema = new mongoose.Schema({
 
 // Schema for monthly salary slips
 const salarySlipSchema = new mongoose.Schema({
+  monthKey: {
+    type: String, // e.g., "2025-07"
+    required: true,
+  },
   month: {
     type: String, // e.g., "July 2025"
+    required: true,
+  },
+  year: {
+    type: Number, // e.g., 2025
     required: true,
   },
   basicSalary: {
@@ -30,6 +38,19 @@ const salarySlipSchema = new mongoose.Schema({
   finalPayable: {
     type: Number,
     required: true,
+  },
+  advances: [advanceSchema], // Individual advances for this month
+  totalAdvances: {
+    type: Number,
+    default: 0,
+  },
+  baseSalary: {
+    type: Number,
+    default: 0,
+  },
+  netPay: {
+    type: Number,
+    default: 0,
   },
   generatedAt: {
     type: Date,
@@ -73,10 +94,6 @@ const employeeSchema = new mongoose.Schema(
       enum: ["A", "B", "C", "D"],
     },
     dob: Date,
-    baseSalary: {
-      type: Number,
-      default: 0,
-    },
     validityDate: {
       type: Date,
       default: function() {

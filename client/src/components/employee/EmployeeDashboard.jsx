@@ -20,12 +20,33 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
 const EmployeeDashboard = () => {
-  const { employee } = useSelector((state) => state.auth);
-  const { data: salaryData, isLoading } = useGetEmployeeSalarySlipsQuery();
+  const { employee, isEmployeeAuthenticated } = useSelector((state) => state.auth);
+  const { data: salaryData, isLoading, error } = useGetEmployeeSalarySlipsQuery();
   const navigate = useNavigate();
+
+  console.log("Employee Dashboard - Auth State:", { employee, isEmployeeAuthenticated });
+  console.log("Employee Dashboard - API State:", { salaryData, isLoading, error });
+  console.log(salaryData)
 
   const currentDate = new Date();
   const currentMonth = currentDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+  
+  // Show error state if API fails
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <h3 className="text-red-800 font-medium">Error Loading Data</h3>
+          <p className="text-red-600 mt-1">
+            {error?.data?.message || error?.message || "Failed to load salary data"}
+          </p>
+          <p className="text-sm text-red-500 mt-2">
+            Status: {error?.status} | Data: {JSON.stringify(error?.data)}
+          </p>
+        </div>
+      </div>
+    );
+  }
   
   // Calculate current month salary info
   const currentMonthSlip = salaryData?.salarySlips?.find(slip => 

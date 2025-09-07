@@ -58,9 +58,10 @@ const EmployeeProfile = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Profile Card */}
+        {/* Profile Card - Fixed on scroll */}
         <div className="lg:col-span-1">
-          <Card>
+          <div className="sticky top-6">
+            <Card>
             <CardHeader className="text-center">
               <div className="flex justify-center mb-4">
                 <Avatar className="w-24 h-24">
@@ -106,7 +107,8 @@ const EmployeeProfile = () => {
                 </div>
               </div>
             </CardContent>
-          </Card>
+            </Card>
+          </div>
         </div>
 
         {/* Details */}
