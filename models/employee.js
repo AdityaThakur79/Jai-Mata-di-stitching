@@ -114,6 +114,13 @@ const employeeSchema = new mongoose.Schema(
       required: true,
     },
 
+    // Additional roles the employee can perform besides the primary role
+    secondaryRoles: {
+      type: [String],
+      enum: ["tailor", "manager", "biller", "director", "admin", "other"],
+      default: [],
+    },
+
     designation: String, 
 
     employeeId: {

@@ -292,6 +292,9 @@ const Employee = () => {
                       </svg>
                       <span className="text-lg text-gray-600 dark:text-gray-300 capitalize">
                         {emp.role}
+                        {Array.isArray(emp.secondaryRoles) && emp.secondaryRoles.length > 0 && (
+                          <span className="ml-2 text-sm text-gray-500">/ {emp.secondaryRoles.join(", ")}</span>
+                        )}
                       </span>
                     </div>
                     <div className="flex items-center gap-3">
@@ -624,6 +627,11 @@ const Employee = () => {
                     <div className="text-lg font-bold text-orange-900 dark:text-orange-100 capitalize">
                       {emp.role}
                     </div>
+                    {Array.isArray(emp.secondaryRoles) && emp.secondaryRoles.length > 0 && (
+                      <div className="text-xs text-orange-700 dark:text-orange-300 mt-1">
+                        Secondary: {emp.secondaryRoles.join(", ")}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1081,7 +1089,12 @@ const Employee = () => {
                       {employee.email}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {employee.role}
+                      <div className="flex items-center gap-2">
+                        <span className="capitalize">{employee.role}</span>
+                        {Array.isArray(employee.secondaryRoles) && employee.secondaryRoles.length > 0 && (
+                          <span className="text-xs text-gray-500">(Secondary: {employee.secondaryRoles.join(", ")})</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                       <span
@@ -1242,6 +1255,7 @@ const Employee = () => {
         onClose={() => setDrawerOpen(false)}
         open={drawerOpen}
         width={800}
+        bodyStyle={{ padding: 0, height: '100%', overflow: 'auto' }}
         footer={
           selectedEmployee && (
             <div className="flex justify-end gap-2">

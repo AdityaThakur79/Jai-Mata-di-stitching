@@ -111,13 +111,13 @@ const EmployeeIdCard = ({ employee, logoDataUrl, profileImageDataUrl = null }) =
            
             marginRight: mm(15),
           }}>
-            {/* Top Header */}
+            {/* Top Header - REDUCED HEIGHT */}
             <View style={{
               position: "absolute",
               top: 0,
               left: 0,
               right: 0,
-              height: mm(30),
+              height: mm(16), // Further reduced from mm(22) to mm(18)
               backgroundColor: "#FF6B35",
               alignItems: "center",
               justifyContent: "center",
@@ -126,23 +126,21 @@ const EmployeeIdCard = ({ employee, logoDataUrl, profileImageDataUrl = null }) =
               <View style={{
                 alignItems: "center",
                 flexDirection: "row",
-                marginTop: mm(2),
+                // Ensure equal vertical padding for balanced look
+                paddingTop: mm(2),
+                paddingBottom: mm(2),
               }}>
                 {logoDataUrl ? (
                   <Image src={logoDataUrl} style={{
-                    width: mm(14),
-                    height: mm(14),
-                    // backgroundColor: "#ffffff",
+                    width: mm(12), // Slightly reduced from mm(14)
+                    height: mm(12), // Slightly reduced from mm(14)
                     borderRadius: mm(1),
                     marginRight: mm(3),
-                    // borderWidth: 2,
-                    // borderStyle: "solid",
-                    // borderColor: "#ffffff",
                   }} />
                 ) : (
                   <View style={{
-                    width: mm(12),
-                    height: mm(12),
+                    width: mm(10), // Reduced from mm(12)
+                    height: mm(10), // Reduced from mm(12)
                     backgroundColor: "#ffffff",
                     borderRadius: mm(1),
                     alignItems: "center",
@@ -153,7 +151,7 @@ const EmployeeIdCard = ({ employee, logoDataUrl, profileImageDataUrl = null }) =
                     borderColor: "#ffffff",
                   }}>
                     <Text style={{
-                      fontSize: 8,
+                      fontSize: 7, // Reduced from 8
                       fontWeight: 700,
                       color: "#FF6B35",
                     }}>JMD</Text>
@@ -164,25 +162,20 @@ const EmployeeIdCard = ({ employee, logoDataUrl, profileImageDataUrl = null }) =
                   alignItems: "flex-start",
                 }}>
                   <Text style={{
-                    fontSize: 12,
+                    fontSize: 10, // Reduced from 12
                     fontWeight: 700,
                     color: "#ffffff",
                     letterSpacing: 0.5,
                     lineHeight: 1.2,
                   }}>JMD STITCHING PVT LTD</Text>
-                  {/* <Text style={{
-                    fontSize: 8,
-                    color: "#ffffff",
-                    fontWeight: 700,
-                  }}>PVT LTD</Text> */}
                 </View>
               </View>
             </View>
 
-            {/* Employee Photo */}
+            {/* Employee Photo - Balanced Size */}
             <View style={{
               position: "absolute",
-              top: mm(32),
+              top: mm(20), // Moved up since header is shorter
               left: 0,
               right: 0,
               alignItems: "center",
@@ -190,10 +183,10 @@ const EmployeeIdCard = ({ employee, logoDataUrl, profileImageDataUrl = null }) =
               zIndex: 10,
             }}>
               <View style={{
-                width: mm(24),
-                height: mm(24),
+                width: mm(32), // Balanced size
+                height: mm(32), // Balanced size
                 backgroundColor: "#ffffff",
-                borderRadius: mm(8),
+                borderRadius: mm(10), // Increased from mm(8)
                 borderWidth: 2,
                 borderStyle: "solid",
                 borderColor: "#FF6B35",
@@ -206,22 +199,22 @@ const EmployeeIdCard = ({ employee, logoDataUrl, profileImageDataUrl = null }) =
                   <Image 
                     src={getProfileImage()} 
                     style={{
-                      width: mm(18),
-                      height: mm(18),
-                      borderRadius: mm(6),
+                      width: mm(28), // Balanced size
+                      height: mm(28), // Balanced size
+                      borderRadius: mm(8), // Increased from mm(6)
                     }}
                   />
                 ) : (
                   <View style={{
-                    width: mm(18),
-                    height: mm(18),
+                    width: mm(28), // Balanced size
+                    height: mm(28), // Balanced size
                     backgroundColor: "#f5f5f5",
-                    borderRadius: mm(6),
+                    borderRadius: mm(8), // Increased from mm(6)
                     alignItems: "center",
                     justifyContent: "center",
                   }}>
                     <Text style={{
-                      fontSize: 12,
+                      fontSize: 16, // Balanced with image size
                       fontWeight: 700,
                       color: "#FF6B35",
                     }}>
@@ -233,7 +226,7 @@ const EmployeeIdCard = ({ employee, logoDataUrl, profileImageDataUrl = null }) =
               
               <View style={{
                 textAlign: "center",
-                marginBottom: mm(4),
+                marginBottom: mm(2), // reduce gap under name/role
               }}>
                 <Text style={{
                   fontSize: 14,
@@ -256,14 +249,16 @@ const EmployeeIdCard = ({ employee, logoDataUrl, profileImageDataUrl = null }) =
                   letterSpacing: 0.5,
                   textAlign: "center",
                   alignSelf: "center",
-                }}>{emp.role || "Position"}</Text>
+                }}>
+                  {(emp.role || "Position") + (Array.isArray(emp.secondaryRoles) && emp.secondaryRoles.length > 0 ? ` / ${emp.secondaryRoles.join(", ")}` : "")}
+                </Text>
               </View>
             </View>
 
-            {/* Information Grid */}
+            {/* Information Grid - Adjusted to avoid footer overlap and reduce gap */}
             <View style={{
               position: "absolute",
-              top: mm(75),
+              top: mm(82), // Move grid closer to profile block
               left: mm(4),
               right: mm(4),
               zIndex: 10,
@@ -272,12 +267,12 @@ const EmployeeIdCard = ({ employee, logoDataUrl, profileImageDataUrl = null }) =
                 flexDirection: "row",
                 justifyContent: "space-between",
                 alignItems: "center",
-                paddingTop: mm(1.5),
-                paddingBottom: mm(1.5),
+                paddingTop: mm(1.0),
+                paddingBottom: mm(1.0),
                 borderBottomWidth: 1,
                 borderBottomStyle: "solid",
                 borderBottomColor: "#e0e0e0",
-                marginBottom: mm(0.5),
+                marginBottom: mm(0.3),
               }}>
                 <Text style={{
                   fontSize: 8,
@@ -299,12 +294,12 @@ const EmployeeIdCard = ({ employee, logoDataUrl, profileImageDataUrl = null }) =
                 flexDirection: "row",
                 justifyContent: "space-between",
                 alignItems: "center",
-                paddingTop: mm(1.5),
-                paddingBottom: mm(1.5),
+                paddingTop: mm(1.0),
+                paddingBottom: mm(1.0),
                 borderBottomWidth: 1,
                 borderBottomStyle: "solid",
                 borderBottomColor: "#e0e0e0",
-                marginBottom: mm(0.5),
+                marginBottom: mm(0.3),
               }}>
                 <Text style={{
                   fontSize: 8,
@@ -326,12 +321,12 @@ const EmployeeIdCard = ({ employee, logoDataUrl, profileImageDataUrl = null }) =
                 flexDirection: "row",
                 justifyContent: "space-between",
                 alignItems: "center",
-                paddingTop: mm(1.5),
-                paddingBottom: mm(1.5),
+                paddingTop: mm(1.0),
+                paddingBottom: mm(1.0),
                 borderBottomWidth: 1,
                 borderBottomStyle: "solid",
                 borderBottomColor: "#e0e0e0",
-                marginBottom: mm(0.5),
+                marginBottom: mm(0.3),
               }}>
                 <Text style={{
                   fontSize: 8,
@@ -353,12 +348,12 @@ const EmployeeIdCard = ({ employee, logoDataUrl, profileImageDataUrl = null }) =
                 flexDirection: "row",
                 justifyContent: "space-between",
                 alignItems: "center",
-                paddingTop: mm(1.5),
-                paddingBottom: mm(1.5),
+                paddingTop: mm(1.0),
+                paddingBottom: mm(1.0),
                 borderBottomWidth: 1,
                 borderBottomStyle: "solid",
                 borderBottomColor: "#e0e0e0",
-                marginBottom: mm(0.5),
+                marginBottom: mm(0.3),
               }}>
                 <Text style={{
                   fontSize: 8,
@@ -403,135 +398,25 @@ const EmployeeIdCard = ({ employee, logoDataUrl, profileImageDataUrl = null }) =
                   flex: 1,
                 }}>{validityDate}</Text>
               </View>
-              {/* <View style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-                paddingTop: mm(1.5),
-                paddingBottom: mm(1.5),
-                borderBottomWidth: 1,
-                borderBottomStyle: "solid",
-                borderBottomColor: "#e0e0e0",
-                marginBottom: mm(0.5),
-              }}>
-                <Text style={{
-                  fontSize: 8,
-                  fontWeight: 700,
-                  color: "#333333",
-                  textTransform: "uppercase",
-                  letterSpacing: 0.3,
-                  width: mm(30),
-                }}>Gender:</Text>
-                <Text style={{
-                  fontSize: 8,
-                  color: "#000000",
-                  fontWeight: 400,
-                  textAlign: "right",
-                  flex: 1,
-                }}>{emp.gender || "—"}</Text>
-              </View> */}
-              {/* <View style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-                paddingTop: mm(1.5),
-                paddingBottom: mm(1.5),
-                borderBottomWidth: 1,
-                borderBottomStyle: "solid",
-                borderBottomColor: "#e0e0e0",
-                marginBottom: mm(0.5),
-              }}>
-                <Text style={{
-                  fontSize: 8,
-                  fontWeight: 700,
-                  color: "#333333",
-                  textTransform: "uppercase",
-                  letterSpacing: 0.3,
-                  width: mm(30),
-                }}>Blood Group:</Text>
-                <Text style={{
-                  fontSize: 8,
-                  color: "#FF6B35",
-                  fontWeight: 700,
-                  backgroundColor: "#fff5f2",
-                  paddingTop: mm(1),
-                  paddingBottom: mm(1),
-                  paddingLeft: mm(2),
-                  paddingRight: mm(2),
-                  borderRadius: mm(2),
-                  textAlign: "center",
-                }}>{emp.bloodGroup || "B+"}</Text>
-              </View> */}
             </View>
 
-            {/* Barcode Section */}
-            {/* <View style={{
-              position: "absolute",
-              bottom: mm(20),
-              left: 0,
-              right: 0,
-              alignItems: "center",
-              flexDirection: "column",
-              zIndex: 10,
-            }}>
-              <View style={{
-                backgroundColor: "#ffffff",
-                borderRadius: mm(3),
-                padding: mm(2),
-                borderWidth: 1,
-                borderStyle: "solid",
-                borderColor: "#e0e0e0",
-                marginBottom: mm(1),
-              }}>
-                {barcodeDataUrl ? (
-                  <Image src={barcodeDataUrl} style={{
-                    width: mm(30),
-                    height: mm(8),
-                    borderRadius: mm(2),
-                  }} />
-                ) : (
-                  <View style={{
-                    width: mm(30),
-                    height: mm(8),
-                    backgroundColor: "#000000",
-                    borderRadius: mm(2),
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}>
-                    <Text style={{
-                      fontSize: 6,
-                      color: "#ffffff",
-                      fontWeight: 700,
-                      letterSpacing: 1,
-                    }}>||||| |||| |||||</Text>
-                  </View>
-                )}
-              </View>
-              <Text style={{
-                fontSize: 7,
-                color: "#666666",
-                fontWeight: 700,
-                textAlign: "center",
-              }}>ID: {emp.employeeId || "EMP001"}</Text>
-            </View> */}
-
-            {/* Bottom Section */}
+            {/* Bottom Section - reduced height */}
             <View style={{
               position: "absolute",
               bottom: 0,
               left: 0,
               right: 0,
-              height: mm(15),
+              height: mm(12),
               backgroundColor: "#FF6B35",
               alignItems: "center",
               justifyContent: "center",
             }}>
               <Text style={{
-                fontSize: 9,
+                fontSize: 8,
                 fontWeight: 700,
                 color: "#ffffff",
                 textAlign: "center",
-                letterSpacing: 0.3,
+                letterSpacing: 0.2,
               }}>YOUR SATISFACTION IS OUR FIRST PRIORITY</Text>
             </View>
           </View>

@@ -53,6 +53,7 @@ export const createEmployee = async (req, res) => {
       address,
       aadhaarNumber,
       role,
+      secondaryRoles,
       joiningDate,
       bloodGroup,
       grade,
@@ -107,6 +108,20 @@ export const createEmployee = async (req, res) => {
       aadhaarImage,
       aadhaarPublicId,
       role,
+      secondaryRoles: (() => {
+        try {
+          if (!secondaryRoles) return [];
+          const parsed = typeof secondaryRoles === "string" ? JSON.parse(secondaryRoles) : secondaryRoles;
+          if (Array.isArray(parsed)) return parsed;
+          return [];
+        } catch (e) {
+          // support comma-separated string fallback
+          if (typeof secondaryRoles === "string") {
+            return secondaryRoles.split(",").map(r => r.trim()).filter(Boolean);
+          }
+          return [];
+        }
+      })(),
       employeeId,
       joiningDate,
       bloodGroup,
@@ -213,6 +228,7 @@ export const updateEmployee = async (req, res) => {
       address,
       aadhaarNumber,
       role,
+      secondaryRoles,
       joiningDate,
       bloodGroup,
       grade,
@@ -239,6 +255,21 @@ export const updateEmployee = async (req, res) => {
     if (address !== undefined) employee.address = address;
     if (aadhaarNumber !== undefined) employee.aadhaarNumber = aadhaarNumber;
     if (role !== undefined) employee.role = role;
+    // Update secondary roles with flexible parsing
+    if (secondaryRoles !== undefined) {
+      try {
+        const parsed = typeof secondaryRoles === "string" ? JSON.parse(secondaryRoles) : secondaryRoles;
+        employee.secondaryRoles = Array.isArray(parsed)
+          ? parsed
+          : (typeof secondaryRoles === "string"
+              ? secondaryRoles.split(",").map(r => r.trim()).filter(Boolean)
+              : []);
+      } catch (e) {
+        employee.secondaryRoles = typeof secondaryRoles === "string"
+          ? secondaryRoles.split(",").map(r => r.trim()).filter(Boolean)
+          : [];
+      }
+    }
     if (joiningDate !== undefined) employee.joiningDate = joiningDate;
     if (bloodGroup !== undefined) employee.bloodGroup = bloodGroup;
     if (grade !== undefined) employee.grade = grade;

@@ -101,6 +101,9 @@ const EmployeeIdCardPreview = ({ employee, onClose }) => {
           <div className="flex justify-between items-center">
             <p className="text-sm text-gray-600">
               Employee ID: {employee.employeeId} | Role: {employee.role}
+              {Array.isArray(employee.secondaryRoles) && employee.secondaryRoles.length > 0 && (
+                <span className="ml-2 text-xs text-gray-500">(Secondary: {employee.secondaryRoles.join(", ")})</span>
+              )}
             </p>
             <div className="flex space-x-2">
               <button
