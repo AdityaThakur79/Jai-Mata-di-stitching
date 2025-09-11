@@ -774,6 +774,15 @@ const EmployeeDetail = () => {
                   >
                     {safeEmployeeData.role.toUpperCase()}
                   </Badge>
+                  {Array.isArray(safeEmployeeData.secondaryRoles) && safeEmployeeData.secondaryRoles.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {safeEmployeeData.secondaryRoles.map((r) => (
+                        <Badge key={r} variant="outline" className="text-xs capitalize">
+                          {r}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                   <Badge
                     variant={getStatusVariant(safeEmployeeData.status)}
                     className="text-sm px-3 py-1.5 font-semibold shadow-lg"
@@ -808,6 +817,16 @@ const EmployeeDetail = () => {
                       {safeEmployeeData.role.toUpperCase()}
                     </span>
                   </div>
+                  {Array.isArray(safeEmployeeData.secondaryRoles) && safeEmployeeData.secondaryRoles.length > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Secondary Roles:
+                      </span>
+                      <span className="font-medium">
+                        {safeEmployeeData.secondaryRoles.join(", ")}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">
                       Joining Date:

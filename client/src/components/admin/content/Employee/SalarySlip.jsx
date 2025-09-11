@@ -363,7 +363,12 @@ const SalarySlip = ({ employee, salarySlip, logoDataUrl }) => {
                   <Text style={styles.cellTextBold}>Designation</Text>
                 </View>
                 <View style={styles.gridValue}>
-                  <Text style={styles.cellText}>{employee.role || 'N/A'}</Text>
+                  <Text style={styles.cellText}>
+                    {employee.role || 'N/A'}
+                    {Array.isArray(employee.secondaryRoles) && employee.secondaryRoles.length > 0
+                      ? ` (Secondary: ${employee.secondaryRoles.join(', ')})`
+                      : ''}
+                  </Text>
                 </View>
               </View>
               <View style={styles.gridRow}>

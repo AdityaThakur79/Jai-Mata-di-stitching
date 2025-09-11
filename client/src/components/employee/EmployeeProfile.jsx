@@ -76,6 +76,18 @@ const EmployeeProfile = () => {
                 <Badge variant="secondary" className="capitalize">
                   {profile?.role}
                 </Badge>
+                {Array.isArray(profile?.secondaryRoles) && profile.secondaryRoles.length > 0 && (
+                  <div className="mt-1">
+                    <span className="text-xs text-gray-500">Secondary:</span>
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {profile.secondaryRoles.map((r) => (
+                        <Badge key={r} variant="outline" className="capitalize text-xs">
+                          {r}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

@@ -74,6 +74,7 @@ const UpdateEmployee = () => {
     baseSalary: "",
     bankDetails: { bankName: "", accountNumber: "", ifsc: "" },
     emergencyContact: { name: "", mobile: "" },
+    secondaryRoles: [],
   });
   const [profileImage, setProfileImage] = useState(null);
   const [previewImage, setPreviewImage] = useState("");
@@ -127,6 +128,7 @@ const UpdateEmployee = () => {
         baseSalary: employee.baseSalary ? employee.baseSalary.toString() : "",
         bankDetails: employee.bankDetails || { bankName: "", accountNumber: "", ifsc: "" },
         emergencyContact: employee.emergencyContact || { name: "", mobile: "" },
+        secondaryRoles: Array.isArray(employee.secondaryRoles) ? employee.secondaryRoles : [],
       });
       
       // Set branch ID if available
@@ -169,6 +171,7 @@ const UpdateEmployee = () => {
         baseSalary: employee.baseSalary ? employee.baseSalary.toString() : "",
         bankDetails: employee.bankDetails || { bankName: "", accountNumber: "", ifsc: "" },
         emergencyContact: employee.emergencyContact || { name: "", mobile: "" },
+        secondaryRoles: Array.isArray(employee.secondaryRoles) ? employee.secondaryRoles : [],
       });
       
       // Set branch ID if available
@@ -222,6 +225,18 @@ const UpdateEmployee = () => {
     }
   };
 
+  const toggleSecondaryRole = (role) => {
+    setForm((prev) => {
+      const exists = prev.secondaryRoles.includes(role);
+      return {
+        ...prev,
+        secondaryRoles: exists
+          ? prev.secondaryRoles.filter((r) => r !== role)
+          : [...prev.secondaryRoles, role],
+      };
+    });
+  };
+
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     setProfileImage(file);
@@ -270,6 +285,9 @@ const UpdateEmployee = () => {
     if (profileImage) formData.append("profileImage", profileImage);
     if (aadhaarImage) formData.append("aadhaarImage", aadhaarImage);
     if (existingAadhaarPublicId) formData.append("existingAadhaarPublicId", existingAadhaarPublicId);
+    if (form.secondaryRoles?.length) {
+      formData.append("secondaryRoles", JSON.stringify(form.secondaryRoles));
+    }
     
     // Handle bank details - send even if empty to allow clearing
     const bankDetailsToSend = {
@@ -465,6 +483,25 @@ const UpdateEmployee = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                </FormField>
+
+                <FormField label="Secondary Roles (optional)" className="sm:col-span-2">
+                  <div className="flex flex-wrap gap-2">
+                    {roleOptions.map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => toggleSecondaryRole(r)}
+                        className={`h-7 px-3 rounded border text-xs capitalize ${
+                          form.secondaryRoles.includes(r)
+                            ? "bg-orange-600 text-white border-orange-600"
+                            : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
+                        }`}
+                      >
+                        {r}
+                      </button>
+                    ))}
+                  </div>
                 </FormField>
                 
                 <FormField label="Joining Date">

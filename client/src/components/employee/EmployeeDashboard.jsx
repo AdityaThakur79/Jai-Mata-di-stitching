@@ -102,6 +102,9 @@ const EmployeeDashboard = () => {
             <h1 className="text-3xl font-bold">Welcome back, {employee?.name}!</h1>
             <p className="text-white/80 mt-2">
               Employee ID: {employee?.employeeId} • Role: {employee?.role?.charAt(0).toUpperCase() + employee?.role?.slice(1)}
+              {Array.isArray(employee?.secondaryRoles) && employee.secondaryRoles.length > 0 && (
+                <span className="ml-2 text-sm opacity-90">(Secondary: {employee.secondaryRoles.join(", ")})</span>
+              )}
             </p>
             <p className="text-white/80">
               Joined: {new Date(employee?.joiningDate).toLocaleDateString()}
