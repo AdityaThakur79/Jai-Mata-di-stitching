@@ -72,6 +72,7 @@ const Employee = () => {
   const [previewEmployee, setPreviewEmployee] = useState(null);
   const [profileImageDataUrl, setProfileImageDataUrl] = useState(null);
   const [isConvertingImage, setIsConvertingImage] = useState(false);
+  const [logoDataUrl, setLogoDataUrl] = useState(null);
 
   const handleViewEmployee = async (employeeId) => {
     setDrawerOpen(true);
@@ -143,16 +144,6 @@ const Employee = () => {
   const createPdfDocument = () => {
     if (!selectedEmployee) return null;
     
-    // Create logo data URL (you can replace this with your actual logo)
-    const logoDataUrl = "data:image/svg+xml;base64," + btoa(`
-      <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-        <rect width="120" height="120" fill="#FF6B35" rx="60"/>
-        <text x="60" y="75" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="white">JMD</text>
-      </svg>
-    `);
-    
-    // Use the pre-converted profile image from state
-    
     return (
       <EmployeeIdCard 
         employee={selectedEmployee} 
@@ -212,6 +203,28 @@ const Employee = () => {
       setIsConvertingImage(false);
     }
   }, [selectedEmployee]);
+
+  // Load company logo and convert to base64 once
+  useEffect(() => {
+    const toDataUrl = async (url) => {
+      try {
+        const response = await fetch(url, { cache: 'no-store' });
+        if (!response.ok) throw new Error('Failed to fetch logo');
+        const blob = await response.blob();
+        const reader = new FileReader();
+        return await new Promise((resolve, reject) => {
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      } catch (e) {
+        console.error('Error converting logo to base64:', e);
+        return null;
+      }
+    };
+    const logoUrl = '/images/jmd_logo.jpeg';
+    toDataUrl(logoUrl).then((dataUrl) => setLogoDataUrl(dataUrl));
+  }, []);
 
   const renderEmployeeDetails = (emp) => {
     if (!emp) return null;
