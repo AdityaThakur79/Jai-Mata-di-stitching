@@ -9,8 +9,10 @@ import {
   Instagram, 
   Twitter, 
   Linkedin,
-  ArrowUp
+  ArrowUp,
+  Youtube
 } from "lucide-react";
+import { FaXTwitter } from "react-icons/fa6";
 
 const footerLinks = {
   company: [
@@ -34,10 +36,11 @@ const footerLinks = {
 };
 
 const socialLinks = [
-  { icon: <Facebook className="w-5 h-5" />, href: "#", label: "Facebook" },
-  { icon: <Instagram className="w-5 h-5" />, href: "#", label: "Instagram" },
-  { icon: <Twitter className="w-5 h-5" />, href: "#", label: "Twitter" },
-  { icon: <Linkedin className="w-5 h-5" />, href: "#", label: "LinkedIn" },
+  { icon: <Facebook className="w-5 h-5" />, href: "https://www.facebook.com/jmdstitching", label: "Facebook" },
+  { icon: <Instagram className="w-5 h-5" />, href: "https://www.instagram.com/jmdstitching.co.in/", label: "Instagram" },
+  { icon: <FaXTwitter className="w-5 h-5" />, href: "https://x.com/JmdStitching", label: "Twitter" },
+  { icon: <Linkedin className="w-5 h-5" />, href: "linkedin.com/company/jmd-stitching-private-limited/", label: "LinkedIn" },
+  { icon: <Youtube className="w-5 h-5" />, href: "https://www.youtube.com/@jmdstitching", label: "Youtube" },
 ];
 
 const UserFooter = () => {
@@ -149,7 +152,7 @@ const UserFooter = () => {
             </div>
             
             <h2 className="text-3xl sm:text-4xl font-light text-gray-800 mb-4 font-serif drop-shadow-sm">
-              JMD STITCHING
+              JMD STITCHING PRIVATE LIMITED
             </h2>
             <div className="w-24 h-1 mx-auto mb-6 rounded-full shadow-lg" style={{ background: '#e3b873' }}></div>
             <p className="text-gray-600 leading-relaxed max-w-3xl mx-auto text-lg font-light drop-shadow-sm">
@@ -259,10 +262,10 @@ const UserFooter = () => {
                     </div>
                     <div>
                       <a 
-                        href="tel:+917972889376" 
+                        href="tel:+919082150556" 
                         className="text-gray-600 hover:text-gray-800 font-medium transition-all duration-300 drop-shadow-sm relative group"
                       >
-                        +91 797 288 9376
+                        +91 9082150556
                         <span 
                           className="absolute left-0 bottom-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full"
                           style={{ background: '#e3b873' }}
@@ -283,10 +286,10 @@ const UserFooter = () => {
                     </div>
                     <div>
                       <a 
-                        href="mailto:info@jmdtailors.com" 
+                        href="mailto:info@jmdstithing.com" 
                         className="text-gray-600 hover:text-gray-800 font-medium transition-all duration-300 drop-shadow-sm relative group"
                       >
-                        info@jmdtailors.com
+                        info@jmdstithing.com
                         <span 
                           className="absolute left-0 bottom-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full"
                           style={{ background: '#e3b873' }}
@@ -391,7 +394,7 @@ const UserFooter = () => {
             viewport={{ once: true }}
           >
             <div className="flex items-center md:flex-row flex-col space-x-2 text-gray-600 text-sm drop-shadow-sm">
-              <span>© 2025 JAI MATA DI STITCHING. Made with</span>
+              <span>© 2025 JMD STITCHING PRIVATE LIMITED. Made with</span>
               <Heart className="w-4 h-4 text-red-500 fill-current animate-pulse" />
               <span>in India</span>
             </div>

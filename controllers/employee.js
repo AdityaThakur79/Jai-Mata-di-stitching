@@ -1398,7 +1398,7 @@ const generateSalarySlipHTML = (employee, salarySlip, month) => {
     </head>
     <body>
       <div class="header">
-        <div class="company-name">JMD STITCHING PVT LTD</div>
+        <div class="company-name">JMD STITCHING PRIVATE LIMITED</div>
         <div class="salary-slip-title">SALARY SLIP</div>
         <div class="pay-period">Pay Period: ${month}</div>
       </div>

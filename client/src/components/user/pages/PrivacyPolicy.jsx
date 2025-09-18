@@ -81,7 +81,7 @@ const PrivacyPolicy = () => {
             <motion.div className="mb-12" variants={fadeInUp}>
               <h2 className="text-2xl md:text-3xl font-semibold text-gray-800 mb-6 font-serif">Introduction</h2>
               <p className="text-gray-600 leading-relaxed mb-4">
-                At JAI MATA DI STITCHING ("we," "our," or "us"), we are committed to protecting your privacy and personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our premises or use our services.
+                At JMD STITCHING PRIVATE LIMITED ("we," "our," or "us"), we are committed to protecting your privacy and personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our premises or use our services.
               </p>
               <p className="text-gray-600 leading-relaxed">
                 By using our services, you consent to the data practices described in this policy.
@@ -253,9 +253,10 @@ const PrivacyPolicy = () => {
               <div className="space-y-4 text-gray-600 leading-relaxed">
                 <p>If you have questions about this Privacy Policy or our data practices, please contact us:</p>
                 <div className="bg-amber-50 p-6 rounded-xl">
-                  <p><strong>JAI MATA DI STITCHING</strong></p>
+                  <p><strong>JMD STITCHING PRIVATE LIMITED</strong></p>
                   <p>108, Infinity Business Park, Dombivali East, Maharashtra</p>
-                  <p>Phone: +91 797 288 9376</p>
+                  <p>Phone: +91 9082150556</p>
+                  <p>Email: info@jmdstithing.com</p>
                   <p>Email: info@jmdtailors.com</p>
                 </div>
               </div>

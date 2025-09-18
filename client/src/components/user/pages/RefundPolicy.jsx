@@ -81,7 +81,7 @@ const RefundPolicy = () => {
             <motion.div className="mb-12" variants={fadeInUp}>
               <h2 className="text-2xl md:text-3xl font-semibold text-gray-800 mb-6 font-serif">Our Refund Policy</h2>
               <p className="text-gray-600 leading-relaxed mb-4">
-                At JAI MATA DI STITCHING, we understand that custom tailoring is a significant investment. This refund policy outlines the terms and conditions for cancellations, refunds, and exchanges for our tailoring services.
+                At JMD STITCHING PRIVATE LIMITED, we understand that custom tailoring is a significant investment. This refund policy outlines the terms and conditions for cancellations, refunds, and exchanges for our tailoring services.
               </p>
               <p className="text-gray-600 leading-relaxed">
                 Please read this policy carefully before placing your order, as custom-made garments have specific terms due to their personalized nature.
@@ -251,9 +251,10 @@ const RefundPolicy = () => {
               <div className="space-y-4 text-gray-600 leading-relaxed">
                 <p>For refund requests or questions about this policy, please contact us:</p>
                 <div className="bg-amber-50 p-6 rounded-xl">
-                  <p><strong>JAI MATA DI STITCHING</strong></p>
+                  <p><strong>JMD STITCHING PRIVATE LIMITED</strong></p>
                   <p>108, Infinity Business Park, Dombivali East, Maharashtra</p>
-                  <p>Phone: +91 797 288 9376</p>
+                  <p>Phone: +91 9082150556</p>
+                  <p>Email: info@jmdstithing.com</p>
                   <p>Email: info@jmdtailors.com</p>
                   <p className="mt-4 text-sm text-gray-500">
                     <strong>Business Hours:</strong> Monday - Saturday: 10:00 AM - 8:00 PM

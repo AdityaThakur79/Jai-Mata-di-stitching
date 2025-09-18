@@ -81,7 +81,7 @@ const ShippingPolicy = () => {
             <motion.div className="mb-12" variants={fadeInUp}>
               <h2 className="text-2xl md:text-3xl font-semibold text-gray-800 mb-6 font-serif">Delivery & Shipping</h2>
               <p className="text-gray-600 leading-relaxed mb-4">
-                At JAI MATA DI STITCHING, we ensure your custom-tailored garments reach you safely and on time. This shipping policy outlines our delivery procedures, timelines, and terms for local and outstation deliveries.
+                At JMD STITCHING PRIVATE LIMITED, we ensure your custom-tailored garments reach you safely and on time. This shipping policy outlines our delivery procedures, timelines, and terms for local and outstation deliveries.
               </p>
               <p className="text-gray-600 leading-relaxed">
                 We take great care in packaging and delivering your garments to maintain their quality and presentation.
@@ -310,9 +310,10 @@ const ShippingPolicy = () => {
               <div className="space-y-4 text-gray-600 leading-relaxed">
                 <p>For delivery-related queries or to schedule a delivery, contact us:</p>
                 <div className="bg-amber-50 p-6 rounded-xl">
-                  <p><strong>JAI MATA DI STITCHING</strong></p>
+                  <p><strong>JMD STITCHING PRIVATE LIMITED</strong></p>
                   <p>108, Infinity Business Park, Dombivali East, Maharashtra</p>
-                  <p>Phone: +91 797 288 9376</p>
+                  <p>Phone: +91 9082150556</p>
+                  <p>Email: info@jmdstithing.com</p>
                   <p>Email: info@jmdtailors.com</p>
                   <p className="mt-4 text-sm text-gray-500">
                     <strong>Delivery Hours:</strong> Monday - Saturday: 10:00 AM - 7:00 PM<br/>

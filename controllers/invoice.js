@@ -484,9 +484,9 @@ const generateInvoiceHTML = (invoice) => {
     </head>
     <body>
       <div class="header">
-        <div class="company-name">JMD Stitching</div>
+        <div class="company-name">JMD STITCHING PRIVATE LIMITED</div>
         <div>Professional Tailoring Services</div>
-        <div>Contact: +91 1234567890 | Email: info@jmdstitching.com</div>
+        <div>Contact: +91 9082150556 | Email: info@jmdstithing.com</div>
       </div>
 
       <div class="invoice-details">

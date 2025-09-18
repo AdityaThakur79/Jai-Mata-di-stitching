@@ -81,7 +81,7 @@ const TermsConditions = () => {
             <motion.div className="mb-12" variants={fadeInUp}>
               <h2 className="text-2xl md:text-3xl font-semibold text-gray-800 mb-6 font-serif">Introduction</h2>
               <p className="text-gray-600 leading-relaxed mb-4">
-                Welcome to JAI MATA DI STITCHING ("we," "our," or "us"). These Terms and Conditions ("Terms") govern your use of our tailoring services and website located at our business premises and online platforms.
+                Welcome to JMD STITCHING PRIVATE LIMITED ("we," "our," or "us"). These Terms and Conditions ("Terms") govern your use of our tailoring services and website located at our business premises and online platforms.
               </p>
               <p className="text-gray-600 leading-relaxed">
                 By accessing or using our services, you agree to be bound by these Terms. If you disagree with any part of these terms, then you may not access our services.
@@ -216,9 +216,10 @@ const TermsConditions = () => {
               <div className="space-y-4 text-gray-600 leading-relaxed">
                 <p>If you have any questions about these Terms and Conditions, please contact us:</p>
                 <div className="bg-amber-50 p-6 rounded-xl">
-                  <p><strong>JAI MATA DI STITCHING</strong></p>
+                  <p><strong>JMD STITCHING PRIVATE LIMITED</strong></p>
                   <p>108, Infinity Business Park, Dombivali East, Maharashtra</p>
-                  <p>Phone: +91 797 288 9376</p>
+                  <p>Phone: +91 9082150556</p>
+                  <p>Email: info@jmdstithing.com</p>
                   <p>Email: info@jmdtailors.com</p>
                 </div>
               </div>
