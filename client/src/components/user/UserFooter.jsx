@@ -346,6 +346,7 @@ const UserFooter = () => {
                     key={index}
                     href={social.href}
                     aria-label={social.label}
+                    target="_blank"
                     className="w-10 h-10 backdrop-blur-sm rounded-full flex items-center justify-center text-gray-600 hover:text-gray-800 transition-all duration-300 hover:scale-110 shadow-md"
                     style={{ 
                       background: 'rgba(227, 184, 115, 0.15)',
