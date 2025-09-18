@@ -10,7 +10,7 @@ const Footer = () => {
             alt="JMD Logo"
             className="h-8 w-8 rounded-full object-cover border border-amber-400 shadow"
           />
-          <span className="text-sm text-white font-semibold tracking-wide">© 2025 JAI MATA DI STITCHING</span>
+          <span className="text-sm text-white font-semibold tracking-wide">© 2025 JMD STITCHING PRIVATE LIMITED</span>
         </div>
         <p className="text-sm text-white text-center sm:text-right">
           Designed and developed by{' '}

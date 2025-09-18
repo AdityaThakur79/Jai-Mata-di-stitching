@@ -373,7 +373,7 @@ const ContactPage = () => {
                       
                       <div className="flex items-center space-x-3 text-sm text-gray-600">
                         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        <span className="font-light">We typically respond within 24 hours</span>
+                        <span className="font-light">We typically respond within 12 hours</span>
               </div>
                 </div>
                   </form>
@@ -420,20 +420,20 @@ const ContactPage = () => {
                     </h3>
                     <div className="space-y-2">
                       <a 
-                        href="tel:+917972889376" 
+                        href="tel:+919082150556" 
                         className="block text-gray-700 hover:text-gray-900 font-medium transition-all duration-300 relative group/link"
                       >
-                        +91 797 288 9376
+                        +91 9082150556
                         <span 
                           className="absolute left-0 -bottom-1 w-0 h-0.5 transition-all duration-300 group-hover/link:w-full"
                           style={{ background: '#e3b873' }}
                         ></span>
                       </a>
                       <a
-                        href="mailto:info@jmdtailors.com"
+                        href="mailto:info@jmdstithing.com"
                         className="block text-gray-600 hover:text-gray-800 font-light transition-all duration-300 relative group/link text-sm"
                       >
-                        info@jmdtailors.com
+                        info@jmdstithing.com
                         <span 
                           className="absolute left-0 -bottom-1 w-0 h-0.5 transition-all duration-300 group-hover/link:w-full"
                           style={{ background: '#e3b873' }}

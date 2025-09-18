@@ -6,7 +6,7 @@ export const registerOTPTemplate = (name, otp) => {
   <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>JAI MATA DI - Verify Your Registration</title>
+      <title>JMD STITCHING PRIVATE LIMITED - Verify Your Registration</title>
       <style>
           body, html {
               margin: 0;
@@ -67,11 +67,11 @@ export const registerOTPTemplate = (name, otp) => {
       <div class="wrapper">
           <div class="container">
             
-              <h2>Welcome to Dellcube, ${name}!</h2>
+              <h2>Welcome to JMD STITCHING PRIVATE LIMITED, ${name}!</h2>
               <p class="message">Thank you for registering. Please use the OTP below to verify your email address and complete your registration.</p>
               <div class="otp-box">${otp}</div>
               <p class="message">If you did not request this, please ignore this email.</p>
-              <div class="footer">&copy; ${new Date().getFullYear()} JMD Stitching. All rights reserved.</div>
+              <div class="footer">&copy; ${new Date().getFullYear()} JMD STITCHING PRIVATE LIMITED. All rights reserved.</div>
           </div>
       </div>
   </body>

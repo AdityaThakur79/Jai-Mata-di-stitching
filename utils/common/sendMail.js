@@ -87,7 +87,7 @@ export const sendSalarySlipEmail = async (email, employeeData, salarySlip, month
       <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; border: 2px solid #ff6b35; border-radius: 12px; background: linear-gradient(135deg, #fff5f0 0%, #ffffff 100%);">
         <div style="text-align: center; background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%); margin: -20px -20px 30px -20px; padding: 30px 20px 20px 20px; border-radius: 10px 10px 0 0;">
           <div style="margin-bottom: 15px;">
-            <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">JMD STITCHING PVT LTD</h1>
+            <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">JMD STITCHING PRIVATE LIMITED</h1>
             <h2 style="color: #fff5f0; margin: 5px 0 0 0; font-size: 16px; font-weight: normal;">SALARY SLIP</h2>
           </div>
           <p style="color: #ffffff; margin: 0; font-size: 14px; background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 20px; display: inline-block;">${month}</p>
@@ -143,7 +143,7 @@ export const sendSalarySlipEmail = async (email, employeeData, salarySlip, month
         <div style="text-align: center; color: #666; font-size: 14px; border-top: 2px solid #ff6b35; padding-top: 20px; background: #f8f9fa; margin: 0 -20px -20px -20px; padding: 20px; border-radius: 0 0 10px 10px;">
           <p style="margin: 5px 0; color: #ff6b35; font-weight: bold;">Generated on: ${new Date(salarySlip.generatedAt).toLocaleDateString('en-IN')}</p>
           <p style="margin: 5px 0; color: #666;">This is an automated salary slip. Please contact HR for any queries.</p>
-          <p style="margin: 10px 0 0 0; color: #ff6b35; font-weight: bold;">JMD STITCHING PVT LTD</p>
+          <p style="margin: 10px 0 0 0; color: #ff6b35; font-weight: bold;">JMD STITCHING PRIVATE LIMITED</p>
         </div>
       </div>
     `;
@@ -151,12 +151,12 @@ export const sendSalarySlipEmail = async (email, employeeData, salarySlip, month
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
-      subject: `JMD Stitching PVT LTD - Salary Slip for ${month} - ${employeeData.name}`,
+      subject: `JMD Stitching PRIVATE LIMITED - Salary Slip for ${month} - ${employeeData.name}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; background: #f8f9fa; padding: 20px;">
           <!-- Header -->
           <div style="background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%); padding: 25px; border-radius: 12px; text-align: center; margin-bottom: 25px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-            <h2 style="color: white; margin: 0; font-size: 28px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">JMD STITCHING PVT LTD</h2>
+            <h2 style="color: white; margin: 0; font-size: 28px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">JMD STITCHING PRIVATE LIMITED</h2>
             <p style="color: #fff5f0; margin: 8px 0 0 0; font-size: 18px; font-weight: 500;">Salary Slip for ${month}</p>
           </div>
           
@@ -165,7 +165,7 @@ export const sendSalarySlipEmail = async (email, employeeData, salarySlip, month
             <p style="color: #333; font-size: 18px; margin: 0 0 15px 0; font-weight: 600;">Dear <strong>${employeeData.name}</strong>,</p>
             <p style="color: #666; margin: 0 0 15px 0; font-size: 16px; line-height: 1.5;">Please find attached your official salary slip PDF for ${month}.</p>
             <p style="color: #666; margin: 0 0 20px 0; font-size: 16px; line-height: 1.5;">Download the main salary slip from your employee dashboard on the website, login here: <a href="https://jdmstitching.com/login" style="color: #ff6b35; text-decoration: none; font-weight: bold;">https://jdmstitching.com/login</a></p>
-            <p style="color: #ff6b35; font-weight: bold; margin: 0; font-size: 16px;">Best regards,<br>JMD Stitching PVT LTD Team</p>
+            <p style="color: #ff6b35; font-weight: bold; margin: 0; font-size: 16px;">Best regards,<br>JMD Stitching PRIVATE LIMITED Team</p>
           </div>
           
           <!-- Salary Slip Preview -->

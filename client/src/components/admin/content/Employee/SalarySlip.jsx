@@ -327,7 +327,7 @@ const SalarySlip = ({ employee, salarySlip, logoDataUrl }) => {
               <Image src={logoDataUrl} style={styles.logo} />
             )}
             <View style={styles.companyText}>
-              <Text style={styles.companyName}>JMD STITCHING PVT LTD</Text>
+              <Text style={styles.companyName}>JMD STITCHING PRIVATE LIMITED</Text>
               <Text style={styles.headerTitle}>SALARY SLIP</Text>
             </View>
           </View>

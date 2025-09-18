@@ -40,7 +40,7 @@ const EmployeeIdCard = ({ employee, logoDataUrl, profileImageDataUrl = null }) =
   const companyName = "JMD Stitching PVT LTD";
   const companyFullName = "JMD STITCHING PVT LTD";
   const companyAddress = "108,1st floor, A-115 Vijay Infinity Business Park, MIDC Phase - 1, Behind Pendharkar College, Dombivali(E), Thane - 421203, Maharashtra, India";
-  const companyEmail = "info@jmdstitching.com";
+  const companyEmail = "info@jmdstithing.com";
   const companyPhone = "9082150556";
 
   // Function to get profile image
