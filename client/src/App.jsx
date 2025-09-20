@@ -7,7 +7,6 @@ import VerifyOTP from "@/components/verifyOtp";
 import NotFound from "@/utils/NotFound";
 import UnAuthorized from "@/utils/UnAuthorized";
 import RoleProtectedRoute from "@/utils/RoleProtectedRoute";
-import EmployeeProtectedRoute from "@/utils/EmployeeProtectedRoute";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/admin/content/sidebar";
 import Footer from "@/components/Footer";
@@ -94,7 +93,13 @@ import ManageGallery from './components/admin/content/gallery/ManageGallery';
 import CreateCategory from './components/admin/content/categories/CreateCategory';
 import UpdateCategory from './components/admin/content/categories/UpdateCategory';
 import ManageCategories from './components/admin/content/categories/ManageCategories';
-
+import Clients from "./components/admin/content/Client/Clients.jsx";
+import UpdateClient from "./components/admin/content/Client/UpdateClient.jsx";
+import CreateOrder from "./components/admin/content/Client/CreateOrder.jsx";
+import UpdateOrder from "./components/admin/content/Client/UpdateOrder.jsx";
+import CompletedOrder from "./components/admin/content/Client/CompletedOrder.jsx";
+import ClientPendingOrders from "./components/admin/content/Client/PendingOrders.jsx";
+import CreateClient from "./components/admin/content/Client/CreateClient.jsx";
 const appRouter = createBrowserRouter([
   //Homepage Routes
   {
@@ -171,11 +176,11 @@ const appRouter = createBrowserRouter([
   {
     path: "employee",
     element: (
-      <EmployeeProtectedRoute>
+      <>
         <AdminNavbar />
         <EmployeeSidebar />
         {/* <Footer /> */}
-      </EmployeeProtectedRoute>
+      </>
     ),
     children: [
       {
@@ -385,6 +390,35 @@ const appRouter = createBrowserRouter([
         path: "website/categories",
         element: <ManageCategories />,
       },
+      //Client management
+      {
+        path:"clients",
+        element:<Clients/>
+      },
+      {
+        path:"create-client",
+        element:<CreateClient/>
+      },
+      {
+        path:"update-client",
+        element:<UpdateClient/>
+      },
+      {
+        path:"create-order",
+        element:<CreateOrder/>
+      },
+      {
+        path:"edit-order/:id",
+        element:<UpdateOrder/>
+      },
+      {
+        path:"pending-client-orders",
+        element:<ClientPendingOrders/>
+      },
+      {
+        path:"completed-client-orders",
+        element:<CompletedOrder/>
+      }
     ],
   },
 

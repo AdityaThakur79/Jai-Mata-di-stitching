@@ -374,6 +374,17 @@ const Sidebar = () => {
               </Link>
             </AccordionItem>
 
+            <AccordionItem value="item-12">
+              <Link
+                to="/admin/create-client"
+                className="flex items-center gap-2 hover:text-[#EB811F] py-4 px-0"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Plus size={22} />
+                <h2 className="text-sm">Add Client</h2>
+              </Link>
+            </AccordionItem>
+
             <AccordionItem value="item-11">
               <AccordionTrigger className="hover:no-underline">
                 <div className="flex items-center gap-2">
@@ -389,6 +400,16 @@ const Sidebar = () => {
                 >
                   <PersonStandingIcon size={22} />
                   <h2>Customer Master</h2>
+                </Link>
+              </AccordionContent>
+              <AccordionContent>
+                <Link
+                  to="/admin/clients"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <User2Icon size={22} />
+                  <h2>Client Management</h2>
                 </Link>
               </AccordionContent>
              <AccordionContent>

@@ -24,6 +24,11 @@ const CreateBranch = () => {
     scn: "",
     phone: "",
     email: "",
+    bankDetails: {
+      bankName: "",
+      accountNumber: "",
+      ifsc: "",
+    },
     status: "active",
   });
 
@@ -32,7 +37,18 @@ const CreateBranch = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    if (name.startsWith('bankDetails.')) {
+      const bankField = name.split('.')[1];
+      setForm((prev) => ({
+        ...prev,
+        bankDetails: {
+          ...prev.bankDetails,
+          [bankField]: value,
+        },
+      }));
+    } else {
+      setForm((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleStatusChange = (val) => {
@@ -134,6 +150,36 @@ const CreateBranch = () => {
                 value={form.email}
                 onChange={handleChange}
                 placeholder="Enter branch email"
+                className="h-8 text-sm bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md transition-all duration-200 hover:border-gray-400"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium text-gray-700">Bank Name</Label>
+              <Input
+                name="bankDetails.bankName"
+                value={form.bankDetails.bankName}
+                onChange={handleChange}
+                placeholder="Enter bank name"
+                className="h-8 text-sm bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md transition-all duration-200 hover:border-gray-400"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium text-gray-700">Account Number</Label>
+              <Input
+                name="bankDetails.accountNumber"
+                value={form.bankDetails.accountNumber}
+                onChange={handleChange}
+                placeholder="Enter account number"
+                className="h-8 text-sm bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md transition-all duration-200 hover:border-gray-400"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium text-gray-700">IFSC Code</Label>
+              <Input
+                name="bankDetails.ifsc"
+                value={form.bankDetails.ifsc}
+                onChange={handleChange}
+                placeholder="Enter IFSC code"
                 className="h-8 text-sm bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md transition-all duration-200 hover:border-gray-400"
               />
             </div>

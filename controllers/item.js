@@ -3,7 +3,7 @@ import { v2 as cloudinary } from "cloudinary";
 
 export const createItemMaster = async (req, res) => {
   try {
-    const { name, description, fields, stitchingCharge, category } = req.body;
+    const { name, description, fields, stitchingCharge, category, styles } = req.body;
 
     if (!name || !Array.isArray(fields) || !category) {
       return res.status(400).json({
@@ -33,12 +33,29 @@ export const createItemMaster = async (req, res) => {
       secondaryItemImagePublicId = req.files.secondaryItemImage[0].filename;
     }
 
+    // Parse styles if provided
+    let parsedStyles = [];
+    if (styles) {
+      try {
+        parsedStyles = JSON.parse(styles);
+        if (!Array.isArray(parsedStyles)) {
+          throw new Error("Styles must be an array");
+        }
+      } catch (parseError) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid styles format. Must be a valid JSON array.",
+        });
+      }
+    }
+
     const itemMaster = await ItemMaster.create({
       name: name.trim().toLowerCase(),
       description,
       fields,
       stitchingCharge,
       category,
+      styles: parsedStyles,
       itemImage,
       itemImagePublicId,
       secondaryItemImage,
@@ -136,7 +153,7 @@ export const getItemMasterById = async (req, res) => {
 
 export const updateItemMaster = async (req, res) => {
   try {
-    const { itemId, itemType, description, fields, stitchingCharge, category } = req.body;
+    const { itemId, name, description, fields, stitchingCharge, category, styles } = req.body;
 
     const existingItem = await ItemMaster.findById(itemId);
     if (!existingItem) {
@@ -161,7 +178,23 @@ export const updateItemMaster = async (req, res) => {
       existingItem.secondaryItemImagePublicId = req.files.secondaryItemImage[0].filename;
     }
 
-    existingItem.itemType = itemType || existingItem.itemType;
+    // Parse styles if provided
+    if (styles !== undefined) {
+      try {
+        const parsedStyles = JSON.parse(styles);
+        if (!Array.isArray(parsedStyles)) {
+          throw new Error("Styles must be an array");
+        }
+        existingItem.styles = parsedStyles;
+      } catch (parseError) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid styles format. Must be a valid JSON array.",
+        });
+      }
+    }
+
+    existingItem.name = name ? name.trim().toLowerCase() : existingItem.name;
     existingItem.description = description || existingItem.description;
     existingItem.fields = fields || existingItem.fields;
     existingItem.stitchingCharge = stitchingCharge || existingItem.stitchingCharge;

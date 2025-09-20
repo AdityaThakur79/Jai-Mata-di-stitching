@@ -25,6 +25,9 @@ const UpdateBranch = () => {
   const [scn, setScn] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [ifsc, setIfsc] = useState("");
   const [status, setStatus] = useState("active");
 
   const location = useLocation();
@@ -48,6 +51,9 @@ const UpdateBranch = () => {
       setScn(b.scn || "");
       setPhone(b.phone || "");
       setEmail(b.email || "");
+      setBankName(b.bankDetails?.bankName || "");
+      setAccountNumber(b.bankDetails?.accountNumber || "");
+      setIfsc(b.bankDetails?.ifsc || "");
       setStatus(b.status || "active");
     }
   }, [data, isSuccess]);
@@ -62,6 +68,11 @@ const UpdateBranch = () => {
       scn,
       phone,
       email,
+      bankDetails: {
+        bankName,
+        accountNumber,
+        ifsc,
+      },
       status,
     });
   };
@@ -145,6 +156,33 @@ const UpdateBranch = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter email"
+                className="h-8 text-sm bg-white border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-md transition-all duration-200 hover:border-gray-400"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium text-gray-700">Bank Name</Label>
+              <Input
+                value={bankName}
+                onChange={(e) => setBankName(e.target.value)}
+                placeholder="Enter bank name"
+                className="h-8 text-sm bg-white border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-md transition-all duration-200 hover:border-gray-400"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium text-gray-700">Account Number</Label>
+              <Input
+                value={accountNumber}
+                onChange={(e) => setAccountNumber(e.target.value)}
+                placeholder="Enter account number"
+                className="h-8 text-sm bg-white border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-md transition-all duration-200 hover:border-gray-400"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium text-gray-700">IFSC Code</Label>
+              <Input
+                value={ifsc}
+                onChange={(e) => setIfsc(e.target.value)}
+                placeholder="Enter IFSC code"
                 className="h-8 text-sm bg-white border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-md transition-all duration-200 hover:border-gray-400"
               />
             </div>

@@ -7,7 +7,8 @@ const RoleProtectedRoute = ({ children, allowedRoles }) => {
   // const token = Cookies.get("token");
   const token = localStorage.getItem("token");
   console.log(token);
-  if (!token) return <Navigate to="/auth/login" replace />;
+  
+  if (!token) return <Navigate to="/login" replace />;
 
   try {
     const decoded = jwtDecode(token);
@@ -20,7 +21,7 @@ const RoleProtectedRoute = ({ children, allowedRoles }) => {
       return <Navigate to="/unauthorized" replace />;
     }
   } catch (err) {
-    return <Navigate to="/auth/login" replace />;
+    return <Navigate to="/login" replace />;
   }
 };
 

@@ -3,7 +3,7 @@ import Branch from "../models/branch.js";
 // Create Branch
 export const createBranch = async (req, res) => {
   try {
-    const { branchName, address, gst, pan, scn, phone, email, status } = req.body;
+    const { branchName, address, gst, pan, scn, phone, email, bankDetails, status } = req.body;
     if (!branchName || !address) {
       return res.status(400).json({ success: false, message: "Branch name and address are required." });
     }
@@ -11,7 +11,7 @@ export const createBranch = async (req, res) => {
     if (existing) {
       return res.status(400).json({ success: false, message: "Branch with this name already exists." });
     }
-    const branch = await Branch.create({ branchName, address, gst, pan, scn, phone, email, status });
+    const branch = await Branch.create({ branchName, address, gst, pan, scn, phone, email, bankDetails, status });
     res.status(201).json({ success: true, message: "Branch created successfully.", branch });
   } catch (err) {
     console.error("Error creating branch:", err);
@@ -80,7 +80,7 @@ export const getBranchById = async (req, res) => {
 // Update Branch
 export const updateBranch = async (req, res) => {
   try {
-    const { branchId, branchName, address, gst, pan, scn, phone, email, status } = req.body;
+    const { branchId, branchName, address, gst, pan, scn, phone, email, bankDetails, status } = req.body;
     const branch = await Branch.findById(branchId);
     if (!branch) {
       return res.status(404).json({ success: false, message: "Branch not found" });
@@ -92,6 +92,13 @@ export const updateBranch = async (req, res) => {
     branch.scn = scn || branch.scn;
     branch.phone = phone || branch.phone;
     branch.email = email || branch.email;
+    if (bankDetails) {
+      branch.bankDetails = {
+        bankName: bankDetails.bankName || branch.bankDetails?.bankName || "",
+        accountNumber: bankDetails.accountNumber || branch.bankDetails?.accountNumber || "",
+        ifsc: bankDetails.ifsc || branch.bankDetails?.ifsc || "",
+      };
+    }
     branch.status = status || branch.status;
     await branch.save();
     res.status(200).json({ success: true, message: "Branch updated successfully", branch });

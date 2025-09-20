@@ -78,9 +78,11 @@ const Navbar = () => {
           <img
             src="/images/jmd_logo.jpeg"
             alt="Jai Mata Di Logo"
-            className="w-12 h-12 rounded-full border-2 border-[#EB811F]/30 shadow-sm hover:shadow-md transition-shadow"
+            className="w-16 h-16 rounded-full border-2 border-[#EB811F]/30 shadow-sm hover:shadow-md transition-shadow"
           />
         </Link>
+
+       
 
         <div className="flex items-center gap-4">
           {employee ? (

@@ -31,6 +31,11 @@ const branchSchema = new mongoose.Schema({
     type: String,
     default: "",
   },
+  bankDetails: {
+    bankName: String,
+    accountNumber: String,
+    ifsc: String,
+  },
   status: {
     type: String,
     enum: ["active", "inactive"],
