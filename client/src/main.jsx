@@ -9,6 +9,10 @@ import { Provider } from 'react-redux'
 import { appStore } from './app/store'
 import { Toaster } from 'react-hot-toast'
 
+// Buffer polyfill for @react-pdf/renderer
+import { Buffer } from 'buffer'
+window.Buffer = Buffer
+
 createRoot(document.getElementById('root')).render(
   <>
     <Provider store={appStore}>

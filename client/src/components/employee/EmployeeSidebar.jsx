@@ -83,6 +83,19 @@ const EmployeeSidebar = () => {
   const rolePermissions = {
     // Define which roles can access which menu items
     'director': ['*'], // Director can access everything
+    'billeradmin': [
+      'dashboard',
+      'invoices',
+      'measurement',
+      'stocks',
+      'delivery',
+      'order-details',
+      'employee-dashboard',
+      'create-order',
+      'client-management',
+      'profile',
+      'salary'
+    ],
     'manager': [
       'dashboard',
       'invoices',
@@ -259,6 +272,19 @@ const EmployeeSidebar = () => {
         { title: "Fabric Invoice", icon: ReceiptIndianRupee, path: "/employee/fabric-invoices" },
         { title: "Stitching Invoice", icon: ReceiptText, path: "/employee/stitching-invoices" },
         { title: "Quotation", icon: Quote, path: "/employee/quotations" },
+      ],
+    },
+    {
+      id: "client-management",
+      title: "Client Management",
+      icon: User2Icon,
+      subItems: [
+        { title: "Clients", icon: Settings, path: "/employee/clients" },
+        { title: "Pending Orders", icon: Tags, path: "/employee/pending-client-orders" },
+        { title: "Completed Orders", icon: Image, path: "/employee/completed-client-orders" },
+        { title: "Create Order", icon: Plus, path: "/employee/create-order" },
+
+        // { title: "Website Settings", icon: Layers, path: "/employee/website/settings" },
       ],
     },
     {

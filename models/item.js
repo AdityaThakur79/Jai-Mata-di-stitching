@@ -1,5 +1,20 @@
 import mongoose from "mongoose";
 
+// Style schema for each item
+const styleSchema = new mongoose.Schema({
+    styleId: { 
+        type: String, 
+        required: true 
+    },
+    styleName: { 
+        type: String, 
+        required: true 
+    },
+    description: { 
+        type: String 
+    }
+}, { _id: false });
+
 const itemMasterSchema = new mongoose.Schema({
     name: { type: String, required: true, unique: true },
     fields: [{ type: String, required: true }],
@@ -14,6 +29,7 @@ const itemMasterSchema = new mongoose.Schema({
         default: 0,
         min: 0,
     },
+    styles: [styleSchema], // Array of styles for this item
     createdAt: { type: Date, default: Date.now },
 });
 

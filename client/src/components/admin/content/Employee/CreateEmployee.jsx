@@ -132,12 +132,13 @@ const CreateEmployee = () => {
 
   const toggleSecondaryRole = (role) => {
     setForm((prev) => {
-      const exists = prev.secondaryRoles.includes(role);
+      const currentRoles = prev.secondaryRoles || [];
+      const exists = currentRoles.includes(role);
       return {
         ...prev,
         secondaryRoles: exists
-          ? prev.secondaryRoles.filter((r) => r !== role)
-          : [...prev.secondaryRoles, role],
+          ? currentRoles.filter((r) => r !== role)
+          : [...currentRoles, role],
       };
     });
   };
@@ -364,7 +365,7 @@ const CreateEmployee = () => {
                         type="button"
                         onClick={() => toggleSecondaryRole(r)}
                         className={`h-7 px-3 rounded border text-xs capitalize ${
-                          form.secondaryRoles.includes(r)
+                          form.secondaryRoles?.includes(r)
                             ? "bg-orange-600 text-white border-orange-600"
                             : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
                         }`}

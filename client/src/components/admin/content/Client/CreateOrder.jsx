@@ -1,0 +1,1063 @@
+import React, { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectItem,
+  SelectContent,
+} from "@/components/ui/select";
+import { useNavigate } from "react-router-dom";
+import { PlusCircle, Trash2, Loader2, User, Package, Users, ShoppingCart, Calendar } from "lucide-react";
+import toast from "react-hot-toast";
+import { useCreateOrderMutation } from "@/features/api/orderApi";
+import { useGetAllItemMastersQuery } from "@/features/api/itemApi";
+import { useGetAllBranchesQuery } from "@/features/api/branchApi";
+import { useGetAllFabricsQuery } from "@/features/api/fabricApi";
+import { useGetAllStylesQuery } from "@/features/api/styleApi";
+import { useGetAllClientsQuery } from "@/features/api/clientApi";
+import { useCreateClientMutation } from "@/features/api/clientApi";
+
+// Form Section Component
+const FormSection = ({ title, icon: Icon, children, className = "" }) => (
+  <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${className}`}>
+    <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100">
+      <Icon className="w-4 h-4 text-gray-600" />
+      <h3 className="font-semibold text-gray-800 text-sm">{title}</h3>
+    </div>
+    {children}
+  </div>
+);
+
+// Form Field Component
+const FormField = ({ label, required, children, className = "" }) => (
+  <div className={`space-y-1 ${className}`}>
+    <Label className="text-xs font-medium text-gray-700">
+      {label} {required && <span className="text-red-500">*</span>}
+    </Label>
+    {children}
+  </div>
+);
+
+const CreateOrder = () => {
+  const navigate = useNavigate();
+
+  const [orderType, setOrderType] = useState("");
+  const [existingClient, setExistingClient] = useState(false);
+  const [selectedClientId, setSelectedClientId] = useState("");
+  const [clientDetails, setClientDetails] = useState({
+    name: "",
+    mobile: "",
+    email: "",
+    address: "",
+    city: "",
+    state: "",
+    pincode: "",
+  });
+  const [branchId, setBranchId] = useState("");
+  const [expectedDeliveryDate, setExpectedDeliveryDate] = useState("");
+  const [priority, setPriority] = useState("medium");
+  const [items, setItems] = useState([
+    {
+      itemType: "",
+      measurement: {},
+      fabric: "",
+      fabricMeters: "",
+      style: "",
+      quantity: 1,
+      designNumber: "",
+      description: "",
+    },
+  ]);
+  const [notes, setNotes] = useState("");
+  const [specialInstructions, setSpecialInstructions] = useState("");
+  
+  // Pricing state
+  const [discountType, setDiscountType] = useState("percentage");
+  const [discountValue, setDiscountValue] = useState("");
+  const [taxRate, setTaxRate] = useState("18");
+  
+  // Payment state
+  const [advancePayment, setAdvancePayment] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentNotes, setPaymentNotes] = useState("");
+
+  // API calls
+  const { data: itemData } = useGetAllItemMastersQuery({ page: 1, limit: 100 });
+  const { data: branchesData } = useGetAllBranchesQuery();
+  const { data: fabricsData } = useGetAllFabricsQuery({ page: 1, limit: 100 });
+  const { data: stylesData } = useGetAllStylesQuery({ page: 1, limit: 100 });
+  const { data: clientsData } = useGetAllClientsQuery({ page: 1, limit: 100 });
+
+  const [createOrder, { isLoading: isCreatingOrder }] = useCreateOrderMutation();
+  const [createClient, { isLoading: isCreatingClient }] = useCreateClientMutation();
+
+  // Calculate detailed item breakdown
+  const calculateItemBreakdown = (item, index) => {
+    if (!item.itemType || !item.quantity) return null;
+    
+    const selectedItem = itemData?.items?.find(i => i._id === item.itemType);
+    if (!selectedItem) return null;
+    
+    let itemPrice = 0;
+    let fabricCost = 0;
+    let stitchingCost = 0;
+    const breakdown = [];
+    
+    // Add fabric cost if fabric is selected
+    if (item.fabric && item.fabricMeters) {
+      const selectedFabric = fabricsData?.fabrics?.find(f => f._id === item.fabric);
+      if (selectedFabric) {
+        fabricCost = selectedFabric.pricePerMeter * parseFloat(item.fabricMeters);
+        itemPrice += fabricCost;
+        breakdown.push({
+          type: 'fabric',
+          name: selectedFabric.name,
+          rate: selectedFabric.pricePerMeter,
+          quantity: parseFloat(item.fabricMeters),
+          total: fabricCost,
+          unit: 'per meter'
+        });
+      }
+    }
+    
+    // Add stitching charge if applicable
+    if (orderType === "stitching" || orderType === "fabric_stitching") {
+      stitchingCost = selectedItem.stitchingCharge || 0;
+      itemPrice += stitchingCost;
+      breakdown.push({
+        type: 'stitching',
+        name: 'Stitching Charge',
+        rate: stitchingCost,
+        quantity: 1,
+        total: stitchingCost,
+        unit: 'per item'
+      });
+    }
+    
+    const totalItemPrice = itemPrice * parseInt(item.quantity);
+    
+    return {
+      itemName: selectedItem.name,
+      quantity: parseInt(item.quantity),
+      unitPrice: itemPrice,
+      totalPrice: totalItemPrice,
+      breakdown,
+      fabric: item.fabric ? fabricsData?.fabrics?.find(f => f._id === item.fabric) : null
+    };
+  };
+
+  // Calculate order total
+  const calculateOrderTotal = () => {
+    let subtotal = 0;
+    const itemBreakdowns = [];
+    
+    items.forEach((item, index) => {
+      const breakdown = calculateItemBreakdown(item, index);
+      if (breakdown) {
+        subtotal += breakdown.totalPrice;
+        itemBreakdowns.push(breakdown);
+      }
+    });
+    
+    // Calculate discount
+    let discountAmount = 0;
+    if (discountValue && parseFloat(discountValue) > 0) {
+      if (discountType === "percentage") {
+        discountAmount = (subtotal * parseFloat(discountValue)) / 100;
+      } else {
+        discountAmount = parseFloat(discountValue);
+      }
+    }
+    
+    // Calculate taxable amount
+    const taxableAmount = subtotal - discountAmount;
+    
+    // Calculate tax
+    const taxAmount = (taxableAmount * parseFloat(taxRate)) / 100;
+    
+    // Calculate total
+    const totalAmount = taxableAmount + taxAmount;
+    
+    // Calculate advance payment
+    const advanceAmount = advancePayment ? parseFloat(advancePayment) : 0;
+    const balanceAmount = totalAmount - advanceAmount;
+    
+    return {
+      subtotal,
+      discountAmount,
+      taxableAmount,
+      taxAmount,
+      totalAmount,
+      advanceAmount,
+      balanceAmount,
+      itemBreakdowns
+    };
+  };
+
+  const orderTotal = calculateOrderTotal();
+
+  // Force re-render when pricing dependencies change
+  useEffect(() => {
+    // This will trigger recalculation when items, discount, tax rate, or payment changes
+  }, [items, discountType, discountValue, taxRate, orderType, itemData, fabricsData, advancePayment]);
+
+  // Format currency
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+    }).format(amount);
+  };
+
+  const handleItemChange = (index, key, value) => {
+    const updated = [...items];
+    updated[index][key] = value;
+    
+    // Reset measurements when item type changes
+    if (key === "itemType") {
+      updated[index].measurement = {};
+      updated[index].style = ""; // Reset style when item type changes
+    }
+    
+    // Reset fabric meters when fabric changes
+    if (key === "fabric") {
+      updated[index].fabricMeters = "";
+    }
+    
+    setItems(updated);
+  };
+
+  const handleMeasurementChange = (index, field, value) => {
+    const updated = [...items];
+    updated[index].measurement[field] = value;
+    setItems(updated);
+  };
+
+  const addItem = () => {
+    setItems([
+      ...items,
+      {
+        itemType: "",
+        measurement: {},
+        fabric: "",
+        fabricMeters: "",
+        style: "",
+        quantity: 1,
+        designNumber: "",
+        description: "",
+      },
+    ]);
+  };
+
+  const removeItem = (index) => {
+    if (items.length > 1) {
+      setItems(items.filter((_, i) => i !== index));
+    }
+  };
+
+  const validateForm = () => {
+    // Check required fields
+    if (!orderType) {
+      toast.error("Please select an order type");
+      return false;
+    }
+
+    if (!branchId) {
+      toast.error("Please select a branch");
+      return false;
+    }
+
+    // Check client details
+    if (existingClient && !selectedClientId) {
+      toast.error("Please select a client");
+      return false;
+    }
+
+    if (!existingClient) {
+      if (!clientDetails.name || !clientDetails.mobile || !clientDetails.address || !clientDetails.city || !clientDetails.state || !clientDetails.pincode) {
+        toast.error("Please fill in all required client details");
+        return false;
+      }
+    }
+
+    // Check items
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (!item.itemType) {
+        toast.error(`Please select item type for item ${i + 1}`);
+        return false;
+      }
+
+      if (!item.quantity || item.quantity < 1) {
+        toast.error(`Please enter valid quantity for item ${i + 1}`);
+        return false;
+      }
+
+      // Check fabric validation
+      if (item.fabric && (!item.fabricMeters || item.fabricMeters < 2)) {
+        toast.error(`Fabric meters must be at least 2 for item ${i + 1}`);
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
+    try {
+      let clientId = null;
+      let finalClientDetails = {};
+
+      if (existingClient) {
+        // Use existing client
+        clientId = selectedClientId;
+        const selectedClient = clientsData?.clients?.find(c => c._id === selectedClientId);
+        if (selectedClient) {
+          finalClientDetails = {
+            name: selectedClient.name,
+            mobile: selectedClient.mobile,
+            email: selectedClient.email,
+            address: selectedClient.address,
+            city: selectedClient.city,
+            state: selectedClient.state,
+            pincode: selectedClient.pincode,
+          };
+        }
+      } else {
+        // Create new client first
+        const clientFormData = new FormData();
+        Object.keys(clientDetails).forEach(key => {
+          clientFormData.append(key, clientDetails[key]);
+        });
+
+        const clientResponse = await createClient(clientFormData);
+        if (clientResponse.data?.success) {
+          clientId = clientResponse.data.client._id;
+          finalClientDetails = clientDetails;
+        } else {
+          toast.error("Failed to create client");
+          return;
+        }
+      }
+
+      // Create order
+      const orderData = {
+        orderType,
+        client: clientId,
+        clientDetails: finalClientDetails,
+        items: items.map(item => ({
+          ...item,
+          fabricMeters: item.fabric ? parseFloat(item.fabricMeters) : undefined,
+          quantity: parseInt(item.quantity)
+        })),
+        branchId,
+        expectedDeliveryDate: expectedDeliveryDate || null,
+        priority,
+        notes,
+        specialInstructions,
+        discountType,
+        discountValue: discountValue ? parseFloat(discountValue) : 0,
+        taxRate: parseFloat(taxRate),
+        advancePayment: advancePayment ? parseFloat(advancePayment) : 0,
+        paymentMethod,
+        paymentNotes,
+      };
+
+      const response = await createOrder(orderData);
+      
+      if (response.data?.success) {
+        toast.success("Order created successfully!");
+        navigate("/employee/pending-client-orders");
+      } else {
+        toast.error(response.data?.message || "Failed to create order");
+      }
+    } catch (error) {
+      console.error("Error creating order:", error);
+      toast.error("An error occurred while creating the order");
+    }
+  };
+
+  return (
+    <div className="min-h-screen py-4 px-2 sm:px-4">
+      <div className="container mx-auto">
+        {/* Header */}
+        <div className="mb-6">
+          <div className="inline-flex items-center justify-center w-12 h-12 bg-orange-600 rounded-full shadow-lg mb-3">
+            <ShoppingCart className="w-6 h-6 text-white" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">Create Order</h1>
+          <p className="text-gray-600 text-sm">Create a new order with client and item details</p>
+        </div>
+
+        <div className="space-y-4">
+          {/* Order Information */}
+          <FormSection title="Order Information" icon={ShoppingCart}>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+              <FormField label="Order Type" required>
+                <Select value={orderType} onValueChange={setOrderType}>
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue placeholder="Select order type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fabric">Fabric Only</SelectItem>
+                    <SelectItem value="fabric_stitching">Fabric + Stitching</SelectItem>
+                    <SelectItem value="stitching">Stitching Only</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormField>
+
+              <FormField label="Priority">
+                <Select value={priority} onValueChange={setPriority}>
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="urgent">Urgent</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormField>
+
+              <FormField label="Expected Delivery Date">
+                <Input
+                  type="date"
+                  value={expectedDeliveryDate}
+                  onChange={(e) => setExpectedDeliveryDate(e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </FormField>
+
+              <FormField label="Branch" required>
+                <Select value={branchId} onValueChange={setBranchId}>
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue placeholder="Select branch" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {branchesData?.branches?.filter(b => b._id && b._id.trim() !== '' && b.branchName).length > 0 ? (
+                      branchesData.branches.filter(b => b._id && b._id.trim() !== '' && b.branchName).map((b) => (
+                        <SelectItem key={b._id} value={b._id}>
+                          {b.branchName} - {b.address}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="no-branches" disabled>
+                        No branches available
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </FormField>
+            </div>
+          </FormSection>
+
+          {/* Client Information */}
+          <FormSection title="Client Information" icon={User}>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <Label className="text-sm font-medium">Client Type:</Label>
+                <Select
+                  value={existingClient ? "existing" : "new"}
+                  onValueChange={(v) => setExistingClient(v === "existing")}
+                >
+                  <SelectTrigger className="w-48 h-8 text-sm">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="new">New Client</SelectItem>
+                    <SelectItem value="existing">Existing Client</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {existingClient ? (
+                <FormField label="Select Client" required>
+                  <Select
+                    value={selectedClientId}
+                    onValueChange={setSelectedClientId}
+                  >
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder="Choose existing client" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {clientsData?.clients?.filter(c => c._id && c._id.trim() !== '' && c.name).length > 0 ? (
+                        clientsData.clients.filter(c => c._id && c._id.trim() !== '' && c.name).map((c) => (
+                          <SelectItem key={c._id} value={c._id}>
+                            {c.name} - {c.mobile}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="no-clients" disabled>
+                          No clients available
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </FormField>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <FormField label="Name" required>
+                    <Input
+                      placeholder="Client name"
+                      value={clientDetails.name}
+                      onChange={(e) =>
+                        setClientDetails({ ...clientDetails, name: e.target.value })
+                      }
+                      className="h-8 text-sm"
+                    />
+                  </FormField>
+
+                  <FormField label="Mobile" required>
+                    <Input
+                      placeholder="Mobile number"
+                      value={clientDetails.mobile}
+                      onChange={(e) =>
+                        setClientDetails({ ...clientDetails, mobile: e.target.value })
+                      }
+                      className="h-8 text-sm"
+                    />
+                  </FormField>
+
+                  <FormField label="Email">
+                    <Input
+                      placeholder="Email address"
+                      type="email"
+                      value={clientDetails.email}
+                      onChange={(e) =>
+                        setClientDetails({ ...clientDetails, email: e.target.value })
+                      }
+                      className="h-8 text-sm"
+                    />
+                  </FormField>
+
+                  <FormField label="Address" required>
+                    <Input
+                      placeholder="Complete address"
+                      value={clientDetails.address}
+                      onChange={(e) =>
+                        setClientDetails({ ...clientDetails, address: e.target.value })
+                      }
+                      className="h-8 text-sm"
+                    />
+                  </FormField>
+
+                  <FormField label="City" required>
+                    <Input
+                      placeholder="City"
+                      value={clientDetails.city}
+                      onChange={(e) =>
+                        setClientDetails({ ...clientDetails, city: e.target.value })
+                      }
+                      className="h-8 text-sm"
+                    />
+                  </FormField>
+
+                  <FormField label="State" required>
+                    <Input
+                      placeholder="State"
+                      value={clientDetails.state}
+                      onChange={(e) =>
+                        setClientDetails({ ...clientDetails, state: e.target.value })
+                      }
+                      className="h-8 text-sm"
+                    />
+                  </FormField>
+
+                  <FormField label="Pincode" required>
+                    <Input
+                      placeholder="Pincode"
+                      value={clientDetails.pincode}
+                      onChange={(e) =>
+                        setClientDetails({ ...clientDetails, pincode: e.target.value })
+                      }
+                      className="h-8 text-sm"
+                    />
+                  </FormField>
+                </div>
+              )}
+            </div>
+          </FormSection>
+
+
+          {/* Order Items */}
+          <FormSection title="Order Items" icon={Package}>
+            <div className="space-y-4">
+              {items.map((item, index) => (
+                <div key={index} className="border rounded-lg p-4 bg-gray-50">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-medium text-gray-900">
+                      Item {index + 1}
+                    </h4>
+                    {items.length > 1 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeItem(index)}
+                        className="text-red-600 hover:text-red-700 h-8"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
+                    <FormField label="Item Type" required>
+                      <Select
+                        value={item.itemType}
+                        onValueChange={(v) => handleItemChange(index, "itemType", v)}
+                      >
+                        <SelectTrigger className="h-8 text-sm">
+                          <SelectValue placeholder="Select item type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {itemData?.items?.filter(i => i._id && i._id.trim() !== '' && i.name).length > 0 ? (
+                            itemData.items.filter(i => i._id && i._id.trim() !== '' && i.name).map((i) => (
+                              <SelectItem key={i._id} value={i._id}>
+                                {i.name}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-items" disabled>
+                              No items available
+                            </SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </FormField>
+
+                    <FormField label="Quantity" required>
+                      <Input
+                        type="number"
+                        min={1}
+                        placeholder="Quantity"
+                        value={item.quantity || 1}
+                        onChange={(e) =>
+                          handleItemChange(index, "quantity", e.target.value)
+                        }
+                        className="h-8 text-sm"
+                      />
+                    </FormField>
+
+                    <FormField label="Style">
+                      <Select
+                        value={item.style}
+                        onValueChange={(v) => handleItemChange(index, "style", v)}
+                      >
+                        <SelectTrigger className="h-8 text-sm">
+                          <SelectValue placeholder="Select style" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {itemData?.items?.find((i) => i._id === item.itemType)?.styles?.filter(s => s.styleId && s.styleId.trim() !== '' && s.styleName).length > 0 ? (
+                            itemData.items.find((i) => i._id === item.itemType).styles
+                              .filter(s => s.styleId && s.styleId.trim() !== '' && s.styleName) // Filter out empty styleIds and styleNames
+                              .map((s) => (
+                                <SelectItem key={s.styleId} value={s.styleId}>
+                                  {s.styleName}
+                                </SelectItem>
+                              ))
+                          ) : (
+                            <SelectItem value="no-styles" disabled>
+                              No styles available for this item
+                            </SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </FormField>
+
+                    <FormField label="Fabric">
+                      <Select
+                        value={item.fabric}
+                        onValueChange={(v) => handleItemChange(index, "fabric", v)}
+                      >
+                        <SelectTrigger className="h-8 text-sm">
+                          <SelectValue placeholder="Select fabric" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {fabricsData?.fabrics?.filter(f => f._id && f._id.trim() !== '' && f.name).length > 0 ? (
+                            fabricsData.fabrics.filter(f => f._id && f._id.trim() !== '' && f.name).map((f) => (
+                              <SelectItem key={f._id} value={f._id}>
+                                {f.name} - ₹{f.pricePerMeter}/m
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-fabrics" disabled>
+                              No fabrics available
+                            </SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </FormField>
+
+                    <FormField label={`Fabric Meters ${item.fabric ? "*" : ""}`}>
+                      <Input
+                        type="number"
+                        min={2}
+                        step={0.1}
+                        placeholder="Enter meters"
+                        value={item.fabricMeters || ""}
+                        onChange={(e) =>
+                          handleItemChange(index, "fabricMeters", e.target.value)
+                        }
+                        className="h-8 text-sm"
+                        disabled={!item.fabric}
+                      />
+                    </FormField>
+
+                    <FormField label="Design Number">
+                      <Input
+                        placeholder="Design number"
+                        value={item.designNumber || ""}
+                        onChange={(e) =>
+                          handleItemChange(index, "designNumber", e.target.value)
+                        }
+                        className="h-8 text-sm"
+                      />
+                    </FormField>
+                  </div>
+
+                  {/* Measurements */}
+                  {itemData?.items?.find((i) => i._id === item.itemType)?.fields && (
+                    <div className="mb-4">
+                      <Label className="text-sm font-medium mb-2 block">
+                        Measurements
+                      </Label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {itemData.items
+                          .find((i) => i._id === item.itemType)
+                          ?.fields?.map((field) => (
+                            <Input
+                              key={field}
+                              type="number"
+                              placeholder={`${field} (cm)`}
+                              value={item.measurement[field] || ""}
+                              onChange={(e) =>
+                                handleMeasurementChange(index, field, e.target.value)
+                              }
+                              className="h-8 text-sm"
+                            />
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <FormField label="Description">
+                    <Input
+                      placeholder="Additional notes"
+                      value={item.description || ""}
+                      onChange={(e) =>
+                        handleItemChange(index, "description", e.target.value)
+                      }
+                      className="h-8 text-sm"
+                    />
+                  </FormField>
+                </div>
+              ))}
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={addItem}
+                className="w-full h-8"
+              >
+                <PlusCircle className="w-4 h-4 mr-2" />
+                Add Another Item
+              </Button>
+            </div>
+          </FormSection>
+
+          {/* Additional Information */}
+          <FormSection title="Additional Information" icon={Calendar}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <FormField label="Notes">
+                <Input
+                  placeholder="Order notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </FormField>
+
+              <FormField label="Special Instructions">
+                <Input
+                  placeholder="Special instructions"
+                  value={specialInstructions}
+                  onChange={(e) => setSpecialInstructions(e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </FormField>
+            </div>
+          </FormSection>
+        </div>
+
+        {/* Pricing Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6 mb-6">
+          <FormSection title="Pricing & Discount" icon={Package}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <FormField label="Discount Type">
+                <Select value={discountType} onValueChange={setDiscountType}>
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue placeholder="Select discount type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="percentage">Percentage (%)</SelectItem>
+                    <SelectItem value="fixed">Fixed Amount (₹)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormField>
+
+              <FormField label="Discount Value">
+                <Input
+                  type="number"
+                  placeholder={discountType === "percentage" ? "0" : "0"}
+                  value={discountValue}
+                  onChange={(e) => setDiscountValue(e.target.value)}
+                  className="h-8 text-sm"
+                  min="0"
+                  step={discountType === "percentage" ? "0.01" : "1"}
+                />
+              </FormField>
+
+              <FormField label="GST Rate (%)" required>
+                <Input
+                  type="number"
+                  placeholder="18"
+                  value={taxRate}
+                  onChange={(e) => setTaxRate(e.target.value)}
+                  className="h-8 text-sm"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                />
+              </FormField>
+
+              <FormField label="Advance Payment (₹)">
+                <Input
+                  type="number"
+                  placeholder="0"
+                  value={advancePayment}
+                  onChange={(e) => setAdvancePayment(e.target.value)}
+                  className="h-8 text-sm"
+                  min="0"
+                  step="0.01"
+                />
+              </FormField>
+
+              <FormField label="Payment Method">
+                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue placeholder="Select payment method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="card">Card</SelectItem>
+                    <SelectItem value="upi">UPI</SelectItem>
+                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                    <SelectItem value="cheque">Cheque</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormField>
+
+              <FormField label="Payment Notes">
+                <Input
+                  placeholder="Payment notes (optional)"
+                  value={paymentNotes}
+                  onChange={(e) => setPaymentNotes(e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </FormField>
+            </div>
+          </FormSection>
+
+          {/* Order Total Display */}
+          <FormSection title="Order Summary" icon={ShoppingCart}>
+            <div className={`rounded-lg p-4 border ${
+              orderTotal.totalAmount > 0 
+                ? 'bg-orange-50 border-orange-200' 
+                : 'bg-gray-50 border-gray-200'
+            }`}>
+              {orderTotal.totalAmount === 0 ? (
+                <div className="text-center py-6">
+                  <Package className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">Add items to see order total</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Detailed Item Breakdown */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3">Item Details</h4>
+                    <div className="space-y-3">
+                      {orderTotal.itemBreakdowns.map((item, index) => (
+                        <div key={index} className="bg-white rounded-lg p-3 border border-gray-200">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <h5 className="font-medium text-gray-800">{item.itemName}</h5>
+                              <p className="text-xs text-gray-500">Quantity: {item.quantity}</p>
+                            </div>
+                            <span className="font-semibold text-gray-900">
+                              {formatCurrency(item.totalPrice)}
+                            </span>
+                          </div>
+                          
+                          {/* Item Cost Breakdown */}
+                          <div className="space-y-1 text-xs">
+                            {item.breakdown.map((cost, costIndex) => (
+                              <div key={costIndex} className="flex justify-between items-center text-gray-600">
+                                <span>
+                                  {cost.name}: {formatCurrency(cost.rate)} × {cost.quantity} {cost.unit}
+                                </span>
+                                <span className="font-medium">
+                                  {formatCurrency(cost.total)}
+                                </span>
+                              </div>
+                            ))}
+                            
+                            {/* Unit Price Summary */}
+                            <div className="flex justify-between items-center pt-1 border-t border-gray-100">
+                              <span className="font-medium text-gray-700">
+                                Unit Price: {formatCurrency(item.unitPrice)} × {item.quantity}
+                              </span>
+                              <span className="font-semibold text-gray-900">
+                                {formatCurrency(item.totalPrice)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Order Summary */}
+                  <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3">Order Summary</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-600">Subtotal:</span>
+                        <span className="text-sm font-semibold text-gray-900">
+                          {formatCurrency(orderTotal.subtotal)}
+                        </span>
+                      </div>
+                    
+                      {orderTotal.discountAmount > 0 && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-gray-600">
+                            Discount ({discountType === 'percentage' ? `${discountValue}%` : 'Fixed'}):
+                          </span>
+                          <span className="text-sm font-semibold text-green-600">
+                            -{formatCurrency(orderTotal.discountAmount)}
+                          </span>
+                        </div>
+                      )}
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-600">Taxable Amount:</span>
+                        <span className="text-sm font-semibold text-gray-900">
+                          {formatCurrency(orderTotal.taxableAmount)}
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-600">GST ({taxRate}%):</span>
+                        <span className="text-sm font-semibold text-gray-900">
+                          {formatCurrency(orderTotal.taxAmount)}
+                        </span>
+                      </div>
+                      
+                      <div className="border-t border-gray-300 pt-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-base font-bold text-gray-800">Total Amount:</span>
+                          <span className="text-lg font-bold text-orange-600">
+                            {formatCurrency(orderTotal.totalAmount)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Payment Information */}
+                      {orderTotal.advanceAmount > 0 && (
+                        <>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium text-gray-600">Advance Payment:</span>
+                            <span className="text-sm font-semibold text-blue-600">
+                              -{formatCurrency(orderTotal.advanceAmount)}
+                            </span>
+                          </div>
+                          
+                          <div className="border-t border-gray-300 pt-2">
+                            <div className="flex justify-between items-center">
+                              <span className="text-base font-bold text-gray-800">Balance Amount:</span>
+                              <span className="text-lg font-bold text-green-600">
+                                {formatCurrency(orderTotal.balanceAmount)}
+                              </span>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </FormSection>
+        </div>
+
+        {/* Submit Button */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t border-gray-200">
+          <div className="flex flex-col">
+            {orderTotal.totalAmount > 0 && (
+              <div className="text-sm text-gray-600">
+                <span className="font-medium">
+                  {orderTotal.advanceAmount > 0 ? "Balance Amount: " : "Order Total: "}
+                </span>
+                <span className="text-lg font-bold text-orange-600">
+                  {formatCurrency(orderTotal.advanceAmount > 0 ? orderTotal.balanceAmount : orderTotal.totalAmount)}
+                </span>
+                {orderTotal.advanceAmount > 0 && (
+                  <div className="text-xs text-gray-500 mt-1">
+                    Total: {formatCurrency(orderTotal.totalAmount)} | 
+                    Advance: {formatCurrency(orderTotal.advanceAmount)}
+                  </div>
+                )}
+              </div>
+            )}
+            <p className="text-xs text-gray-500 mt-1">
+              {orderTotal.totalAmount === 0 
+                ? "Add items and complete the form to create order"
+                : "Review the order details before submitting"
+              }
+            </p>
+          </div>
+          
+          <Button
+            onClick={handleSubmit}
+            disabled={isCreatingOrder || isCreatingClient || orderTotal.totalAmount === 0}
+            className={`h-10 px-8 font-medium rounded-md shadow-sm transition-colors text-sm ${
+              orderTotal.totalAmount > 0
+                ? "bg-orange-600 hover:bg-orange-700 text-white"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            }`}
+          >
+            {isCreatingOrder || isCreatingClient ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Creating Order...
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                Create Order
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CreateOrder;
