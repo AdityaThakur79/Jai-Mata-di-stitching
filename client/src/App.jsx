@@ -93,6 +93,9 @@ import ManageGallery from './components/admin/content/gallery/ManageGallery';
 import CreateCategory from './components/admin/content/categories/CreateCategory';
 import UpdateCategory from './components/admin/content/categories/UpdateCategory';
 import ManageCategories from './components/admin/content/categories/ManageCategories';
+import Catalogues from './components/admin/content/WebsiteCatalogue/Catalogues.jsx';
+import CreateCatalogue from './components/admin/content/WebsiteCatalogue/CreateCatalogue.jsx';
+import UpdateCatalogue from './components/admin/content/WebsiteCatalogue/UpdateCatalogue.jsx';
 import Clients from "./components/admin/content/Client/Clients.jsx";
 import UpdateClient from "./components/admin/content/Client/UpdateClient.jsx";
 import CreateOrder from "./components/admin/content/Client/CreateOrder.jsx";
@@ -100,6 +103,11 @@ import UpdateOrder from "./components/admin/content/Client/UpdateOrder.jsx";
 import CompletedOrder from "./components/admin/content/Client/CompletedOrder.jsx";
 import ClientPendingOrders from "./components/admin/content/Client/PendingOrders.jsx";
 import CreateClient from "./components/admin/content/Client/CreateClient.jsx";
+import BookAppointment from "./components/user/BookAppointment.jsx";
+import CataloguesUserView from "./components/user/Catalogues.jsx";
+import CataloguesPage from "./components/user/pages/Catalogues.jsx";
+import TrackOrder from "./components/user/TrackOrder.jsx";
+
 const appRouter = createBrowserRouter([
   //Homepage Routes
   {
@@ -114,6 +122,7 @@ const appRouter = createBrowserRouter([
             <Feature />
             <Services />
             <Categories />
+            <CataloguesUserView/>
             <Fabric />
             <MenItems />
             <WomenItems />
@@ -121,14 +130,16 @@ const appRouter = createBrowserRouter([
             <WomenHeroSection />
             <Info />
             <Gallery />
+            <BookAppointment/>
             <Testimonials />  
             <CTA /> 
-            {/* <Qa/> */}
+           
           </>
         ),
       },
       { path: "/fabrics", element: <FabricPage /> },
       { path: "/about", element: <JMDTailorsAbout /> },
+      { path: "/catalogues", element: <CataloguesPage /> },
       { path: "/gallery", element: <GalleryPage /> },
       { path: "/services", element: <ServicesPage /> },
       { path: "/men", element: <MensWear /> },
@@ -139,6 +150,7 @@ const appRouter = createBrowserRouter([
       { path: "/privacy", element: <PrivacyPolicy /> },
       { path: "/refund", element: <RefundPolicy /> },
       { path: "/shipping", element: <ShippingPolicy /> },
+      { path: "/track-order", element: <TrackOrder /> },
       { path: "*", element: <NotFound /> },
     ],
   },
@@ -377,6 +389,18 @@ const appRouter = createBrowserRouter([
       {
         path: "website/gallery",
         element: <ManageGallery />,
+      },
+      {
+        path: "website/catalogues",
+        element: <Catalogues />,
+      },
+      {
+        path: "website/catalogues/create",
+        element: <CreateCatalogue />,
+      },
+      {
+        path: "website/catalogues/update/:id",
+        element: <UpdateCatalogue />,
       },
       {
         path: "website/category/create",

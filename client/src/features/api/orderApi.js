@@ -142,6 +142,11 @@ export const orderApi = createApi({
         credentials: "include",
       }),
     }),
+
+    // Track order by order number (public endpoint)
+    trackOrder: builder.query({
+      query: (orderNumber) => `/track/${orderNumber}`,
+    }),
   }),
 });
 
@@ -159,4 +164,5 @@ export const {
   useUpdatePaymentStatusMutation,
   useUpdateBillPaymentStatusMutation,
   useGetOrderForInvoiceMutation,
+  useTrackOrderQuery,
 } = orderApi;

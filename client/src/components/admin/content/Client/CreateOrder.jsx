@@ -165,48 +165,44 @@ const CreateOrder = () => {
     const selectedItem = itemData?.items?.find(i => i._id === item.itemType);
     if (!selectedItem) return null;
     
-    let itemPrice = 0;
     let fabricCost = 0;
     let stitchingCost = 0;
     const breakdown = [];
-    
-    // Add fabric cost if fabric is selected
-    if (item.fabric && item.fabricMeters) {
+    // Calculate fabric cost - ensure proper validation and fix calculation
+    if (item.fabric && item.fabricMeters && parseFloat(item.fabricMeters) > 0) {
       const selectedFabric = fabricsData?.fabrics?.find(f => f._id === item.fabric);
       if (selectedFabric) {
-        fabricCost = selectedFabric.pricePerMeter * parseFloat(item.fabricMeters);
-        itemPrice += fabricCost;
+        const totalMeters = parseFloat(item.fabricMeters);
+        fabricCost = selectedFabric.pricePerMeter * totalMeters;
         breakdown.push({
           type: 'fabric',
           name: selectedFabric.name,
           rate: selectedFabric.pricePerMeter,
-          quantity: parseFloat(item.fabricMeters),
+          quantity: totalMeters,
           total: fabricCost,
-          unit: 'per meter'
+          unit: 'meters (total for order)'
         });
       }
     }
     
-    // Add stitching charge if applicable
-    if (orderType === "stitching" || orderType === "fabric_stitching") {
-      stitchingCost = selectedItem.stitchingCharge || 0;
-      itemPrice += stitchingCost;
+    // Calculate item base cost (stitchingCharge) - per unit * quantity (always included)
+    stitchingCost = (selectedItem.stitchingCharge || 0) * parseInt(item.quantity);
+    if ((selectedItem.stitchingCharge || 0) > 0) {
       breakdown.push({
-        type: 'stitching',
-        name: 'Stitching Charge',
-        rate: stitchingCost,
-        quantity: 1,
+        type: 'item_cost',
+        name: 'Item Cost',
+        rate: selectedItem.stitchingCharge || 0,
+        quantity: parseInt(item.quantity),
         total: stitchingCost,
         unit: 'per item'
       });
     }
     
-    const totalItemPrice = itemPrice * parseInt(item.quantity);
-    
+    const totalItemPrice = fabricCost + stitchingCost;
     return {
       itemName: selectedItem.name,
       quantity: parseInt(item.quantity),
-      unitPrice: itemPrice,
+      unitPrice: stitchingCost / parseInt(item.quantity) + (fabricCost / parseInt(item.quantity)), // Total cost divided by quantity
       totalPrice: totalItemPrice,
       breakdown,
       fabric: item.fabric ? fabricsData?.fabrics?.find(f => f._id === item.fabric) : null
@@ -368,8 +364,8 @@ const CreateOrder = () => {
       }
 
       // Check fabric validation
-      if (item.fabric && (!item.fabricMeters || item.fabricMeters < 2)) {
-        toast.error(`Fabric meters must be at least 2 for item ${i + 1}`);
+      if (item.fabric && (!item.fabricMeters || item.fabricMeters <= 0)) {
+        toast.error(`Fabric meters must be greater than 0 for item ${i + 1}`);
         return false;
       }
     }
@@ -793,7 +789,7 @@ const CreateOrder = () => {
                     <FormField label={`Fabric Meters ${item.fabric ? "*" : ""}`}>
                       <Input
                         type="number"
-                        min={2}
+                        min={0.1}
                         step={0.1}
                         placeholder="Enter meters"
                         value={item.fabricMeters || ""}

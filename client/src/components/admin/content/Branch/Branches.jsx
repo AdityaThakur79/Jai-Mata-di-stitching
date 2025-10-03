@@ -54,10 +54,10 @@ const Branches = () => {
     search: debouncedSearchQuery,
   });
 
-  const [deleteBranch, { isSuccess, isError }] = useDeleteBranchMutation();
+  const [deleteBranch, { isSuccess, isError, error }] = useDeleteBranchMutation();
 
   const handleDelete = async (branchId) => {
-    await deleteBranch(branchId);
+    await deleteBranch({ branchId });
   };
 
   const handlePageChange = (newPage) => {
@@ -86,9 +86,10 @@ const Branches = () => {
       toast.success("Branch Deleted Successfully");
       refetch();
     } else if (isError) {
-      toast.error("Failed to delete branch");
+      const errorMessage = error?.data?.message || error?.message || "Failed to delete branch";
+      toast.error(errorMessage);
     }
-  }, [isSuccess, isError]);
+  }, [isSuccess, isError, error]);
 
   const [open, setOpen] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState(null);
@@ -527,8 +528,8 @@ const Branches = () => {
                       <span className="font-medium">{selectedBranch?.pan || "Not provided"}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">SCN:</span>
-                      <span className="font-medium">{selectedBranch?.scn || "Not provided"}</span>
+                      <span className="text-gray-600">CIN:</span>
+                      <span className="font-medium">{selectedBranch?.cin || "Not provided"}</span>
                     </div>
                   </div>
                 </div>

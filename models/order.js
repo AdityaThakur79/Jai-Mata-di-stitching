@@ -338,22 +338,34 @@ const orderSchema = new mongoose.Schema({
 // Generate order number before saving
 orderSchema.pre("save", async function (next) {
   if (this.isNew && !this.orderNumber) {
-    const currentYear = new Date().getFullYear();
-    const currentMonth = String(new Date().getMonth() + 1).padStart(2, "0");
-    
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
+
+    const nextDate = new Date(now);
+    nextDate.setMonth(nextDate.getMonth() + 1);
+    const nextYear = nextDate.getFullYear();
+    const nextMonth = String(nextDate.getMonth() + 1).padStart(2, "0");
+
+    // New desired pattern: JMD-YYYYMM-YYYYMM-####
+    const periodFrom = `${currentYear}${currentMonth}`;
+    const periodTo = `${nextYear}${nextMonth}`;
+
+    const regex = new RegExp(`^JMD-${periodFrom}-${periodTo}-\\d{4}$`);
     const lastOrder = await this.constructor.findOne(
-      { orderNumber: new RegExp(`^ORD-${currentYear}${currentMonth}-\\d{4}$`) },
+      { orderNumber: regex },
       {},
       { sort: { orderNumber: -1 } }
     );
 
     let nextIdNum = 1;
     if (lastOrder && lastOrder.orderNumber) {
-      const lastIdNum = parseInt(lastOrder.orderNumber.split("-")[2]);
+      const parts = lastOrder.orderNumber.split("-");
+      const lastIdNum = parseInt(parts[3]);
       nextIdNum = lastIdNum + 1;
     }
-    
-    this.orderNumber = `JMD-ORD-${currentYear}${currentMonth}-${String(nextIdNum).padStart(4, "0")}`;
+
+    this.orderNumber = `JMD-${periodFrom}-${periodTo}-${String(nextIdNum).padStart(4, "0")}`;
   }
   next();
 });
