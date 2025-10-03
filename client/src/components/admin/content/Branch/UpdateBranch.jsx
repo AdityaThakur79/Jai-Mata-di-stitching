@@ -22,7 +22,7 @@ const UpdateBranch = () => {
   const [address, setAddress] = useState("");
   const [gst, setGst] = useState("");
   const [pan, setPan] = useState("");
-  const [scn, setScn] = useState("");
+  const [cin, setCin] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [bankName, setBankName] = useState("");
@@ -48,7 +48,7 @@ const UpdateBranch = () => {
       setAddress(b.address || "");
       setGst(b.gst || "");
       setPan(b.pan || "");
-      setScn(b.scn || "");
+      setCin(b.cin || "");
       setPhone(b.phone || "");
       setEmail(b.email || "");
       setBankName(b.bankDetails?.bankName || "");
@@ -65,7 +65,7 @@ const UpdateBranch = () => {
       address,
       gst,
       pan,
-      scn,
+      cin,
       phone,
       email,
       bankDetails: {
@@ -133,11 +133,11 @@ const UpdateBranch = () => {
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs font-medium text-gray-700">SCN</Label>
+              <Label className="text-xs font-medium text-gray-700">CIN (Corporate Identification Number)</Label>
               <Input
-                value={scn}
-                onChange={(e) => setScn(e.target.value)}
-                placeholder="Enter SCN number"
+                value={cin}
+                onChange={(e) => setCin(e.target.value)}
+                placeholder="Enter CIN number"
                 className="h-8 text-sm bg-white border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-md transition-all duration-200 hover:border-gray-400"
               />
             </div>

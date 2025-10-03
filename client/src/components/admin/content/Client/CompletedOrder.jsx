@@ -935,7 +935,7 @@ const CompletedOrders = () => {
                       {({ loading, error }) => (
                         <Button
                           disabled={loading}
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                          className="bg-orange-600 hover:bg-orange-700 text-white"
                           onClick={() => {
                             if (error) {
                               handlePDFError(error);

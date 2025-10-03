@@ -19,7 +19,7 @@ const branchSchema = new mongoose.Schema({
     type: String,
     default: "",
   },
-  scn: {
+  cin: {
     type: String,
     default: "",
   },

@@ -73,7 +73,8 @@ const styles = StyleSheet.create({
   page: {
     flexDirection: 'column',
     backgroundColor: '#FFFFFF',
-    padding: 20,
+    padding: 16,
+    paddingTop: 0,
     fontFamily: 'Helvetica',
     fontSize: 9,
   },
@@ -85,38 +86,41 @@ const styles = StyleSheet.create({
     borderBottom: '1 solid #f77f2f',
     paddingBottom: 10,
     backgroundColor: '#FAFAFA',
-    padding: 10,
+    padding: 8,
     borderRadius: 4,
   },
   logoSection: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   logo: {
-    width: 40,
-    height: 40,
+    width: 60,
+    height: 60,
     marginRight: 10,
     backgroundColor: '#f77f2f',
-    borderRadius: 20,
+    borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
   },
   logoImage: {
-    width: 40,
-    height: 40,
+    width: 60,
+    height: 60,
     marginRight: 10,
-    borderRadius: 20,
+    borderRadius: 30,
   },
   logoText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: 'bold',
   },
   companyInfo: {
     flexDirection: 'column',
+    marginLeft: 6,
+    maxWidth: '68%',
   },
   companyName: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#000000',
     marginBottom: 4,
@@ -141,6 +145,7 @@ const styles = StyleSheet.create({
     padding: 6,
     borderRadius: 4,
     border: '1 solid #f77f2f',
+    minWidth: 130,
   },
   invoiceTitle: {
     fontSize: 14,
@@ -330,16 +335,14 @@ const styles = StyleSheet.create({
     paddingTop: 15,
     borderTop: '1 solid #f77f2f',
   },
-  footerTopBanner: {
-    backgroundColor: '#f77f2f',
-    padding: 6,
-    marginTop: 6,
-    marginBottom: 10,
+  cinRow: {
+    marginTop: 4,
+    marginBottom: 6,
     textAlign: 'center',
   },
-  footerBannerText: {
-    color: '#FFFFFF',
+  cinText: {
     fontSize: 8,
+    color: '#000000',
     fontWeight: 'bold',
   },
   footerRow: {
@@ -378,19 +381,7 @@ const styles = StyleSheet.create({
   },
   signatureSection: {
     alignItems: 'center',
-    marginTop: 40,
-  },
-  signatureLine: {
-    fontSize: 9,
-    fontStyle: 'italic',
-    color: '#000000',
-    marginBottom: 3,
-    fontWeight: 'bold',
-  },
-  signatureText: {
-    fontSize: 7,
-    color: '#000000',
-    fontWeight: 'bold',
+    marginTop: 8,
   },
   shippingSection: {
     backgroundColor: '#FFFFFF',
@@ -470,9 +461,8 @@ const InvoiceDocument = (data) => {
             <Text style={styles.companyTagline}>YOUR SATISFACTION IS OUR FIRST PRIORITY</Text>
             <Text style={styles.companyDetails}>
               {data.companyAddress}
-              {'\n'}Phone: {data.companyPhone}
-              {'\n'}Email: {data.companyEmail}
-              {'\n'}GST: {data.companyGST} | PAN: {data.companyPAN}
+              {'\n'}Contact: {data.companyPhone}   |   Email: {data.companyEmail}
+              {'\n'}GST: {data.companyGST}   |   PAN: {data.companyPAN}
             </Text>
           </View>
         </View>
@@ -504,7 +494,7 @@ const InvoiceDocument = (data) => {
         {/* Invoice Details */}
         <View style={styles.col}>
           <View style={[styles.pricingBox, styles.cardFixed]}>
-            <Text style={styles.sectionTitle}>Invoice Details</Text>
+            <Text style={styles.sectionTitle}>Invoice Information</Text>
             <Text style={styles.sectionContent}>
               Invoice Number: {(data.invoiceNumber || '').replace('-BILL-', '-')}
               {'\n'}Invoice Date: {data.invoiceDate}
@@ -656,9 +646,11 @@ const InvoiceDocument = (data) => {
 
       {/* Footer */}
       <View style={styles.footer}>
-        <View style={styles.footerTopBanner}>
-          <Text style={styles.footerBannerText}>YOUR SATISFACTION IS OUR FIRST PRIORITY</Text>
-        </View>
+        {!!data.companyCIN && (
+          <View style={styles.cinRow}>
+            <Text style={styles.cinText}>CIN: {data.companyCIN}</Text>
+          </View>
+        )}
         <View style={styles.footerRow}>
           <View style={styles.termsSection}>
           <Text style={styles.termsTitle}>Terms & Conditions</Text>
@@ -672,9 +664,9 @@ const InvoiceDocument = (data) => {
           </Text>
           </View>
           <View style={styles.signatureSection}>
-          <Text style={styles.signatureLine}>Signature</Text>
-          <Text style={styles.signatureText}>For, {data.companyName}</Text>
-          <Text style={styles.signatureText}>Authorized Signatory</Text>
+            <Text style={{ fontSize: 9, fontWeight: 'bold' }}>For, {data.companyName}</Text>
+            <Text style={{ height: 36 }}></Text>
+            <Text style={{ fontSize: 9, fontWeight: 'bold' }}>Authorized Signatory</Text>
           </View>
         </View>
         <Text style={styles.machineNote}>This is a computer generated invoice. No stamp or signature required.</Text>

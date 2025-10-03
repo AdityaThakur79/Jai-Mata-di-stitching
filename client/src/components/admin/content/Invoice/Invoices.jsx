@@ -593,10 +593,9 @@ const Invoices = () => {
               <div className="h-full flex flex-col">
                 <div className="flex justify-between items-center mb-3">
                   <Button
-                    variant="outline"
                     size="sm"
                     onClick={() => handleDownloadPDF(selectedInvoice._id)}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white"
                   >
                     <Download className="w-4 h-4" />
                     Download PDF

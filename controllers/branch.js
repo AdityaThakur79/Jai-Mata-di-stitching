@@ -1,10 +1,12 @@
 import Branch from "../models/branch.js";
+import Order from "../models/order.js";
+import PendingOrder from "../models/pendingOrder.js";
 import mongoose from "mongoose";
 
 // Create Branch
 export const createBranch = async (req, res) => {
   try {
-    const { branchName, address, gst, pan, scn, phone, email, bankDetails, status } = req.body;
+    const { branchName, address, gst, pan, cin, phone, email, bankDetails, status } = req.body;
     if (!branchName || !address) {
       return res.status(400).json({ success: false, message: "Branch name and address are required." });
     }
@@ -12,7 +14,7 @@ export const createBranch = async (req, res) => {
     if (existing) {
       return res.status(400).json({ success: false, message: "Branch with this name already exists." });
     }
-    const branch = await Branch.create({ branchName, address, gst, pan, scn, phone, email, bankDetails, status });
+    const branch = await Branch.create({ branchName, address, gst, pan, cin, phone, email, bankDetails, status });
     res.status(201).json({ success: true, message: "Branch created successfully.", branch });
   } catch (err) {
     console.error("Error creating branch:", err);
@@ -36,7 +38,7 @@ export const getAllBranches = async (req, res) => {
         { email: { $regex: search, $options: "i" } },
         { gst: { $regex: search, $options: "i" } },
         { pan: { $regex: search, $options: "i" } },
-        { scn: { $regex: search, $options: "i" } },
+        { cin: { $regex: search, $options: "i" } },
       ];
     }
     if (status && status !== "all") {
@@ -81,7 +83,7 @@ export const getBranchById = async (req, res) => {
 // Update Branch
 export const updateBranch = async (req, res) => {
   try {
-    const { branchId, branchName, address, gst, pan, scn, phone, email, bankDetails, status } = req.body;
+    const { branchId, branchName, address, gst, pan, cin, phone, email, bankDetails, status } = req.body;
     const branch = await Branch.findById(branchId);
     if (!branch) {
       return res.status(404).json({ success: false, message: "Branch not found" });
@@ -90,7 +92,7 @@ export const updateBranch = async (req, res) => {
     branch.address = address || branch.address;
     branch.gst = gst || branch.gst;
     branch.pan = pan || branch.pan;
-    branch.scn = scn || branch.scn;
+    branch.cin = cin || branch.cin;
     branch.phone = phone || branch.phone;
     branch.email = email || branch.email;
     if (bankDetails) {
@@ -116,10 +118,32 @@ export const deleteBranch = async (req, res) => {
     if (!branchId || !mongoose.isValidObjectId(branchId)) {
       return res.status(400).json({ success: false, message: "Invalid or missing branchId" });
     }
+    
     const branch = await Branch.findById(branchId);
     if (!branch) {
       return res.status(404).json({ success: false, message: "Branch not found" });
     }
+
+    // Check if branch has any associated orders
+    const [orderCount, pendingOrderCount] = await Promise.all([
+      Order.countDocuments({ branchId }),
+      PendingOrder.countDocuments({ branchId })
+    ]);
+
+    if (orderCount > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Cannot delete branch. It has ${orderCount} associated order${orderCount > 1 ? 's' : ''}. Please delete or reassign the orders first.` 
+      });
+    }
+
+    if (pendingOrderCount > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Cannot delete branch. It has ${pendingOrderCount} associated pending order${pendingOrderCount > 1 ? 's' : ''}. Please delete or reassign the pending orders first.` 
+      });
+    }
+
     await branch.deleteOne();
     res.status(200).json({ success: true, message: "Branch deleted successfully" });
   } catch (err) {

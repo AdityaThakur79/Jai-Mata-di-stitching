@@ -136,22 +136,21 @@ export const createOrder = async (req, res) => {
         });
       }
 
-      let itemPrice = 0;
+      let fabricCost = 0;
+      let stitchingCost = 0;
       
-      // Calculate fabric cost if fabric is selected
+      // Calculate fabric cost - total fabric for entire order, NOT per unit
       if (item.fabric && item.fabricMeters) {
         const fabric = await Fabric.findById(item.fabric);
         if (fabric) {
-          itemPrice += fabric.pricePerMeter * item.fabricMeters;
+          fabricCost = fabric.pricePerMeter * item.fabricMeters;
         }
       }
 
-      // Add stitching charge if applicable
-      if (orderType === "stitching" || orderType === "fabric_stitching") {
-        itemPrice += itemMaster.stitchingCharge || 0;
-      }
+      // Calculate item base cost (stitchingCharge) - per unit * quantity (always included)
+      stitchingCost = (itemMaster.stitchingCharge || 0) * item.quantity;
 
-      const totalItemPrice = itemPrice * item.quantity;
+      const totalItemPrice = fabricCost + stitchingCost;
       subtotal += totalItemPrice;
 
       // Find the selected style from the item's styles
@@ -167,7 +166,7 @@ export const createOrder = async (req, res) => {
           styleName: selectedStyle.styleName,
           description: selectedStyle.description
         } : null,
-        unitPrice: itemPrice,
+        unitPrice: stitchingCost / item.quantity + (fabricCost / item.quantity), // Cost per unit including fabric and stitching
         totalPrice: totalItemPrice,
       });
     }
@@ -389,7 +388,8 @@ export const generateBill = async (req, res) => {
       });
     }
 
-    if (order.status === "completed") {
+    // Block only if a bill already exists, not merely by status
+    if (order.bill) {
       return res.status(400).json({
         success: false,
         message: "Bill already generated for this order",
@@ -439,10 +439,14 @@ export const generateBill = async (req, res) => {
       notes: notes || "",
     });
 
-    // Update order with bill reference and mark as completed
+    // Update order with bill reference; do not force status if already set
     order.bill = bill._id;
-    order.status = "completed";
-    order.actualDeliveryDate = new Date();
+    if (order.status !== "completed") {
+      order.status = "completed";
+    }
+    if (!order.actualDeliveryDate) {
+      order.actualDeliveryDate = new Date();
+    }
 
     await order.save();
 
@@ -689,10 +693,9 @@ export const updateOrder = async (req, res) => {
         }
       }
 
-      // Calculate stitching cost
-      stitchingCost = selectedItem.stitchingCharge || 0;
-      itemPrice = fabricCost + stitchingCost;
-      const totalItemPrice = itemPrice * parseInt(item.quantity);
+      // Calculate item base cost (stitchingCharge) - per unit * quantity (always included)
+      stitchingCost = (selectedItem.stitchingCharge || 0) * parseInt(item.quantity);
+      const totalItemPrice = fabricCost + stitchingCost;
       subtotal += totalItemPrice;
 
       processedItems.push({
@@ -706,7 +709,7 @@ export const updateOrder = async (req, res) => {
           description: item.style?.description || "",
         },
         specialInstructions: item.specialInstructions || "",
-        unitPrice: itemPrice,
+        unitPrice: stitchingCost / parseInt(item.quantity) + (fabricCost / parseInt(item.quantity)), // Cost per unit including fabric and stitching
         totalPrice: totalItemPrice,
       });
     }
@@ -1293,7 +1296,7 @@ export const getOrderForInvoice = async (req, res) => {
       .populate("client", "name mobile email address city state pincode")
       .populate("items.itemType", "name stitchingCharge")
       .populate("items.fabric", "name pricePerMeter")
-      .populate("branchId", "branchName address phone email gst pan bankDetails")
+      .populate("branchId", "branchName address phone email gst pan cin bankDetails")
       .populate("createdBy", "name employeeId")
       .populate("bill", "billNumber billDate dueDate subtotal taxAmount totalAmount paymentStatus notes");
 
@@ -1323,6 +1326,7 @@ export const getOrderForInvoice = async (req, res) => {
       companyEmail: order.branchId?.email || "info@jmdstithing.com",
       companyGST: order.branchId?.gst || "GST123456789",
       companyPAN: order.branchId?.pan || "PAN123456789",
+      companyCIN: order.branchId?.cin || "",
       logo: logoBase64,
       // Payment Information from branch profile
       bankName: order.branchId?.bankDetails?.bankName || "Union Bank of India",

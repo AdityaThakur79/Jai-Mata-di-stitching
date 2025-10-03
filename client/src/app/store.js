@@ -16,6 +16,7 @@ import { galleryApi } from "@/features/api/galleryApi.js";
 import { categoriesApi } from "@/features/api/categoriesApi.js";
 import { clientApi } from "@/features/api/clientApi.js";
 import { orderApi } from "@/features/api/orderApi.js";
+import { catalogueApi } from "@/features/api/catalogueApi.js";
 
 export const appStore = configureStore({
   reducer: rootReducer,
@@ -37,6 +38,7 @@ export const appStore = configureStore({
       categoriesApi.middleware,
       clientApi.middleware,
       orderApi.middleware,
+      catalogueApi.middleware,
     ),
 });
 

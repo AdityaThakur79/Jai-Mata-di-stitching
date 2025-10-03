@@ -17,6 +17,7 @@ import { galleryApi } from "@/features/api/galleryApi.js";
 import { categoriesApi } from "@/features/api/categoriesApi.js";
 import { clientApi } from "@/features/api/clientApi.js";
 import { orderApi } from "@/features/api/orderApi.js";
+import { catalogueApi } from "@/features/api/catalogueApi.js";
 
 const rootReducer = combineReducers({
   [authApi.reducerPath]: authApi.reducer,
@@ -36,6 +37,7 @@ const rootReducer = combineReducers({
   [categoriesApi.reducerPath]: categoriesApi.reducer,
   [clientApi.reducerPath]: clientApi.reducer,
   [orderApi.reducerPath]: orderApi.reducer,
+  [catalogueApi.reducerPath]: catalogueApi.reducer,
   auth: authReducer,
 });
 

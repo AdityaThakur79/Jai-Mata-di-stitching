@@ -361,6 +361,7 @@ const EmployeeSidebar = () => {
         { title: "Manage Services", icon: Settings, path: "/employee/website/services" },
         { title: "Categories", icon: Tags, path: "/employee/website/categories" },
         { title: "Gallery Management", icon: Image, path: "/employee/website/gallery" },
+        { title: "Catalogues", icon: Layers, path: "/employee/website/catalogues" },
         // { title: "Website Settings", icon: Layers, path: "/employee/website/settings" },
       ],
     },

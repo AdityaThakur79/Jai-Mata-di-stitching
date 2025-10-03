@@ -21,7 +21,7 @@ const CreateBranch = () => {
     address: "",
     gst: "",
     pan: "",
-    scn: "",
+    cin: "",
     phone: "",
     email: "",
     bankDetails: {
@@ -124,12 +124,12 @@ const CreateBranch = () => {
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs font-medium text-gray-700">SCN</Label>
+              <Label className="text-xs font-medium text-gray-700">CIN (Corporate Identification Number)</Label>
               <Input
-                name="scn"
-                value={form.scn}
+                name="cin"
+                value={form.cin}
                 onChange={handleChange}
-                placeholder="Enter SCN"
+                placeholder="Enter CIN"
                 className="h-8 text-sm bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md transition-all duration-200 hover:border-gray-400"
               />
             </div>

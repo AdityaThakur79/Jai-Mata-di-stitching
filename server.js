@@ -30,8 +30,10 @@ app.use(cookieParser());
 
 //User Auth routes
 import userRoutes from "./routes/user.js";
+import catalogueRoutes from "./routes/catalogue.js";
 
 app.use("/api/user", userRoutes);
+app.use("/api/catalogue", catalogueRoutes);
 
 //Master routes
 import customerRoutes from "./routes/customer.js"
