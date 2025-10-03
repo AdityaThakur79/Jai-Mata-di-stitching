@@ -62,6 +62,9 @@ export const createOrder = async (req, res) => {
       notes,
       specialInstructions,
       branchId,
+      advancePayment,
+      paymentMethod,
+      paymentNotes,
       shippingDetails,
     } = req.body;
 
@@ -95,6 +98,14 @@ export const createOrder = async (req, res) => {
         city: existingClient.city,
         state: existingClient.state,
         pincode: existingClient.pincode,
+        gstin: existingClient.gstin,
+        pan: existingClient.pan,
+        businessName: existingClient.businessName,
+        tradeName: existingClient.tradeName,
+        legalName: existingClient.legalName,
+        businessType: existingClient.businessType,
+        gstStatus: existingClient.gstStatus,
+        gstStateCode: existingClient.gstStateCode,
       };
     } else if (clientDetails) {
       // New client details
@@ -201,6 +212,9 @@ export const createOrder = async (req, res) => {
       taxRate,
       taxAmount,
       totalAmount,
+      advancePayment: advancePayment ? parseFloat(advancePayment) : 0,
+      paymentMethod: paymentMethod || "",
+      paymentNotes: paymentNotes || "",
       notes,
       specialInstructions,
       branchId: branchId || user.branchId,

@@ -56,8 +56,6 @@ const UpdateClient = () => {
     city: "",
     state: "",
     pincode: "",
-    dateOfBirth: "",
-    gender: "",
     notes: "",
     isActive: true,
     branchId: "",
@@ -114,8 +112,6 @@ const UpdateClient = () => {
           city: client.city || "",
           state: client.state || "",
           pincode: client.pincode || "",
-          dateOfBirth: client.dateOfBirth ? client.dateOfBirth.split('T')[0] : "",
-          gender: client.gender || "",
           notes: client.notes || "",
           isActive: client.isActive !== undefined ? client.isActive : true,
           branchId: client.branchId?._id || client.branchId || "",
@@ -260,27 +256,7 @@ const UpdateClient = () => {
                 />
               </FormField>
               
-              <FormField label="Gender">
-                <Select value={form.gender} onValueChange={(value) => handleInputChange("gender", value)}>
-                  <SelectTrigger className="h-8 text-sm">
-                    <SelectValue placeholder="Select gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </FormField>
               
-              <FormField label="Date of Birth">
-                <Input
-                  type="date"
-                  value={form.dateOfBirth}
-                  onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
-                  className="h-8 text-sm"
-                />
-              </FormField>
 
               <FormField label="Status">
                 <Select value={form.isActive.toString()} onValueChange={(value) => handleInputChange("isActive", value === "true")}>

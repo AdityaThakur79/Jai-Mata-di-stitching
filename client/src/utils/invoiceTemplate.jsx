@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image, Link } from '@react-pdf/renderer';
 
 // Helper function to convert image to data URL
 const toDataUrl = (url) => {
@@ -17,6 +17,55 @@ const toDataUrl = (url) => {
     img.onerror = () => resolve(null);
     img.src = url;
   });
+};
+
+// Convert numbers to words in Indian numbering system (Rupees/Paise)
+const numberToWordsIndian = (num) => {
+  if (num === 0) return 'zero';
+  const ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+  const tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+
+  const twoDigit = (n) => {
+    if (n < 20) return ones[n];
+    const t = Math.floor(n / 10);
+    const o = n % 10;
+    return `${tens[t]}${o ? ' ' + ones[o] : ''}`.trim();
+  };
+
+  const threeDigit = (n) => {
+    const h = Math.floor(n / 100);
+    const r = n % 100;
+    let res = '';
+    if (h) res += `${ones[h]} hundred`;
+    if (r) res += `${res ? ' ' : ''}${twoDigit(r)}`;
+    return res.trim();
+  };
+
+  let words = '';
+  const crore = Math.floor(num / 10000000);
+  num %= 10000000;
+  const lakh = Math.floor(num / 100000);
+  num %= 100000;
+  const thousand = Math.floor(num / 1000);
+  num %= 1000;
+  const hundredToOne = num;
+
+  if (crore) words += `${twoDigit(crore)} crore`;
+  if (lakh) words += `${words ? ' ' : ''}${twoDigit(lakh)} lakh`;
+  if (thousand) words += `${words ? ' ' : ''}${twoDigit(thousand)} thousand`;
+  if (hundredToOne) words += `${words ? ' ' : ''}${threeDigit(hundredToOne)}`;
+
+  return words.trim();
+};
+
+const amountToWordsINR = (amount) => {
+  const safe = isNaN(amount) ? 0 : Number(amount);
+  const rupees = Math.floor(safe);
+  const paise = Math.round((safe - rupees) * 100);
+  const rupeesPart = `${numberToWordsIndian(rupees)} rupees`;
+  const paisePart = paise ? ` and ${numberToWordsIndian(paise)} paise` : '';
+  const result = (rupeesPart + paisePart + ' only').trim();
+  return result.charAt(0).toUpperCase() + result.slice(1);
 };
 
 // Create styles
@@ -87,9 +136,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   invoiceSection: {
-    alignItems: 'flex-end',
+    alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    padding: 8,
+    padding: 6,
     borderRadius: 4,
     border: '1 solid #f77f2f',
   },
@@ -135,12 +184,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: 15,
   },
-  leftColumn: {
+  col: {
     flex: 1,
-    marginRight: 10,
   },
-  rightColumn: {
-    flex: 1,
+  colGap: {
+    width: 10,
   },
   sectionTitle: {
     fontSize: 10,
@@ -161,10 +209,11 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   clientInfo: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#FFFFFF',
     padding: 6,
-    borderRadius: 4,
+    borderRadius: 3,
     marginBottom: 10,
+    border: '1 solid #f77f2f',
   },
   itemsTable: {
     marginBottom: 15,
@@ -231,7 +280,7 @@ const styles = StyleSheet.create({
   pricingBox: {
     backgroundColor: '#F9FAFB',
     padding: 6,
-    borderRadius: 4,
+    borderRadius: 3,
     border: '1 solid #f77f2f',
   },
   pricingRow: {
@@ -270,12 +319,47 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000000',
   },
+  amountWords: {
+    fontSize: 8,
+    color: '#000000',
+    fontWeight: 'bold',
+    marginTop: 6,
+  },
   footer: {
     marginTop: 20,
     paddingTop: 15,
     borderTop: '1 solid #f77f2f',
+  },
+  footerTopBanner: {
+    backgroundColor: '#f77f2f',
+    padding: 6,
+    marginTop: 6,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  footerBannerText: {
+    color: '#FFFFFF',
+    fontSize: 8,
+    fontWeight: 'bold',
+  },
+  footerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+  machineNote: {
+    fontSize: 7,
+    color: '#6B7280',
+    marginTop: 6,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  footerLink: {
+    fontSize: 8,
+    color: '#f77f2f',
+    marginTop: 4,
+    textAlign: 'center',
+    textDecoration: 'none',
+    fontWeight: 'bold',
   },
   termsSection: {
     flex: 1,
@@ -294,6 +378,7 @@ const styles = StyleSheet.create({
   },
   signatureSection: {
     alignItems: 'center',
+    marginTop: 40,
   },
   signatureLine: {
     fontSize: 9,
@@ -308,10 +393,16 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   shippingSection: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#FFFFFF',
     padding: 6,
-    borderRadius: 4,
+    borderRadius: 3,
     marginBottom: 10,
+    border: '1 solid #f77f2f',
+    alignSelf: 'center',
+    width: '90%',
+  },
+  cardFixed: {
+    height: 120,
   },
   shippingTitle: {
     fontSize: 10,
@@ -364,7 +455,7 @@ const InvoiceDocument = (data) => {
     return (
       <Document>
         <Page size="A4" style={styles.page}>
-      {/* Header */}
+      {/* Header (Only TAX INVOICE and Bill Number) */}
       <View style={styles.header}>
         <View style={styles.logoSection}>
           {logoDataUrl ? (
@@ -387,26 +478,17 @@ const InvoiceDocument = (data) => {
         </View>
         <View style={styles.invoiceSection}>
           <Text style={styles.invoiceTitle}>TAX INVOICE</Text>
-          <Text style={styles.invoiceNumber}>{data.invoiceNumber}</Text>
-          <Text style={styles.invoiceDetails}>
-            Issue Date: {data.invoiceDate}
-            {'\n'}Due Date: {data.dueDate}
-            {'\n'}Original for Recipient
-          </Text>
+          <Text style={styles.invoiceNumber}>{(data.invoiceNumber || '').replace('-BILL-', '-')}</Text>
         </View>
       </View>
 
-      {/* Amount Due Bar */}
-      <View style={styles.amountDueBar}>
-        <Text style={styles.amountDueText}>Amount Due:</Text>
-        <Text style={styles.amountDueValue}>{data.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
-      </View>
+     
 
-      {/* Content */}
+      {/* Content - 3 Column Grid with equal gap */}
       <View style={styles.content}>
         {/* Client Information */}
-        <View style={styles.leftColumn}>
-          <View style={styles.clientInfo}>
+        <View style={styles.col}>
+          <View style={[styles.clientInfo, styles.cardFixed]}>
             <Text style={styles.sectionTitle}>Client Information</Text>
             <Text style={styles.sectionSubtitle}>Bill To</Text>
             <Text style={styles.sectionContent}>
@@ -417,10 +499,27 @@ const InvoiceDocument = (data) => {
               {data.clientEmail && `\nEmail: ${data.clientEmail}`}
             </Text>
           </View>
-          
-          {/* Shipping Information */}
+        </View>
+        <View style={styles.colGap} />
+        {/* Invoice Details */}
+        <View style={styles.col}>
+          <View style={[styles.pricingBox, styles.cardFixed]}>
+            <Text style={styles.sectionTitle}>Invoice Details</Text>
+            <Text style={styles.sectionContent}>
+              Invoice Number: {(data.invoiceNumber || '').replace('-BILL-', '-')}
+              {'\n'}Invoice Date: {data.invoiceDate}
+              {'\n'}Due Date: {data.dueDate}
+              {'\n'}Payment Status: {data.paymentStatus?.toUpperCase() || 'PENDING'}
+              {data.paymentMethod && `\nPayment Method: ${data.paymentMethod}`}
+              {'\n'}Payment Terms: 30 Days
+            </Text>
+          </View>
+        </View>
+        <View style={styles.colGap} />
+        {/* Shipping Information */}
+        <View style={styles.col}>
           {data.shippingDetails && (
-            <View style={styles.shippingSection}>
+            <View style={[styles.shippingSection, styles.cardFixed]}>
               <Text style={styles.shippingTitle}>Shipping Information</Text>
               <Text style={styles.shippingSubtitle}>Ship To</Text>
               <Text style={styles.shippingContent}>
@@ -430,7 +529,6 @@ const InvoiceDocument = (data) => {
                 {data.shippingDetails.shippingPincode && ` - ${data.shippingDetails.shippingPincode}`}
                 {data.shippingDetails.shippingPhone && `\nPhone: ${data.shippingDetails.shippingPhone}`}
                 {data.shippingDetails.shippingMethod && `\nMethod: ${data.shippingDetails.shippingMethod.replace('_', ' ').toUpperCase()}`}
-                {data.shippingDetails.trackingNumber && `\nTracking: ${data.shippingDetails.trackingNumber}`}
                 {data.shippingDetails.deliveryStatus && `\nStatus: ${data.shippingDetails.deliveryStatus.replace('_', ' ').toUpperCase()}`}
                 {data.shippingDetails.estimatedDeliveryDate && `\nEst. Delivery: ${new Date(data.shippingDetails.estimatedDeliveryDate).toLocaleDateString()}`}
                 {data.shippingDetails.actualDeliveryDate && `\nDelivered: ${new Date(data.shippingDetails.actualDeliveryDate).toLocaleDateString()}`}
@@ -439,21 +537,6 @@ const InvoiceDocument = (data) => {
               </Text>
             </View>
           )}
-        </View>
-
-        {/* Invoice Details */}
-        <View style={styles.rightColumn}>
-          <View style={styles.pricingBox}>
-            <Text style={styles.sectionTitle}>Invoice Details</Text>
-            <Text style={styles.sectionContent}>
-              Invoice Number: {data.invoiceNumber}
-              {'\n'}Invoice Date: {data.invoiceDate}
-              {'\n'}Due Date: {data.dueDate}
-              {'\n'}Payment Status: {data.paymentStatus?.toUpperCase() || 'PENDING'}
-              {data.paymentMethod && `\nPayment Method: ${data.paymentMethod}`}
-              {'\n'}Payment Terms: 30 Days
-            </Text>
-          </View>
         </View>
       </View>
 
@@ -563,13 +646,21 @@ const InvoiceDocument = (data) => {
                 }
               </Text>
             </View>
+            {/* Amount in words */}
+            <Text style={styles.amountWords}>
+              Amount in words: {amountToWordsINR(data.advancePayment > 0 ? data.balanceAmount : data.totalAmount)}
+            </Text>
           </View>
         </View>
       </View>
 
       {/* Footer */}
       <View style={styles.footer}>
-        <View style={styles.termsSection}>
+        <View style={styles.footerTopBanner}>
+          <Text style={styles.footerBannerText}>YOUR SATISFACTION IS OUR FIRST PRIORITY</Text>
+        </View>
+        <View style={styles.footerRow}>
+          <View style={styles.termsSection}>
           <Text style={styles.termsTitle}>Terms & Conditions</Text>
           <Text style={styles.termsContent}>
             1. Payment within 30 days of invoice date.
@@ -579,13 +670,17 @@ const InvoiceDocument = (data) => {
             {data.paymentNotes && `\n\nPayment Notes: ${data.paymentNotes}`}
             {data.notes && `\n\nAdditional Notes: ${data.notes}`}
           </Text>
-        </View>
-        
-        <View style={styles.signatureSection}>
+          </View>
+          <View style={styles.signatureSection}>
           <Text style={styles.signatureLine}>Signature</Text>
           <Text style={styles.signatureText}>For, {data.companyName}</Text>
           <Text style={styles.signatureText}>Authorized Signatory</Text>
+          </View>
         </View>
+        <Text style={styles.machineNote}>This is a computer generated invoice. No stamp or signature required.</Text>
+        <Link src="https://jmdstitching.com/track-order" style={styles.footerLink}>
+          Track your order: https://jmdstitching.com/track-order
+        </Link>
       </View>
     </Page>
   </Document>

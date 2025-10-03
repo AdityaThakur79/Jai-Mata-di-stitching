@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,15 +10,14 @@ import {
   SelectContent,
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
-import { PlusCircle, Trash2, Loader2, User, Package, Users, ShoppingCart, Calendar } from "lucide-react";
+import { PlusCircle, Trash2, Loader2, User, Package, Users, ShoppingCart, Calendar, MapPin } from "lucide-react";
 import toast from "react-hot-toast";
 import { useCreateOrderMutation } from "@/features/api/orderApi";
 import { useGetAllItemMastersQuery } from "@/features/api/itemApi";
 import { useGetAllBranchesQuery } from "@/features/api/branchApi";
 import { useGetAllFabricsQuery } from "@/features/api/fabricApi";
 import { useGetAllStylesQuery } from "@/features/api/styleApi";
-import { useGetAllClientsQuery } from "@/features/api/clientApi";
-import { useCreateClientMutation } from "@/features/api/clientApi";
+import { useGetAllClientsQuery, useCreateClientMutation } from "@/features/api/clientApi";
 
 // Form Section Component
 const FormSection = ({ title, icon: Icon, children, className = "" }) => (
@@ -55,6 +54,8 @@ const CreateOrder = () => {
     city: "",
     state: "",
     pincode: "",
+    gstin: "",
+    pan: "",
   });
   const [branchId, setBranchId] = useState("");
   const [expectedDeliveryDate, setExpectedDeliveryDate] = useState("");
@@ -73,6 +74,23 @@ const CreateOrder = () => {
   ]);
   const [notes, setNotes] = useState("");
   const [specialInstructions, setSpecialInstructions] = useState("");
+  // Shipping state (to match Update Order)
+  const [shippingDetails, setShippingDetails] = useState({
+    shippingAddress: "",
+    shippingCity: "",
+    shippingState: "",
+    shippingPincode: "",
+    shippingPhone: "",
+    shippingMethod: "home_delivery",
+    shippingCost: 0,
+    // trackingNumber removed
+    estimatedDeliveryDate: "",
+    actualDeliveryDate: "",
+    deliveryNotes: "",
+    deliveryPerson: "",
+    deliveryPersonContact: "",
+    deliveryStatus: "pending",
+  });
   
   // Pricing state
   const [discountType, setDiscountType] = useState("percentage");
@@ -93,6 +111,52 @@ const CreateOrder = () => {
 
   const [createOrder, { isLoading: isCreatingOrder }] = useCreateOrderMutation();
   const [createClient, { isLoading: isCreatingClient }] = useCreateClientMutation();
+  const [lookupMode] = useState("gstin");
+
+  // Auto-fill city/state based on pincode
+  useEffect(() => {
+    const pincode = (clientDetails.pincode || "").trim();
+    if (pincode && /^[0-9]{6}$/.test(pincode)) {
+      const fetchPincodeDetails = async () => {
+        try {
+          const attempts = [
+            () => fetch(`https://www.postalpincode.in/api/pincode/${pincode}`),
+            () => fetch(`https://api.postalpincode.in/pincode/${pincode}`),
+            () => fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(`http://www.postalpincode.in/api/pincode/${pincode}`)}`),
+            () => fetch(`https://cors-anywhere.herokuapp.com/https://www.postalpincode.in/api/pincode/${pincode}`),
+            () => fetch(`https://thingproxy.freeboard.io/fetch/https://www.postalpincode.in/api/pincode/${pincode}`),
+          ];
+
+          let data = null;
+          for (const attempt of attempts) {
+            try {
+              const res = await attempt();
+              if (!res.ok) continue;
+              data = await res.json();
+              break;
+            } catch (_) {}
+          }
+
+          if (data) {
+            const arr = Array.isArray(data) ? data : [data];
+            const first = arr[0];
+            const offices = first?.PostOffice || [];
+            if (offices.length > 0) {
+              const po = offices[0];
+              setClientDetails(prev => ({
+                ...prev,
+                city: po?.District || prev.city,
+                state: po?.State || prev.state,
+              }));
+            }
+          }
+        } catch (_) {}
+      };
+      fetchPincodeDetails();
+    }
+  }, [clientDetails.pincode]);
+
+  const handleLookup = async () => {};
 
   // Calculate detailed item breakdown
   const calculateItemBreakdown = (item, index) => {
@@ -236,6 +300,13 @@ const CreateOrder = () => {
     setItems(updated);
   };
 
+  const handleShippingChange = (field, value) => {
+    setShippingDetails(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   const addItem = () => {
     setItems([
       ...items,
@@ -366,6 +437,21 @@ const CreateOrder = () => {
         advancePayment: advancePayment ? parseFloat(advancePayment) : 0,
         paymentMethod,
         paymentNotes,
+        shippingDetails: {
+          shippingAddress: shippingDetails.shippingAddress,
+          shippingCity: shippingDetails.shippingCity,
+          shippingState: shippingDetails.shippingState,
+          shippingPincode: shippingDetails.shippingPincode,
+          shippingPhone: shippingDetails.shippingPhone,
+          shippingMethod: shippingDetails.shippingMethod,
+          shippingCost: parseFloat(shippingDetails.shippingCost) || 0,
+          trackingNumber: shippingDetails.trackingNumber,
+          estimatedDeliveryDate: shippingDetails.estimatedDeliveryDate,
+          actualDeliveryDate: shippingDetails.actualDeliveryDate,
+          deliveryNotes: shippingDetails.deliveryNotes,
+          deliveryPerson: shippingDetails.deliveryPerson,
+          deliveryStatus: shippingDetails.deliveryStatus,
+        },
       };
 
       const response = await createOrder(orderData);
@@ -502,6 +588,16 @@ const CreateOrder = () => {
                 </FormField>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div className="md:col-span-2 lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <FormField label="GSTIN">
+                      <Input
+                        placeholder="Enter GSTIN"
+                        value={clientDetails.gstin}
+                        onChange={(e) => setClientDetails({ ...clientDetails, gstin: e.target.value.toUpperCase() })}
+                        className="h-8 text-sm"
+                      />
+                    </FormField>
+                  </div>
                   <FormField label="Name" required>
                     <Input
                       placeholder="Client name"
@@ -788,6 +884,132 @@ const CreateOrder = () => {
                   placeholder="Special instructions"
                   value={specialInstructions}
                   onChange={(e) => setSpecialInstructions(e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </FormField>
+            </div>
+          </FormSection>
+
+          {/* Shipping Details - to match Update Order */}
+          <FormSection title="Shipping Details" icon={MapPin}>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <FormField label="Shipping Address">
+                <Input
+                  placeholder="Enter shipping address"
+                  value={shippingDetails.shippingAddress}
+                  onChange={(e) => handleShippingChange("shippingAddress", e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </FormField>
+              <FormField label="City">
+                <Input
+                  placeholder="City"
+                  value={shippingDetails.shippingCity}
+                  onChange={(e) => handleShippingChange("shippingCity", e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </FormField>
+              <FormField label="State">
+                <Input
+                  placeholder="State"
+                  value={shippingDetails.shippingState}
+                  onChange={(e) => handleShippingChange("shippingState", e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </FormField>
+              <FormField label="Pincode">
+                <Input
+                  placeholder="Pincode"
+                  value={shippingDetails.shippingPincode}
+                  onChange={(e) => handleShippingChange("shippingPincode", e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </FormField>
+              <FormField label="Phone">
+                <Input
+                  placeholder="Phone number"
+                  value={shippingDetails.shippingPhone}
+                  onChange={(e) => handleShippingChange("shippingPhone", e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </FormField>
+              <FormField label="Shipping Method">
+                <Select value={shippingDetails.shippingMethod} onValueChange={(v) => handleShippingChange("shippingMethod", v)}>
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue placeholder="Select shipping method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pickup">Pickup</SelectItem>
+                    <SelectItem value="home_delivery">Home Delivery</SelectItem>
+                    <SelectItem value="courier">Courier</SelectItem>
+                    <SelectItem value="express">Express</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormField>
+              <FormField label="Shipping Cost (₹)">
+                <Input
+                  type="number"
+                  placeholder="0"
+                  value={shippingDetails.shippingCost}
+                  onChange={(e) => handleShippingChange("shippingCost", e.target.value)}
+                  className="h-8 text-sm"
+                  min="0"
+                  step="0.01"
+                />
+              </FormField>
+              
+              <FormField label="Estimated Delivery Date">
+                <Input
+                  type="date"
+                  value={shippingDetails.estimatedDeliveryDate}
+                  onChange={(e) => handleShippingChange("estimatedDeliveryDate", e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </FormField>
+              <FormField label="Actual Delivery Date">
+                <Input
+                  type="date"
+                  value={shippingDetails.actualDeliveryDate}
+                  onChange={(e) => handleShippingChange("actualDeliveryDate", e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </FormField>
+              <FormField label="Delivery Person">
+                <Input
+                  placeholder="Delivery person"
+                  value={shippingDetails.deliveryPerson}
+                  onChange={(e) => handleShippingChange("deliveryPerson", e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </FormField>
+              <FormField label="Delivery Person Contact">
+                <Input
+                  placeholder="Contact number"
+                  value={shippingDetails.deliveryPersonContact}
+                  onChange={(e) => handleShippingChange("deliveryPersonContact", e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </FormField>
+              <FormField label="Delivery Status">
+                <Select value={shippingDetails.deliveryStatus} onValueChange={(v) => handleShippingChange("deliveryStatus", v)}>
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue placeholder="Select delivery status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="shipped">Shipped</SelectItem>
+                    <SelectItem value="in_transit">In Transit</SelectItem>
+                    <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
+                    <SelectItem value="delivered">Delivered</SelectItem>
+                    <SelectItem value="failed">Failed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormField>
+              <FormField label="Delivery Notes">
+                <Input
+                  placeholder="Delivery notes"
+                  value={shippingDetails.deliveryNotes}
+                  onChange={(e) => handleShippingChange("deliveryNotes", e.target.value)}
                   className="h-8 text-sm"
                 />
               </FormField>

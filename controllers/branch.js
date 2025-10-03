@@ -1,4 +1,5 @@
 import Branch from "../models/branch.js";
+import mongoose from "mongoose";
 
 // Create Branch
 export const createBranch = async (req, res) => {
@@ -111,14 +112,18 @@ export const updateBranch = async (req, res) => {
 // Delete Branch
 export const deleteBranch = async (req, res) => {
   try {
-    const { branchId } = req.body;
-    const branch = await Branch.findByIdAndDelete(branchId);
+    const branchId = req.body?.branchId || req.params?.id || req.query?.branchId;
+    if (!branchId || !mongoose.isValidObjectId(branchId)) {
+      return res.status(400).json({ success: false, message: "Invalid or missing branchId" });
+    }
+    const branch = await Branch.findById(branchId);
     if (!branch) {
       return res.status(404).json({ success: false, message: "Branch not found" });
     }
+    await branch.deleteOne();
     res.status(200).json({ success: true, message: "Branch deleted successfully" });
   } catch (err) {
     console.error("Error deleting branch:", err);
     res.status(500).json({ success: false, message: "Internal server error", error: err.message });
   }
-}; 
+};

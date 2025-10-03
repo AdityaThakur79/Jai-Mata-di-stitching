@@ -14,9 +14,9 @@ export const createClient = async (req, res) => {
       city,
       state,
       pincode,
-      dateOfBirth,
-      gender,
+      
       notes,
+      gstin,
     } = req.body;
 
     // Validation
@@ -86,6 +86,7 @@ export const createClient = async (req, res) => {
       notes: notes || "",
       branchId: user.branchId || branchId,
       registeredBy: registeredById,
+      gstin: gstin ? gstin.trim().toUpperCase() : undefined,
     });
 
     res.status(201).json({
@@ -221,6 +222,7 @@ export const updateClient = async (req, res) => {
       notes,
       isActive,
       branchId,
+      gstin,
     } = req.body;
 
     const existingClient = await Client.findById(clientId);
@@ -263,13 +265,13 @@ export const updateClient = async (req, res) => {
     if (city) existingClient.city = city.trim();
     if (state) existingClient.state = state.trim();
     if (pincode) existingClient.pincode = pincode.trim();
-    if (dateOfBirth !== undefined) existingClient.dateOfBirth = dateOfBirth || null;
-    if (gender) existingClient.gender = gender;
+    
     if (notes !== undefined) existingClient.notes = notes;
     if (isActive !== undefined) existingClient.isActive = isActive;
     if (branchId) {
       existingClient.branchId = branchId;
     }
+    if (gstin !== undefined) existingClient.gstin = gstin ? gstin.trim().toUpperCase() : undefined;
 
     await existingClient.save();
 
@@ -285,6 +287,247 @@ export const updateClient = async (req, res) => {
       message: "Internal server error",
       error: err.message,
     });
+  }
+};
+
+// Lookup GSTIN using free sheet.gstin.dev API
+export const lookupGstin = async (req, res) => {
+  try {
+    const { gstin } = req.body;
+    if (!gstin) {
+      return res.status(400).json({ success: false, message: "GSTIN is required" });
+    }
+    const gst = String(gstin).toUpperCase().trim();
+    const gstinRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
+    if (!gstinRegex.test(gst)) {
+      return res.status(400).json({ success: false, message: "Invalid GSTIN format" });
+    }
+    // Use global fetch (Node 18+). Add a timeout to avoid hanging requests.
+    // 1) Prefer AppyFlow when key available (more reliable)
+    if (process.env.APPYFLOW_API_KEY) {
+      try {
+        const afResp = await fetch(`https://appyflow.in/api/verifyGST?gstNo=${gst}&key_secret=${process.env.APPYFLOW_API_KEY}`);
+        if (afResp.ok) {
+          const af = await afResp.json();
+          const afGstin = af?.taxpayerInfo?.gstin || af?.gstin;
+          if (afGstin && afGstin.toUpperCase() === gst) {
+            const pr = af?.taxpayerInfo?.pradr || {};
+            const addr = pr?.adr || {};
+            const normalized = {
+              gstin: gst,
+              legalName: af?.taxpayerInfo?.lgnm || undefined,
+              tradeName: af?.taxpayerInfo?.tradeNam || undefined,
+              businessName: af?.taxpayerInfo?.tradeNam || af?.taxpayerInfo?.lgnm || undefined,
+              gstStatus: af?.taxpayerInfo?.sts || undefined,
+              gstStateCode: af?.taxpayerInfo?.stjCd || undefined,
+              businessType: af?.taxpayerInfo?.ctb || undefined,
+              address: {
+                full: (typeof af?.taxpayerInfo?.pradr?.adr === 'string' && af?.taxpayerInfo?.pradr?.adr) || [addr?.bno, addr?.flno, addr?.st, addr?.loc, addr?.dst].filter(Boolean).join(", "),
+                city: addr?.dst || "",
+                state: addr?.stcd || "",
+                pincode: String(addr?.pncd || (typeof af?.taxpayerInfo?.pradr?.adr === 'string' ? (af?.taxpayerInfo?.pradr?.adr.match(/\b\d{6}\b/)||[])[0]||'' : '')),
+              },
+            };
+            return res.status(200).json({ success: true, data: normalized });
+          }
+        }
+      } catch (e) {
+        // continue to other fallbacks
+      }
+    }
+
+    // 2) sheet.gstin.dev and mirrors
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    let resp;
+    try {
+      resp = await fetch(`https://sheet.gstin.dev/1/gstin/${gst}`, { signal: controller.signal });
+    } catch (networkErr) {
+      clearTimeout(timeout);
+      // Try via public proxies/mirrors for sheet.gstin.dev
+      const proxyUrls = [
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://sheet.gstin.dev/1/gstin/${gst}`)}`,
+        `https://thingproxy.freeboard.io/fetch/https://sheet.gstin.dev/1/gstin/${gst}`,
+        `https://r.jina.ai/http://sheet.gstin.dev/1/gstin/${gst}`,
+      ];
+      for (const url of proxyUrls) {
+        try {
+          const p = await fetch(url);
+          if (p.ok) {
+            const text = await p.text();
+            let json;
+            try { json = JSON.parse(text); } catch { json = null; }
+            if (json) {
+              const normalized = {
+                gstin: gst,
+                legalName: json?.lgnm || json?.legal_name || undefined,
+                tradeName: json?.trade_name || json?.tradeNam || undefined,
+                businessName: json?.trade_name || json?.lgnm || undefined,
+                gstStatus: json?.gstin_status || json?.sts || undefined,
+                gstStateCode: json?.stjcd || json?.state_code || undefined,
+                businessType: json?.dty || json?.constitution_of_business || undefined,
+                address: (() => {
+                  const pr = json?.pradr?.addr || json?.principal_place_of_business || {};
+                  const bno = pr?.bno || pr?.building_name || "";
+                  const flno = pr?.flno || pr?.floor_number || "";
+                  const loc = pr?.loc || pr?.location || "";
+                  const st = pr?.st || pr?.street || "";
+                  const dst = pr?.dst || pr?.district || "";
+                  const pncd = pr?.pncd || pr?.pincode || "";
+                  const stcd = pr?.stcd || pr?.state || "";
+                  return {
+                    full: [bno, flno, st, loc, dst].filter(Boolean).join(", "),
+                    city: dst || "",
+                    state: stcd || "",
+                    pincode: String(pncd || ""),
+                  };
+                })(),
+              };
+              return res.status(200).json({ success: true, data: normalized });
+            }
+          }
+        } catch (_) {}
+      }
+      // If still nothing, proceed to partial
+      // Partial fallback: extract PAN and state code from GSTIN so user can proceed manually
+      const stateCode = gst.substring(0, 2);
+      const panFromGstin = gst.substring(2, 12);
+      return res.status(200).json({
+        success: true,
+        data: {
+          gstin: gst,
+          pan: panFromGstin,
+          gstStateCode: stateCode,
+        },
+        warning: "GST service unreachable. Returned partial details from GSTIN."
+      });
+    }
+    clearTimeout(timeout);
+    if (!resp.ok) {
+      // Try proxy/mirror
+      const proxyUrls = [
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://sheet.gstin.dev/1/gstin/${gst}`)}`,
+        `https://thingproxy.freeboard.io/fetch/https://sheet.gstin.dev/1/gstin/${gst}`,
+        `https://r.jina.ai/http://sheet.gstin.dev/1/gstin/${gst}`,
+      ];
+      for (const url of proxyUrls) {
+        try {
+          const p = await fetch(url);
+          if (p.ok) {
+            const text = await p.text();
+            let json;
+            try { json = JSON.parse(text); } catch { json = null; }
+            if (json) {
+              const normalized = {
+                gstin: gst,
+                legalName: json?.lgnm || json?.legal_name || undefined,
+                tradeName: json?.trade_name || json?.tradeNam || undefined,
+                businessName: json?.trade_name || json?.lgnm || undefined,
+                gstStatus: json?.gstin_status || json?.sts || undefined,
+                gstStateCode: json?.stjcd || json?.state_code || undefined,
+                businessType: json?.dty || json?.constitution_of_business || undefined,
+                address: (() => {
+                  const pr = json?.pradr?.addr || json?.principal_place_of_business || {};
+                  const bno = pr?.bno || pr?.building_name || "";
+                  const flno = pr?.flno || pr?.floor_number || "";
+                  const loc = pr?.loc || pr?.location || "";
+                  const st = pr?.st || pr?.street || "";
+                  const dst = pr?.dst || pr?.district || "";
+                  const pncd = pr?.pncd || pr?.pincode || "";
+                  const stcd = pr?.stcd || pr?.state || "";
+                  return {
+                    full: [bno, flno, st, loc, dst].filter(Boolean).join(", "),
+                    city: dst || "",
+                    state: stcd || "",
+                    pincode: String(pncd || ""),
+                  };
+                })(),
+              };
+              return res.status(200).json({ success: true, data: normalized });
+            }
+          }
+        } catch (_) {}
+      }
+      // AppyFlow was tried first; if mirrors failed, we fall back to partial below
+      // If remote responds non-OK, still return partial parse to help the user
+      const stateCode = gst.substring(0, 2);
+      const panFromGstin = gst.substring(2, 12);
+      return res.status(200).json({
+        success: true,
+        data: {
+          gstin: gst,
+          pan: panFromGstin,
+          gstStateCode: stateCode,
+        },
+        warning: "Unable to fetch GST details. Returned partial details from GSTIN."
+      });
+    }
+    const data = await resp.json();
+    // Normalize from API
+    const normalized = {
+      gstin: gst,
+      legalName: data?.lgnm || data?.legal_name || undefined,
+      tradeName: data?.trade_name || data?.tradeNam || data?.tradeNam || data?.trade_name || data?.trade || undefined,
+      businessName: data?.trade_name || data?.lgnm || undefined,
+      gstStatus: data?.gstin_status || data?.sts || undefined,
+      gstStateCode: data?.stjcd || data?.state_code || undefined,
+      businessType: data?.dty || data?.constitution_of_business || undefined,
+      address: (() => {
+        const pr = data?.pradr?.addr || data?.principal_place_of_business || {};
+        const bno = pr?.bno || pr?.building_name || "";
+        const flno = pr?.flno || pr?.floor_number || "";
+        const loc = pr?.loc || pr?.location || "";
+        const st = pr?.st || pr?.street || "";
+        const dst = pr?.dst || pr?.district || "";
+        const pncd = pr?.pncd || pr?.pincode || "";
+        const stcd = pr?.stcd || pr?.state || "";
+        return {
+          full: [bno, flno, st, loc, dst].filter(Boolean).join(", "),
+          city: dst || "",
+          state: stcd || "",
+          pincode: String(pncd || ""),
+        };
+      })(),
+    };
+    return res.status(200).json({ success: true, data: normalized });
+  } catch (err) {
+    console.error("Error looking up GSTIN:", err);
+    // Distinguish abort from other errors
+    if (err?.name === 'AbortError') {
+      // Partial fallback on timeout
+      const gst = String(req.body?.gstin || "").toUpperCase().trim();
+      if (gst && /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(gst)) {
+        const stateCode = gst.substring(0, 2);
+        const panFromGstin = gst.substring(2, 12);
+        return res.status(200).json({
+          success: true,
+          data: { gstin: gst, pan: panFromGstin, gstStateCode: stateCode },
+          warning: "GST lookup timed out. Returned partial details from GSTIN."
+        });
+      }
+      return res.status(504).json({ success: false, message: "GST lookup timed out. Please try again." });
+    }
+    return res.status(500).json({ success: false, message: "Internal server error", error: err.message });
+  }
+};
+
+// PAN lookup (no reliable free name API). We validate and return normalized PAN.
+export const lookupPan = async (req, res) => {
+  try {
+    const { pan } = req.body;
+    if (!pan) {
+      return res.status(400).json({ success: false, message: "PAN is required" });
+    }
+    const normalized = String(pan).toUpperCase().trim();
+    const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
+    if (!panRegex.test(normalized)) {
+      return res.status(400).json({ success: false, message: "Invalid PAN format" });
+    }
+    // Optional: attempt free validation endpoints if available in future
+    return res.status(200).json({ success: true, data: { pan: normalized } });
+  } catch (err) {
+    console.error("Error looking up PAN:", err);
+    return res.status(500).json({ success: false, message: "Internal server error", error: err.message });
   }
 };
 

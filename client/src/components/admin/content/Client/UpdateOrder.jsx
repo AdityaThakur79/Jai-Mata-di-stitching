@@ -11,13 +11,16 @@ import {
   SelectItem,
   SelectContent,
 } from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+// Match CreateOrder section shells
+const FormSection = ({ title, icon: Icon, children, className = "" }) => (
+  <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${className}`}>
+    <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100">
+      <Icon className="w-4 h-4 text-gray-600" />
+      <h3 className="font-semibold text-gray-800 text-sm">{title}</h3>
+    </div>
+    {children}
+  </div>
+);
 import {
   ArrowLeft,
   Save,
@@ -74,11 +77,11 @@ const UpdateOrder = () => {
     shippingPhone: "",
     shippingMethod: "home_delivery",
     shippingCost: 0,
-    trackingNumber: "",
     estimatedDeliveryDate: "",
     actualDeliveryDate: "",
     deliveryNotes: "",
     deliveryPerson: "",
+    deliveryPersonContact: "",
     deliveryStatus: "pending",
   });
 
@@ -260,15 +263,17 @@ const UpdateOrder = () => {
       }
     }
 
-    // Calculate stitching cost
-    stitchingCost = selectedItem.stitchingCharge || 0;
-    breakdown.push({
-      name: "Stitching Charge",
-      rate: stitchingCost,
-      quantity: 1,
-      unit: "item",
-      total: stitchingCost,
-    });
+    // Calculate stitching cost only for applicable order types (match Create Order)
+    if (formData.orderType === "stitching" || formData.orderType === "fabric_stitching") {
+      stitchingCost = selectedItem.stitchingCharge || 0;
+      breakdown.push({
+        name: "Stitching Charge",
+        rate: stitchingCost,
+        quantity: 1,
+        unit: "item",
+        total: stitchingCost,
+      });
+    }
 
     itemPrice = fabricCost + stitchingCost;
     const totalItemPrice = itemPrice * parseInt(item.quantity);
@@ -489,7 +494,7 @@ const UpdateOrder = () => {
 
   return (
     <div className="min-h-screen py-4 px-2 sm:px-4">
-      <div className="container mx-auto max-w-7xl">
+      <div className="container mx-auto ">
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center gap-4 mb-4">
@@ -509,17 +514,9 @@ const UpdateOrder = () => {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Order Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="w-5 h-5" />
-                Order Information
-              </CardTitle>
-              <CardDescription>Basic order details and settings</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
+          <FormSection title="Order Information" icon={FileText}>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="clientId">Client *</Label>
@@ -690,19 +687,10 @@ const UpdateOrder = () => {
                   placeholder="Add payment notes..."
                 />
               </div>
-            </CardContent>
-          </Card>
+          </FormSection>
 
           {/* Shipping Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="w-5 h-5" />
-                Shipping Details
-              </CardTitle>
-              <CardDescription>Delivery and shipping information</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
+          <FormSection title="Shipping Details" icon={MapPin}>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="shippingAddress">Shipping Address</Label>
@@ -785,15 +773,7 @@ const UpdateOrder = () => {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="trackingNumber">Tracking Number</Label>
-                  <Input
-                    id="trackingNumber"
-                    value={shippingDetails.trackingNumber}
-                    onChange={(e) => handleShippingChange("trackingNumber", e.target.value)}
-                    placeholder="Enter tracking number"
-                  />
-                </div>
+              
 
                 <div className="space-y-2">
                   <Label htmlFor="estimatedDeliveryDate">Estimated Delivery Date</Label>
@@ -822,6 +802,16 @@ const UpdateOrder = () => {
                     value={shippingDetails.deliveryPerson}
                     onChange={(e) => handleShippingChange("deliveryPerson", e.target.value)}
                     placeholder="Enter delivery person name"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="deliveryPersonContact">Delivery Person Contact</Label>
+                  <Input
+                    id="deliveryPersonContact"
+                    value={shippingDetails.deliveryPersonContact}
+                    onChange={(e) => handleShippingChange("deliveryPersonContact", e.target.value)}
+                    placeholder="Enter contact number"
                   />
                 </div>
 
@@ -855,27 +845,18 @@ const UpdateOrder = () => {
                   placeholder="Add delivery notes..."
                 />
               </div>
-            </CardContent>
-          </Card>
+          </FormSection>
 
           {/* Order Items */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Package className="w-5 h-5" />
-                    Order Items
-                  </CardTitle>
-                  <CardDescription>Add items to the order</CardDescription>
-                </div>
-                <Button type="button" onClick={addItem} className="bg-green-600 hover:bg-green-700">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Item
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <FormSection title="Order Items" icon={Package}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-sm text-gray-600">Add items to the order</div>
+              <Button type="button" onClick={addItem} className="bg-orange-600 hover:bg-orange-700">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Item
+              </Button>
+            </div>
+            <div className="space-y-4">
               {console.log("Rendering items:", items)}
               {items.map((item, index) => (
                 <div key={index} className="border border-gray-200 rounded-lg p-4 space-y-4">
@@ -1010,19 +991,11 @@ const UpdateOrder = () => {
                   <p className="text-sm">Click "Add Item" to start adding items to this order</p>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </FormSection>
 
           {/* Order Summary */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="w-5 h-5" />
-                Order Summary
-              </CardTitle>
-              <CardDescription>Review the order total and pricing breakdown</CardDescription>
-            </CardHeader>
-            <CardContent>
+          <FormSection title="Order Summary" icon={FileText}>
               <div className="bg-orange-50 rounded-lg p-6 border border-orange-200">
                 {orderTotal.totalAmount === 0 ? (
                   <div className="text-center py-6">
@@ -1140,8 +1113,7 @@ const UpdateOrder = () => {
                   </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
+          </FormSection>
 
           {/* Submit Button */}
           <div className="flex justify-end gap-4">

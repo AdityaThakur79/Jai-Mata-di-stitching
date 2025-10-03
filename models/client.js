@@ -5,6 +5,12 @@ const clientSchema = new mongoose.Schema({
     type: String,
     unique: true,
   },
+  // GSTIN identifier (optional)
+  gstin: {
+    type: String,
+    trim: true,
+    index: true,
+  },
   name: {
     type: String,
     required: true,
@@ -41,13 +47,6 @@ const clientSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true,
-  },
-  dateOfBirth: {
-    type: Date,
-  },
-  gender: {
-    type: String,
-    enum: ["male", "female", "other"],
   },
   profileImage: {
     type: String,

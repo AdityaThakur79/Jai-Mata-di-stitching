@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,14 +52,66 @@ const CreateClient = () => {
     city: "",
     state: "",
     pincode: "",
-    dateOfBirth: "",
-    gender: "",
     notes: "",
     branchId: "",
+    gstin: "",
+    pan: "",
+    businessName: "",
+    tradeName: "",
+    legalName: "",
+    businessType: "",
+    gstStatus: "",
+    gstStateCode: "",
   });
 
   const [profileImage, setProfileImage] = useState(null);
   const [profileImagePreview, setProfileImagePreview] = useState(null);
+  const [lookupMode] = useState("gstin");
+
+  // Auto-fill city/state based on pincode
+  useEffect(() => {
+    const pincode = (form.pincode || "").trim();
+    if (pincode && /^[0-9]{6}$/.test(pincode)) {
+      const fetchPincodeDetails = async () => {
+        try {
+          const attempts = [
+            () => fetch(`https://www.postalpincode.in/api/pincode/${pincode}`),
+            () => fetch(`https://api.postalpincode.in/pincode/${pincode}`),
+            () => fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(`http://www.postalpincode.in/api/pincode/${pincode}`)}`),
+            () => fetch(`https://cors-anywhere.herokuapp.com/https://www.postalpincode.in/api/pincode/${pincode}`),
+            () => fetch(`https://thingproxy.freeboard.io/fetch/https://www.postalpincode.in/api/pincode/${pincode}`),
+          ];
+
+          let data = null;
+          for (const attempt of attempts) {
+            try {
+              const res = await attempt();
+              if (!res.ok) continue;
+              data = await res.json();
+              break;
+            } catch (_) {}
+          }
+
+          if (data) {
+            const arr = Array.isArray(data) ? data : [data];
+            const first = arr[0];
+            const offices = first?.PostOffice || [];
+            if (offices.length > 0) {
+              const po = offices[0];
+              setForm(prev => ({
+                ...prev,
+                city: po?.District || prev.city,
+                state: po?.State || prev.state,
+              }));
+            }
+          }
+        } catch (_) {
+          // ignore
+        }
+      };
+      fetchPincodeDetails();
+    }
+  }, [form.pincode]);
 
   // Get user's branch info
   const userBranch = employeeData?.employee?.branchId;
@@ -157,6 +209,8 @@ const CreateClient = () => {
     }
   };
 
+  const handleLookup = async () => {};
+
   if (employeeLoading || branchesLoading) {
     return (
       <div className="min-h-screen py-4 px-2 sm:px-4 flex items-center justify-center">
@@ -184,6 +238,17 @@ const CreateClient = () => {
           {/* Basic Information */}
           <FormSection title="Basic Information" icon={User}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="md:col-span-2 lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+                <FormField label="GSTIN">
+                  <Input
+                    placeholder="Enter GSTIN"
+                    value={form.gstin}
+                    onChange={(e) => handleInputChange("gstin", e.target.value.toUpperCase())}
+                    className="h-8 text-sm"
+                  />
+                </FormField>
+              </div>
+
               <FormField label="Full Name" required>
                 <Input
                   placeholder="Enter client's full name"
@@ -212,29 +277,11 @@ const CreateClient = () => {
                 />
               </FormField>
               
-              <FormField label="Gender">
-                <Select value={form.gender} onValueChange={(value) => handleInputChange("gender", value)}>
-                  <SelectTrigger className="h-8 text-sm">
-                    <SelectValue placeholder="Select gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </FormField>
               
-              <FormField label="Date of Birth">
-                <Input
-                  type="date"
-                  value={form.dateOfBirth}
-                  onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
-                  className="h-8 text-sm"
-                />
-              </FormField>
             </div>
           </FormSection>
+
+          {/* Removed extra business fields as per requirement. Name will be auto-set from GST. */}
 
           {/* Branch Selection */}
           <FormSection title="Branch Selection" icon={MapPin}>
