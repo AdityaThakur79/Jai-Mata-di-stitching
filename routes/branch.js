@@ -24,6 +24,8 @@ router.post("/get", isAuthenticated, getBranchById);
 router.put("/update", isAuthenticated, isSuperAdmin, updateBranch);
 
 // Delete Branch (SuperAdmin/Director only)
+// Accepts branchId in body, query, or as /delete/:id
 router.delete("/delete", isAuthenticated, isSuperAdmin, deleteBranch);
+router.delete("/delete/:id", isAuthenticated, isSuperAdmin, deleteBranch);
 
 export default router; 

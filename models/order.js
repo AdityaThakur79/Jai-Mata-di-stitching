@@ -151,6 +151,7 @@ const orderSchema = new mongoose.Schema({
     ref: "Client",
   },
   clientDetails: {
+    gstin: { type: String },
     name: {
       type: String,
       required: true,
@@ -236,6 +237,11 @@ const orderSchema = new mongoose.Schema({
   },
   
   // Payment information
+  advancePayment: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
   paymentStatus: {
     type: String,
     enum: ["pending", "partial", "paid", "overdue", "refunded"],
@@ -291,9 +297,7 @@ const orderSchema = new mongoose.Schema({
       default: 0,
       min: 0,
     },
-    trackingNumber: {
-      type: String,
-    },
+    // trackingNumber removed
     estimatedDeliveryDate: {
       type: Date,
     },
@@ -304,6 +308,9 @@ const orderSchema = new mongoose.Schema({
       type: String,
     },
     deliveryPerson: {
+      type: String,
+    },
+    deliveryPersonContact: {
       type: String,
     },
     deliveryStatus: {

@@ -100,6 +100,7 @@ const PendingOrders = () => {
   const [editingOrder, setEditingOrder] = useState(null);
   const [editingField, setEditingField] = useState(null);
   const [updatingOrder, setUpdatingOrder] = useState(null);
+  const [inlinePaymentStatus, setInlinePaymentStatus] = useState("");
 
   const handleViewOrder = async (orderId) => {
     setOpen(true);
@@ -270,6 +271,31 @@ const PendingOrders = () => {
     } catch (error) {
       console.error("Error updating priority:", error);
       toast.error("Error updating priority");
+    } finally {
+      setUpdatingOrder(null);
+    }
+  };
+
+  const handleInlinePaymentUpdate = async (orderId) => {
+    if (!inlinePaymentStatus) return;
+    setUpdatingOrder(orderId);
+    try {
+      const { data } = await updatePaymentStatus({
+        orderId,
+        paymentStatus: inlinePaymentStatus,
+      });
+      if (data?.success) {
+        toast.success("Payment updated successfully");
+        refetch();
+        setEditingOrder(null);
+        setEditingField(null);
+        setInlinePaymentStatus("");
+      } else {
+        toast.error(data?.message || "Failed to update payment");
+      }
+    } catch (error) {
+      console.error("Error updating payment:", error);
+      toast.error("Error updating payment");
     } finally {
       setUpdatingOrder(null);
     }
@@ -644,6 +670,7 @@ const PendingOrders = () => {
                       <span className="text-xs text-gray-400">(click to edit)</span>
                     </div>
                   </TableHead>
+                  <TableHead className="text-center">Payment</TableHead>
                   <TableHead>Created</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -756,6 +783,62 @@ const PendingOrders = () => {
                         >
                           <Badge className={getStatusColor(order.status)}>
                             {order.status}
+                          </Badge>
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingOrder === order._id && editingField === 'payment' ? (
+                        <div className="flex items-center gap-2 justify-center">
+                          <Select
+                            value={inlinePaymentStatus || order.paymentStatus || "pending"}
+                            onValueChange={(value) => setInlinePaymentStatus(value)}
+                            disabled={updatingOrder === order._id}
+                          >
+                            <SelectTrigger className="w-28 h-6 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending">Pending</SelectItem>
+                              <SelectItem value="partial">Partial</SelectItem>
+                              <SelectItem value="paid">Paid</SelectItem>
+                              <SelectItem value="overdue">Overdue</SelectItem>
+                              <SelectItem value="refunded">Refunded</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {updatingOrder === order._id ? (
+                            <Loader2 className="w-3 h-3 animate-spin text-orange-600" />
+                          ) : (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleInlinePaymentUpdate(order._id)}
+                                className="h-6 w-6 p-0 text-green-600 hover:text-green-700"
+                                title="Save"
+                              >
+                                <CheckCircle className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={cancelEditing}
+                                className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
+                                title="Cancel"
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      ) : (
+                        <div 
+                          className="cursor-pointer rounded px-2 py-1 hover:bg-transparent flex items-center justify-center"
+                          onClick={() => { startEditing(order._id, 'payment'); setInlinePaymentStatus(order.paymentStatus || 'pending'); }}
+                          title="Click to change"
+                        >
+                          <Badge className={getPaymentStatusColor(order.paymentStatus)}>
+                            {order.paymentStatus || 'pending'}
                           </Badge>
                         </div>
                       )}

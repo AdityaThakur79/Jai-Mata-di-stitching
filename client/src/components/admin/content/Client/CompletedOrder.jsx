@@ -43,6 +43,7 @@ import {
   CreditCard,
   Receipt,
   AlertCircle,
+  Edit,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useGetAllOrdersQuery } from "@/features/api/orderApi";
@@ -496,11 +497,11 @@ const CompletedOrders = () => {
                     </TableCell>
                     <TableCell>{order.items?.length || 0}</TableCell>
                     <TableCell className="font-medium">
-                      {formatCurrency(order.totalAmount || 0)}
+                      {formatCurrency((order.bill?.totalAmount ?? order.totalAmount) || 0)}
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="font-mono text-xs">
-                        {order.bill?.billNumber || "N/A"}
+                        {(order.bill?.billNumber || "N/A").replace('-BILL-', '-')}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -567,6 +568,15 @@ const CompletedOrders = () => {
                           title="View Order Details"
                         >
                           <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => navigate(`/employee/edit-order/${order._id}`)}
+                          className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          title="Edit Order"
+                        >
+                          <Edit className="w-4 h-4" />
                         </Button>
                         <Button
                           variant="ghost"
