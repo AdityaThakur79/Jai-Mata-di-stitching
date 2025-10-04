@@ -457,7 +457,7 @@ const EmployeeIdCard = ({ employee, logoDataUrl, profileImageDataUrl = null }) =
               }}>Excellence in Every Stitch</Text>
               <Text style={{
                 fontSize: 8,
-                color: "#666666",
+                color: "#000000",
                 lineHeight: 1.3,
                 textAlign: "center",
               }}>{companyAddress}</Text>
@@ -590,7 +590,7 @@ const EmployeeIdCard = ({ employee, logoDataUrl, profileImageDataUrl = null }) =
               }}>Terms & Conditions</Text>
               <View style={{
                 fontSize: 6,
-                color: "#555555",
+                color: "#000000",
                 lineHeight: 1.3,
               }}>
                 <Text style={{
@@ -680,7 +680,7 @@ const EmployeeIdCard = ({ employee, logoDataUrl, profileImageDataUrl = null }) =
               right: mm(5),
               textAlign: "center",
               fontSize: 6,
-              color: "#999999",
+              color: "#000000",
               borderTopWidth: 1,
               borderTopStyle: "solid",
               borderTopColor: "#e0e0e0",

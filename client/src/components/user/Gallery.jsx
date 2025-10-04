@@ -2,14 +2,15 @@
 import { BlurFade } from "@/components/magicui/blur-fade";
 import { useGetAllGalleryQuery } from '@/features/api/galleryApi';
 import { Loader2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export function Gallery() {
   // Fetch up to 12 images for the homepage/section
   const { data, isLoading, error } = useGetAllGalleryQuery();
-  const images = (data?.gallery || []).slice(0, 12);
+  const images = (data?.gallery || []).slice(0, 6);
 
   return (
-    <section id="photos">
+    <section id="photos" className="px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto text-center mb-10 md:mb-16">
         <BlurFade direction="up" offset={24}>
           <h2 className="text-xs font-bold text-amber-600 tracking-[0.2em] uppercase mb-4 font-serif">CRAFTED VISIONS</h2>
@@ -83,6 +84,22 @@ export function Gallery() {
           ))}
         </div>
       )}
+      
+      {/* View Gallery Button */}
+      <div className="flex justify-center mt-8 md:mt-12">
+        <BlurFade direction="up" offset={24} delay={0.5}>
+          <Link to="/gallery">
+            <button
+              className="border-2 px-6 sm:px-8 py-2 sm:py-3 text-base sm:text-lg font-serif tracking-wider shadow-md transition-all duration-300 uppercase"
+              style={{ borderRadius: 0, background: '#e3b873', color: '#222', borderColor: '#e3b873' }}
+              onMouseOver={e => { e.currentTarget.style.background = '#222'; e.currentTarget.style.color = '#e3b873'; e.currentTarget.style.borderColor = '#222'; }}
+              onMouseOut={e => { e.currentTarget.style.background = '#e3b873'; e.currentTarget.style.color = '#222'; e.currentTarget.style.borderColor = '#e3b873'; }}
+            >
+              VIEW FULL GALLERY
+            </button>
+          </Link>
+        </BlurFade>
+      </div>
     </section>
   );
 }
