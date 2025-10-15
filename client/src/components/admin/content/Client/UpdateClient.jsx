@@ -52,6 +52,8 @@ const UpdateClient = () => {
     name: "",
     email: "",
     mobile: "",
+    gstin: "",
+    pan: "",
     address: "",
     city: "",
     state: "",
@@ -108,6 +110,8 @@ const UpdateClient = () => {
           name: client.name || "",
           email: client.email || "",
           mobile: client.mobile || "",
+          gstin: client.gstin || "",
+          pan: client.pan || "",
           address: client.address || "",
           city: client.city || "",
           state: client.state || "",
@@ -228,6 +232,24 @@ const UpdateClient = () => {
           {/* Basic Information */}
           <FormSection title="Basic Information" icon={User}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="md:col-span-2 lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+                <FormField label="GSTIN">
+                  <Input
+                    placeholder="Enter GSTIN"
+                    value={form.gstin}
+                    onChange={(e) => handleInputChange("gstin", e.target.value.toUpperCase())}
+                    className="h-8 text-sm"
+                  />
+                </FormField>
+                <FormField label="PAN">
+                  <Input
+                    placeholder="Enter PAN"
+                    value={form.pan}
+                    onChange={(e) => handleInputChange("pan", e.target.value.toUpperCase())}
+                    className="h-8 text-sm"
+                  />
+                </FormField>
+              </div>
               <FormField label="Full Name" required>
                 <Input
                   placeholder="Enter client's full name"

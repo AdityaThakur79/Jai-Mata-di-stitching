@@ -5,7 +5,7 @@ const orderItemSchema = new mongoose.Schema({
   itemType: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "ItemMaster",
-    required: true,
+    required: false,
   },
   measurement: {
     type: Map,
@@ -91,7 +91,7 @@ const billSchema = new mongoose.Schema({
   },
   taxRate: {
     type: Number,
-    default: 18, // 18% GST
+    default: 5, // 5% GST
   },
   taxAmount: {
     type: Number,
@@ -114,6 +114,12 @@ const billSchema = new mongoose.Schema({
   notes: {
     type: String,
   },
+  pdfUrl: {
+    type: String,
+  },
+  pdfPublicId: {
+    type: String,
+  },
 }, { timestamps: true });
 
 const orderSchema = new mongoose.Schema({
@@ -122,7 +128,7 @@ const orderSchema = new mongoose.Schema({
   },
   orderType: {
     type: String,
-    enum: ["fabric", "fabric_stitching", "stitching"],
+    enum: ["fabric", "fabric_stitching", "stitching", "readymade"],
     required: true,
   },
   status: {

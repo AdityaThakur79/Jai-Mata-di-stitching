@@ -191,3 +191,18 @@ export const sendSalarySlipEmail = async (email, employeeData, salarySlip, month
     throw error;
   }
 };
+
+// Generic invoice email
+export const sendInvoiceEmail = async ({ to, subject, htmlText, attachments }) => {
+  const transporter = createTransporter();
+  const isVerified = await verifyTransporter(transporter);
+  if (!isVerified) throw new Error('Email service not available');
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to,
+    subject: subject || 'Your Invoice',
+    html: htmlText || '<p>Please find your invoice attached.</p>',
+    attachments: attachments || [],
+  };
+  return transporter.sendMail(mailOptions);
+};

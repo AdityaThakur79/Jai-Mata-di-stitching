@@ -487,27 +487,14 @@ const InvoiceDocument = (data) => {
               {'\n'}{data.clientCity}, {data.clientState} - {data.clientPincode}
               {'\n'}Mobile: {data.clientMobile}
               {data.clientEmail && `\nEmail: ${data.clientEmail}`}
+              {data.gstin && `\nGSTIN: ${data.gstin}`}
             </Text>
           </View>
         </View>
         <View style={styles.colGap} />
-        {/* Invoice Details */}
-        <View style={styles.col}>
-          <View style={[styles.pricingBox, styles.cardFixed]}>
-            <Text style={styles.sectionTitle}>Invoice Information</Text>
-            <Text style={styles.sectionContent}>
-              Invoice Number: {(data.invoiceNumber || '').replace('-BILL-', '-')}
-              {'\n'}Invoice Date: {data.invoiceDate}
-              {'\n'}Due Date: {data.dueDate}
-              {'\n'}Payment Status: {data.paymentStatus?.toUpperCase() || 'PENDING'}
-              {data.paymentMethod && `\nPayment Method: ${data.paymentMethod}`}
-              {'\n'}Payment Terms: 30 Days
-            </Text>
-          </View>
-        </View>
-        <View style={styles.colGap} />
-        {/* Shipping Information */}
-        <View style={styles.col}>
+
+          {/* Shipping Information */}
+          <View style={styles.col}>
           {data.shippingDetails && (
             <View style={[styles.shippingSection, styles.cardFixed]}>
               <Text style={styles.shippingTitle}>Shipping Information</Text>
@@ -527,6 +514,24 @@ const InvoiceDocument = (data) => {
               </Text>
             </View>
           )}
+        </View>
+
+       
+        <View style={styles.colGap} />
+         {/* Invoice Details */}
+         <View style={styles.col}>
+          <View style={[styles.pricingBox, styles.cardFixed]}>
+            <Text style={styles.sectionTitle}>Invoice Information</Text>
+            <Text style={styles.sectionContent}>
+              Invoice Number: {(data.invoiceNumber || '').replace('-BILL-', '-')}
+              {'\n'}Invoice Date: {data.invoiceDate}
+              {'\n'}Due Date: {data.dueDate}
+              {data.orderType && (`\nOrder Type: ${String(data.orderType).replace('_', ' ')}`)}
+              {'\n'}Payment Status: {data.paymentStatus?.toUpperCase() || 'PENDING'}
+              {data.paymentMethod && `\nPayment Method: ${data.paymentMethod}`}
+              {'\n'}Payment Terms: 30 Days
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -602,7 +607,7 @@ const InvoiceDocument = (data) => {
             </View>
             
             <View style={styles.pricingRow}>
-              <Text style={styles.pricingLabel}>GST ({data.taxRate}%):</Text>
+              <Text style={styles.pricingLabel}>GST ({(data.taxRate ?? 5)}%):</Text>
               <Text style={styles.pricingValue}>{data.taxAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
             </View>
             

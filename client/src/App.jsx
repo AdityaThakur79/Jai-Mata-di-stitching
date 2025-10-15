@@ -100,8 +100,9 @@ import Clients from "./components/admin/content/Client/Clients.jsx";
 import UpdateClient from "./components/admin/content/Client/UpdateClient.jsx";
 import CreateOrder from "./components/admin/content/Client/CreateOrder.jsx";
 import UpdateOrder from "./components/admin/content/Client/UpdateOrder.jsx";
-import CompletedOrder from "./components/admin/content/Client/CompletedOrder.jsx";
+// Removed CompletedOrder page
 import ClientPendingOrders from "./components/admin/content/Client/PendingOrders.jsx";
+import ClientOrderDetail from "./components/admin/content/Client/OrderDetail.jsx";
 import CreateClient from "./components/admin/content/Client/CreateClient.jsx";
 import BookAppointment from "./components/user/BookAppointment.jsx";
 import CataloguesUserView from "./components/user/Catalogues.jsx";
@@ -440,8 +441,8 @@ const appRouter = createBrowserRouter([
         element:<ClientPendingOrders/>
       },
       {
-        path:"completed-client-orders",
-        element:<CompletedOrder/>
+        path:"client-order/:id",
+        element:<ClientOrderDetail/>
       }
     ],
   },

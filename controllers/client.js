@@ -27,6 +27,14 @@ export const createClient = async (req, res) => {
       });
     }
 
+    // Helper to normalize Indian mobile to 91XXXXXXXXXX format
+    const normalizeIndianMobile = (val) => {
+      if (!val) return val;
+      const digits = String(val).replace(/\D/g, "");
+      const last10 = digits.slice(-10);
+      return last10 ? `91${last10}` : undefined;
+    };
+
     // Check if client already exists
     const existingClient = await Client.findOne({ email: email.toLowerCase() });
     if (existingClient) {
@@ -74,7 +82,7 @@ export const createClient = async (req, res) => {
     const newClient = await Client.create({
       name: name.trim(),
       email: email.toLowerCase().trim(),
-      mobile: mobile.trim(),
+      mobile: normalizeIndianMobile(mobile),
       address: address.trim(),
       city: city.trim(),
       state: state.trim(),

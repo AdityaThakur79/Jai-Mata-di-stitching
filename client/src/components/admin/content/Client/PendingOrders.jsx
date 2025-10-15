@@ -53,8 +53,11 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useGetAllOrdersQuery, useGetAllOrdersStatsQuery } from "@/features/api/orderApi";
-import { useGetOrderByIdMutation, useDeleteOrderMutation, useGenerateBillMutation, useUpdateOrderStatusMutation, useUpdatePaymentStatusMutation } from "@/features/api/orderApi";
+import { useGetOrderByIdMutation, useDeleteOrderMutation, useGenerateBillMutation, useUpdateOrderStatusMutation, useUpdatePaymentStatusMutation, useGetOrderForInvoiceMutation } from "@/features/api/orderApi";
+import { PDFViewer } from '@react-pdf/renderer';
+import InvoiceDocument from '@/utils/invoiceTemplate.jsx';
 import { useDebounce } from "@/hooks/Debounce";
+
 import { Label } from "recharts";
 
 const PendingOrders = () => {
@@ -86,6 +89,7 @@ const PendingOrders = () => {
   const [generateBill, { isLoading: isGeneratingBill }] = useGenerateBillMutation();
   const [updateOrderStatus, { isLoading: isUpdatingStatus }] = useUpdateOrderStatusMutation();
   const [updatePaymentStatus, { isLoading: isUpdatingPayment }] = useUpdatePaymentStatusMutation();
+  const [getOrderForInvoice] = useGetOrderForInvoiceMutation();
 
   // Status and payment management states
   const [showStatusModal, setShowStatusModal] = useState(false);
@@ -102,6 +106,20 @@ const PendingOrders = () => {
   const [updatingOrder, setUpdatingOrder] = useState(null);
   const [inlinePaymentStatus, setInlinePaymentStatus] = useState("");
 
+  // Invoice viewer state
+  const [showInvoiceViewer, setShowInvoiceViewer] = useState(false);
+  const [invoiceData, setInvoiceData] = useState(null);
+  const [isLoadingInvoice, setIsLoadingInvoice] = useState(false);
+
+  // Reset to page 1 whenever filters/search change to ensure correct refetch window
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, orderTypeFilter, priorityFilter, debouncedSearchQuery]);
+
+  // Delete confirmation modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [orderIdToDelete, setOrderIdToDelete] = useState(null);
+
   const handleViewOrder = async (orderId) => {
     setOpen(true);
     try {
@@ -115,20 +133,27 @@ const PendingOrders = () => {
     }
   };
 
-  const handleDeleteOrder = async (orderId) => {
-    if (window.confirm("Are you sure you want to delete this order?")) {
-      try {
-        const { data } = await deleteOrder(orderId);
-        if (data?.success) {
-          toast.success("Order deleted successfully");
-          refetch();
-        } else {
-          toast.error(data?.message || "Failed to delete order");
-        }
-      } catch (error) {
-        console.error("Error deleting order:", error);
-        toast.error("Error deleting order");
+  const handleAskDelete = (orderId) => {
+    setOrderIdToDelete(orderId);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!orderIdToDelete) return;
+    try {
+      const { data } = await deleteOrder(orderIdToDelete);
+      if (data?.success) {
+        toast.success("Order deleted successfully");
+        refetch();
+      } else {
+        toast.error(data?.message || "Failed to delete order");
       }
+    } catch (error) {
+      console.error("Error deleting order:", error);
+      toast.error("Error deleting order");
+    } finally {
+      setShowDeleteModal(false);
+      setOrderIdToDelete(null);
     }
   };
 
@@ -145,6 +170,29 @@ const PendingOrders = () => {
     } catch (error) {
       console.error("Error generating bill:", error);
       toast.error("Error generating bill");
+    }
+  };
+
+  const handleViewBill = async (orderId) => {
+    try {
+      setIsLoadingInvoice(true);
+      const { data } = await getOrderForInvoice(orderId);
+      if (data?.success && data?.invoiceData) {
+        const inv = data.invoiceData;
+        const normalized = {
+          ...inv,
+          gstin: inv.gstin || inv.clientDetails?.gstin || inv.client?.gstin,
+        };
+        setInvoiceData(normalized);
+        setShowInvoiceViewer(true);
+      } else {
+        toast.error(data?.message || "Failed to load invoice data");
+      }
+    } catch (error) {
+      console.error("Error loading invoice:", error);
+      toast.error("Error loading invoice");
+    } finally {
+      setIsLoadingInvoice(false);
     }
   };
 
@@ -401,8 +449,8 @@ const PendingOrders = () => {
               <div className="inline-flex items-center justify-center w-12 h-12 bg-orange-600 rounded-full shadow-lg mb-3">
                 <ShoppingCart className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">All Orders</h1>
-              <p className="text-gray-600 text-sm">Manage and track all orders</p>
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">Client Orders</h1>
+              <p className="text-gray-600 text-sm">Manage and track client orders</p>
             </div>
             <Button
               onClick={() => navigate("/employee/create-order")}
@@ -481,6 +529,39 @@ const PendingOrders = () => {
                 </div>
                 <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
                   <Receipt className="w-6 h-6 text-purple-600" />
+                </div>
+              </div>
+            </div>
+            {/* Payment Breakdown (from completed stats style) */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Paid Amount</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {formatCurrency(statsData.stats.paymentBreakdown.paid?.amount || 0)}
+                  </p>
+                  <p className="text-xs text-green-600 mt-1">
+                    {statsData.stats.paymentBreakdown.paid?.count || 0} orders
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <CreditCard className="w-6 h-6 text-green-600" />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Pending Amount</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {formatCurrency(statsData.stats.paymentBreakdown.pending?.amount || 0)}
+                  </p>
+                  <p className="text-xs text-yellow-600 mt-1">
+                    {statsData.stats.paymentBreakdown.pending?.count || 0} orders
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                  <CreditCard className="w-6 h-6 text-yellow-600" />
                 </div>
               </div>
             </div>
@@ -590,9 +671,18 @@ const PendingOrders = () => {
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="confirmed">Confirmed</SelectItem>
                 <SelectItem value="in_progress">In Progress</SelectItem>
+                <SelectItem value="measurement_taken">Measurement Taken</SelectItem>
+                <SelectItem value="cutting">Cutting</SelectItem>
+                <SelectItem value="stitching">Stitching</SelectItem>
+                <SelectItem value="quality_check">Quality Check</SelectItem>
+                <SelectItem value="ready_for_delivery">Ready for Delivery</SelectItem>
+                <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
+                <SelectItem value="delivered">Delivered</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
                 <SelectItem value="cancelled">Cancelled</SelectItem>
+                <SelectItem value="on_hold">On Hold</SelectItem>
               </SelectContent>
             </Select>
 
@@ -849,7 +939,7 @@ const PendingOrders = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleViewOrder(order._id)}
+                          onClick={() => navigate(`/employee/client-order/${order._id}`)}
                           className="h-8 w-8 p-0 hover:bg-blue-50"
                           title="View Details"
                         >
@@ -866,31 +956,33 @@ const PendingOrders = () => {
                         </Button>
                         {!order.bill && (order.status === "pending" || order.status === "completed") && (
                           <Button
-                            variant="ghost"
                             size="sm"
                             onClick={() => handleGenerateBill(order._id)}
                             disabled={isGeneratingBill}
-                            className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                            className="h-8 px-3 text-green-700 border-green-200 hover:bg-green-50"
+                            variant="outline"
                             title="Generate Bill"
                           >
-                            <FileText className="w-4 h-4" />
+                            <FileText className="w-4 h-4 mr-2" />
+                            Generate Bill
                           </Button>
                         )}
                         {order.bill && (
                           <Button
-                            variant="ghost"
                             size="sm"
-                            onClick={() => navigate(`/employee/completed-client-orders`)}
-                            className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            onClick={() => handleViewBill(order._id)}
+                            className="h-8 px-3 text-blue-700 border-blue-200 hover:bg-blue-50"
+                            variant="outline"
                             title="View Bill"
                           >
-                            <Receipt className="w-4 h-4" />
+                            <Receipt className="w-4 h-4 mr-2" />
+                            View Bill
                           </Button>
                         )}
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDeleteOrder(order._id)}
+                          onClick={() => handleAskDelete(order._id)}
                           disabled={isDeleting}
                           className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                           title="Delete Order"
@@ -1094,6 +1186,67 @@ const PendingOrders = () => {
                     "Update Payment"
                   )}
                 </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+              <h3 className="text-lg font-semibold mb-2 text-red-600">Delete Order</h3>
+              <p className="text-sm text-gray-600">Are you sure you want to delete this order? This action cannot be undone.</p>
+
+              <div className="flex gap-2 mt-6 justify-end">
+                <Button
+                  onClick={() => { setShowDeleteModal(false); setOrderIdToDelete(null); }}
+                  variant="outline"
+                  className=""
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleConfirmDelete}
+                  disabled={isDeleting}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    "Delete"
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+        {showInvoiceViewer && invoiceData && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg w-full max-w-6xl h-[90vh] flex flex-col">
+              <div className="flex items-center justify-between p-4 border-b">
+                <h3 className="text-lg font-semibold">Invoice Preview</h3>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => {
+                      setShowInvoiceViewer(false);
+                      setInvoiceData(null);
+                    }}
+                    variant="outline"
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <PDFViewer 
+                  className="w-full h-full"
+                >
+                  <InvoiceDocument {...invoiceData} />
+                </PDFViewer>
               </div>
             </div>
           </div>

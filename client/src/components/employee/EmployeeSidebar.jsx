@@ -280,8 +280,8 @@ const EmployeeSidebar = () => {
       icon: User2Icon,
       subItems: [
         { title: "Clients", icon: Settings, path: "/employee/clients" },
-        { title: "Pending Orders", icon: Tags, path: "/employee/pending-client-orders" },
-        { title: "Completed Orders", icon: Image, path: "/employee/completed-client-orders" },
+        { title: "Client Orders", icon: Tags, path: "/employee/pending-client-orders" },
+        // { title: "Completed Orders", icon: Image, path: "/employee/completed-client-orders" },
         { title: "Create Order", icon: Plus, path: "/employee/create-order" },
 
         // { title: "Website Settings", icon: Layers, path: "/employee/website/settings" },

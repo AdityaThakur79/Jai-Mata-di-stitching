@@ -12,12 +12,14 @@ import {
 import { useNavigate } from "react-router-dom";
 import { PlusCircle, Trash2, Loader2, User, Package, Users, ShoppingCart, Calendar, MapPin } from "lucide-react";
 import toast from "react-hot-toast";
-import { useCreateOrderMutation } from "@/features/api/orderApi";
+import { useCreateOrderMutation, useGenerateBillMutation, useGetOrderForInvoiceMutation } from "@/features/api/orderApi";
 import { useGetAllItemMastersQuery } from "@/features/api/itemApi";
 import { useGetAllBranchesQuery } from "@/features/api/branchApi";
 import { useGetAllFabricsQuery } from "@/features/api/fabricApi";
 import { useGetAllStylesQuery } from "@/features/api/styleApi";
 import { useGetAllClientsQuery, useCreateClientMutation } from "@/features/api/clientApi";
+import { PDFViewer } from '@react-pdf/renderer';
+import InvoiceDocument from '@/utils/invoiceTemplate.jsx';
 
 // Form Section Component
 const FormSection = ({ title, icon: Icon, children, className = "" }) => (
@@ -58,7 +60,11 @@ const CreateOrder = () => {
     pan: "",
   });
   const [branchId, setBranchId] = useState("");
-  const [expectedDeliveryDate, setExpectedDeliveryDate] = useState("");
+  const [expectedDeliveryDate, setExpectedDeliveryDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 13);
+    return d.toISOString().split("T")[0];
+  });
   const [priority, setPriority] = useState("medium");
   const [items, setItems] = useState([
     {
@@ -95,7 +101,10 @@ const CreateOrder = () => {
   // Pricing state
   const [discountType, setDiscountType] = useState("percentage");
   const [discountValue, setDiscountValue] = useState("");
-  const [taxRate, setTaxRate] = useState("18");
+  const [discountNarration, setDiscountNarration] = useState("");
+  const [promoCode, setPromoCode] = useState("");
+  const [referenceName, setReferenceName] = useState("");
+  const [taxRate, setTaxRate] = useState("5");
   
   // Payment state
   const [advancePayment, setAdvancePayment] = useState("");
@@ -111,7 +120,13 @@ const CreateOrder = () => {
 
   const [createOrder, { isLoading: isCreatingOrder }] = useCreateOrderMutation();
   const [createClient, { isLoading: isCreatingClient }] = useCreateClientMutation();
+  const [generateBill] = useGenerateBillMutation();
+  const [getOrderForInvoice] = useGetOrderForInvoiceMutation();
   const [lookupMode] = useState("gstin");
+
+  // Invoice preview modal state
+  const [showInvoiceViewer, setShowInvoiceViewer] = useState(false);
+  const [invoiceData, setInvoiceData] = useState(null);
 
   // Auto-fill city/state based on pincode
   useEffect(() => {
@@ -160,16 +175,46 @@ const CreateOrder = () => {
 
   // Calculate detailed item breakdown
   const calculateItemBreakdown = (item, index) => {
+    // Fabric-only orders: compute only fabric cost, no itemType required
+    if (orderType === "fabric") {
+      let fabricCost = 0;
+      const breakdown = [];
+      if (item.fabric && item.fabricMeters && parseFloat(item.fabricMeters) > 0) {
+        const selectedFabric = fabricsData?.fabrics?.find(f => f._id === item.fabric);
+        if (selectedFabric) {
+          const totalMeters = parseFloat(item.fabricMeters);
+          fabricCost = selectedFabric.pricePerMeter * totalMeters;
+          breakdown.push({
+            type: 'fabric',
+            name: selectedFabric.name,
+            rate: selectedFabric.pricePerMeter,
+            quantity: totalMeters,
+            total: fabricCost,
+            unit: 'meters (total for order)'
+          });
+        }
+      }
+      if (fabricCost <= 0) return null;
+      return {
+        itemName: 'Fabric',
+        quantity: 1,
+        unitPrice: fabricCost,
+        totalPrice: fabricCost,
+        breakdown,
+        fabric: item.fabric ? fabricsData?.fabrics?.find(f => f._id === item.fabric) : null
+      };
+    }
+
+    // Other orders require itemType and quantity
     if (!item.itemType || !item.quantity) return null;
-    
     const selectedItem = itemData?.items?.find(i => i._id === item.itemType);
     if (!selectedItem) return null;
-    
+
     let fabricCost = 0;
     let stitchingCost = 0;
     const breakdown = [];
-    // Calculate fabric cost - ensure proper validation and fix calculation
-    if (item.fabric && item.fabricMeters && parseFloat(item.fabricMeters) > 0) {
+    // Fabric cost when applicable
+    if ((orderType === "fabric_stitching") && item.fabric && item.fabricMeters && parseFloat(item.fabricMeters) > 0) {
       const selectedFabric = fabricsData?.fabrics?.find(f => f._id === item.fabric);
       if (selectedFabric) {
         const totalMeters = parseFloat(item.fabricMeters);
@@ -184,8 +229,8 @@ const CreateOrder = () => {
         });
       }
     }
-    
-    // Calculate item base cost (stitchingCharge) - per unit * quantity (always included)
+
+    // Item stitching/base cost
     stitchingCost = (selectedItem.stitchingCharge || 0) * parseInt(item.quantity);
     if ((selectedItem.stitchingCharge || 0) > 0) {
       breakdown.push({
@@ -197,12 +242,12 @@ const CreateOrder = () => {
         unit: 'per item'
       });
     }
-    
+
     const totalItemPrice = fabricCost + stitchingCost;
     return {
       itemName: selectedItem.name,
       quantity: parseInt(item.quantity),
-      unitPrice: stitchingCost / parseInt(item.quantity) + (fabricCost / parseInt(item.quantity)), // Total cost divided by quantity
+      unitPrice: stitchingCost / parseInt(item.quantity) + (fabricCost / parseInt(item.quantity)),
       totalPrice: totalItemPrice,
       breakdown,
       fabric: item.fabric ? fabricsData?.fabrics?.find(f => f._id === item.fabric) : null
@@ -215,6 +260,10 @@ const CreateOrder = () => {
     const itemBreakdowns = [];
     
     items.forEach((item, index) => {
+      // Ensure quantity=1 for fabric-only so backend schema validates
+      if (orderType === "fabric" && (!item.quantity || parseInt(item.quantity) < 1)) {
+        item.quantity = 1;
+      }
       const breakdown = calculateItemBreakdown(item, index);
       if (breakdown) {
         subtotal += breakdown.totalPrice;
@@ -350,23 +399,27 @@ const CreateOrder = () => {
       }
     }
 
-    // Check items
+    // Check items based on order type
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
-      if (!item.itemType) {
+      if (orderType !== "fabric" && !item.itemType) {
         toast.error(`Please select item type for item ${i + 1}`);
         return false;
       }
 
-      if (!item.quantity || item.quantity < 1) {
-        toast.error(`Please enter valid quantity for item ${i + 1}`);
-        return false;
+      if (orderType !== "fabric") {
+        if (!item.quantity || item.quantity < 1) {
+          toast.error(`Please enter valid quantity for item ${i + 1}`);
+          return false;
+        }
       }
 
-      // Check fabric validation
-      if (item.fabric && (!item.fabricMeters || item.fabricMeters <= 0)) {
-        toast.error(`Fabric meters must be greater than 0 for item ${i + 1}`);
-        return false;
+      // Fabric validations
+      if (orderType === "fabric" || orderType === "fabric_stitching") {
+        if (item.fabric && (!item.fabricMeters || parseFloat(item.fabricMeters) <= 0)) {
+          toast.error(`Fabric meters must be greater than 0 for item ${i + 1}`);
+          return false;
+        }
       }
     }
 
@@ -389,6 +442,8 @@ const CreateOrder = () => {
             name: selectedClient.name,
             mobile: selectedClient.mobile,
             email: selectedClient.email,
+            gstin: selectedClient.gstin,
+            pan: selectedClient.pan,
             address: selectedClient.address,
             city: selectedClient.city,
             state: selectedClient.state,
@@ -420,13 +475,16 @@ const CreateOrder = () => {
         items: items.map(item => ({
           ...item,
           fabricMeters: item.fabric ? parseFloat(item.fabricMeters) : undefined,
-          quantity: parseInt(item.quantity)
+          quantity: orderType === "fabric" ? 1 : parseInt(item.quantity)
         })),
         branchId,
         expectedDeliveryDate: expectedDeliveryDate || null,
         priority,
         notes,
         specialInstructions,
+        discountNarration: discountNarration || undefined,
+        promoCode: promoCode || undefined,
+        referenceName: referenceName || undefined,
         discountType,
         discountValue: discountValue ? parseFloat(discountValue) : 0,
         taxRate: parseFloat(taxRate),
@@ -454,7 +512,33 @@ const CreateOrder = () => {
       
       if (response.data?.success) {
         toast.success("Order created successfully!");
-        navigate("/employee/pending-client-orders");
+
+        const createdOrderId = response.data?.order?._id || response.data?.orderId;
+        if (!createdOrderId) {
+          toast.error("Order ID missing. Cannot generate invoice.");
+          return;
+        }
+
+        // Generate bill for the created order (server computes totals and creates bill)
+        const billRes = await generateBill({ orderId: createdOrderId, dueDate: new Date().toISOString() });
+        if (!billRes.data?.success) {
+          toast.error(billRes.data?.message || "Failed to generate bill");
+          return;
+        }
+
+        // Fetch invoice data for PDF rendering
+        const invRes = await getOrderForInvoice(createdOrderId);
+        if (invRes.data?.success && invRes.data?.invoiceData) {
+          const inv = invRes.data.invoiceData;
+          const normalized = {
+            ...inv,
+            gstin: inv.gstin || inv.clientDetails?.gstin || inv.client?.gstin || finalClientDetails?.gstin || clientDetails?.gstin,
+          };
+          setInvoiceData(normalized);
+          setShowInvoiceViewer(true);
+        } else {
+          toast.error(invRes.data?.message || "Failed to load invoice data");
+        }
       } else {
         toast.error(response.data?.message || "Failed to create order");
       }
@@ -489,6 +573,7 @@ const CreateOrder = () => {
                     <SelectItem value="fabric">Fabric Only</SelectItem>
                     <SelectItem value="fabric_stitching">Fabric + Stitching</SelectItem>
                     <SelectItem value="stitching">Stitching Only</SelectItem>
+                    <SelectItem value="readymade">Readymade</SelectItem>
                   </SelectContent>
                 </Select>
               </FormField>
@@ -606,14 +691,18 @@ const CreateOrder = () => {
                   </FormField>
 
                   <FormField label="Mobile" required>
-                    <Input
-                      placeholder="Mobile number"
-                      value={clientDetails.mobile}
-                      onChange={(e) =>
-                        setClientDetails({ ...clientDetails, mobile: e.target.value })
-                      }
-                      className="h-8 text-sm"
-                    />
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600">91</span>
+                      <Input
+                        placeholder="10-digit mobile"
+                        value={clientDetails.mobile}
+                        onChange={(e) => {
+                          const digitsOnly = (e.target.value || "").replace(/\D/g, "").slice(0, 10);
+                          setClientDetails({ ...clientDetails, mobile: digitsOnly });
+                        }}
+                        className="h-8 text-sm"
+                      />
+                    </div>
                   </FormField>
 
                   <FormField label="Email">
@@ -699,6 +788,7 @@ const CreateOrder = () => {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
+                    {orderType !== "fabric" && (
                     <FormField label="Item Type" required>
                       <Select
                         value={item.itemType}
@@ -722,20 +812,24 @@ const CreateOrder = () => {
                         </SelectContent>
                       </Select>
                     </FormField>
+                    )}
 
-                    <FormField label="Quantity" required>
-                      <Input
-                        type="number"
-                        min={1}
-                        placeholder="Quantity"
-                        value={item.quantity || 1}
-                        onChange={(e) =>
-                          handleItemChange(index, "quantity", e.target.value)
-                        }
-                        className="h-8 text-sm"
-                      />
-                    </FormField>
+                    {orderType !== "fabric" && (
+                      <FormField label="Quantity" required>
+                        <Input
+                          type="number"
+                          min={1}
+                          placeholder="Quantity"
+                          value={item.quantity || 1}
+                          onChange={(e) =>
+                            handleItemChange(index, "quantity", e.target.value)
+                          }
+                          className="h-8 text-sm"
+                        />
+                      </FormField>
+                    )}
 
+                    {orderType !== "fabric" && (
                     <FormField label="Style">
                       <Select
                         value={item.style}
@@ -761,45 +855,50 @@ const CreateOrder = () => {
                         </SelectContent>
                       </Select>
                     </FormField>
+                    )}
 
-                    <FormField label="Fabric">
-                      <Select
-                        value={item.fabric}
-                        onValueChange={(v) => handleItemChange(index, "fabric", v)}
-                      >
-                        <SelectTrigger className="h-8 text-sm">
-                          <SelectValue placeholder="Select fabric" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {fabricsData?.fabrics?.filter(f => f._id && f._id.trim() !== '' && f.name).length > 0 ? (
-                            fabricsData.fabrics.filter(f => f._id && f._id.trim() !== '' && f.name).map((f) => (
-                              <SelectItem key={f._id} value={f._id}>
-                                {f.name} - ₹{f.pricePerMeter}/m
+                    {(orderType === "fabric" || orderType === "fabric_stitching") && (
+                      <FormField label="Fabric">
+                        <Select
+                          value={item.fabric}
+                          onValueChange={(v) => handleItemChange(index, "fabric", v)}
+                        >
+                          <SelectTrigger className="h-8 text-sm">
+                            <SelectValue placeholder="Select fabric" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {fabricsData?.fabrics?.filter(f => f._id && f._id.trim() !== '' && f.name).length > 0 ? (
+                              fabricsData.fabrics.filter(f => f._id && f._id.trim() !== '' && f.name).map((f) => (
+                                <SelectItem key={f._id} value={f._id}>
+                                  {f.name} - ₹{f.pricePerMeter}/m
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="no-fabrics" disabled>
+                                No fabrics available
                               </SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem value="no-fabrics" disabled>
-                              No fabrics available
-                            </SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </FormField>
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </FormField>
+                    )}
 
-                    <FormField label={`Fabric Meters ${item.fabric ? "*" : ""}`}>
-                      <Input
-                        type="number"
-                        min={0.1}
-                        step={0.1}
-                        placeholder="Enter meters"
-                        value={item.fabricMeters || ""}
-                        onChange={(e) =>
-                          handleItemChange(index, "fabricMeters", e.target.value)
-                        }
-                        className="h-8 text-sm"
-                        disabled={!item.fabric}
-                      />
-                    </FormField>
+                    {(orderType === "fabric" || orderType === "fabric_stitching") && (
+                      <FormField label={`Fabric Meters ${item.fabric ? "*" : ""}`}>
+                        <Input
+                          type="number"
+                          min={0.1}
+                          step={0.1}
+                          placeholder="Enter meters"
+                          value={item.fabricMeters || ""}
+                          onChange={(e) =>
+                            handleItemChange(index, "fabricMeters", e.target.value)
+                          }
+                          className="h-8 text-sm"
+                          disabled={!item.fabric}
+                        />
+                      </FormField>
+                    )}
 
                     <FormField label="Design Number">
                       <Input
@@ -814,7 +913,7 @@ const CreateOrder = () => {
                   </div>
 
                   {/* Measurements */}
-                  {itemData?.items?.find((i) => i._id === item.itemType)?.fields && (
+                  {orderType !== "fabric" && itemData?.items?.find((i) => i._id === item.itemType)?.fields && (
                     <div className="mb-4">
                       <Label className="text-sm font-medium mb-2 block">
                         Measurements
@@ -883,6 +982,14 @@ const CreateOrder = () => {
                   className="h-8 text-sm"
                 />
               </FormField>
+              <FormField label="Discount Narration">
+                <Input
+                  placeholder="Narration for discount (optional)"
+                  value={discountNarration}
+                  onChange={(e) => setDiscountNarration(e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </FormField>
             </div>
           </FormSection>
 
@@ -922,12 +1029,18 @@ const CreateOrder = () => {
                 />
               </FormField>
               <FormField label="Phone">
-                <Input
-                  placeholder="Phone number"
-                  value={shippingDetails.shippingPhone}
-                  onChange={(e) => handleShippingChange("shippingPhone", e.target.value)}
-                  className="h-8 text-sm"
-                />
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">+91</span>
+                  <Input
+                    placeholder="10-digit phone"
+                    value={shippingDetails.shippingPhone}
+                    onChange={(e) => {
+                      const digitsOnly = (e.target.value || "").replace(/\D/g, "").slice(0, 10);
+                      handleShippingChange("shippingPhone", digitsOnly);
+                    }}
+                    className="h-8 text-sm"
+                  />
+                </div>
               </FormField>
               <FormField label="Shipping Method">
                 <Select value={shippingDetails.shippingMethod} onValueChange={(v) => handleShippingChange("shippingMethod", v)}>
@@ -1038,6 +1151,28 @@ const CreateOrder = () => {
                   className="h-8 text-sm"
                   min="0"
                   step={discountType === "percentage" ? "0.01" : "1"}
+                />
+              </FormField>
+
+              <div className="md:col-span-2 -mt-2">
+                <p className="text-xs text-gray-500">Add discount promo code if applicable or any reference name</p>
+              </div>
+
+              <FormField label="Promo Code">
+                <Input
+                  placeholder="Enter promo code (optional)"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </FormField>
+
+              <FormField label="Reference Name">
+                <Input
+                  placeholder="Reference person/name (optional)"
+                  value={referenceName}
+                  onChange={(e) => setReferenceName(e.target.value)}
+                  className="h-8 text-sm"
                 />
               </FormField>
 
@@ -1251,29 +1386,67 @@ const CreateOrder = () => {
             </p>
           </div>
           
-          <Button
-            onClick={handleSubmit}
-            disabled={isCreatingOrder || isCreatingClient || orderTotal.totalAmount === 0}
-            className={`h-10 px-8 font-medium rounded-md shadow-sm transition-colors text-sm ${
-              orderTotal.totalAmount > 0
-                ? "bg-orange-600 hover:bg-orange-700 text-white"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
-            }`}
-          >
-            {isCreatingOrder || isCreatingClient ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Creating Order...
-              </>
-            ) : (
-              <>
-                <ShoppingCart className="w-4 h-4 mr-2" />
-                Create Order
-              </>
-            )}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              onClick={() => navigate("/employee/pending-client-orders")}
+              className="h-10 px-6 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-md shadow-sm transition-colors text-sm"
+            >
+              Back
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={isCreatingOrder || isCreatingClient || orderTotal.totalAmount <= 0}
+              className={`h-10 px-8 font-medium rounded-md shadow-sm transition-colors text-sm ${
+                orderTotal.totalAmount > 0
+                  ? "bg-orange-600 hover:bg-orange-700 text-white"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
+            >
+              {isCreatingOrder || isCreatingClient ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Creating Order...
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="w-4 h-4 mr-2" />
+                  Create Order
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
+    
+    {/* Invoice PDF Viewer Modal */}
+    {showInvoiceViewer && invoiceData && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg w-full max-w-6xl h-[90vh] flex flex-col">
+          <div className="flex items-center justify-between p-4 border-b">
+            <h3 className="text-lg font-semibold">Invoice Preview</h3>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => {
+                  setShowInvoiceViewer(false);
+                  setInvoiceData(null);
+                }}
+                variant="outline"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+          <div className="flex-1 overflow-hidden">
+            <PDFViewer 
+              className="w-full h-full"
+            >
+              <InvoiceDocument {...invoiceData} />
+            </PDFViewer>
+          </div>
+        </div>
+      </div>
+    )}
     </div>
   );
 };

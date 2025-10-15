@@ -26,7 +26,30 @@ import { useGetAllBranchesQuery } from "@/features/api/branchApi";
 import { selectUserRole } from "@/features/authSlice";
 
 const genderOptions = ["male", "female", "other"];
-const roleOptions = ["tailor", "manager", "biller", "director", "admin", "other"];
+const roleOptions = [
+  "chairman",
+  "ceo",
+  "founder",
+  "director",
+  "sub director",
+  "manager",
+  "fitter",
+  "sales manager",
+  "sales team leader",
+  "sales person",
+  "branch manager",
+  "branch sub manager",
+  "branch fitter",
+  "master",
+  "tailor",
+  "peon",
+  "handwork designer",
+  "handwork person",
+  "social media",
+  "technical team",
+  "packing team leader",
+  "packing employee",
+];
 const bloodGroupOptions = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 const gradeOptions = ["A", "B", "C", "D"];
 
