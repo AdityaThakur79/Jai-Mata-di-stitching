@@ -127,6 +127,7 @@ const CreateOrder = () => {
   // Invoice preview modal state
   const [showInvoiceViewer, setShowInvoiceViewer] = useState(false);
   const [invoiceData, setInvoiceData] = useState(null);
+  const [showPDFModal, setShowPDFModal] = useState(false);
 
   // Auto-fill city/state based on pincode
   useEffect(() => {
@@ -402,7 +403,7 @@ const CreateOrder = () => {
     // Check items based on order type
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
-      if (orderType !== "fabric" && !item.itemType) {
+      if (orderType !== "fabric" && (!item.itemType || item.itemType.trim() === "")) {
         toast.error(`Please select item type for item ${i + 1}`);
         return false;
       }
@@ -462,7 +463,8 @@ const CreateOrder = () => {
           clientId = clientResponse.data.client._id;
           finalClientDetails = clientDetails;
         } else {
-          toast.error("Failed to create client");
+          const errorMsg = clientResponse.data?.message || clientResponse.error?.data?.message || "Failed to create client";
+          toast.error(errorMsg);
           return;
         }
       }
@@ -474,6 +476,7 @@ const CreateOrder = () => {
         clientDetails: finalClientDetails,
         items: items.map(item => ({
           ...item,
+          itemType: item.itemType && item.itemType.trim() !== "" ? item.itemType : null,
           fabricMeters: item.fabric ? parseFloat(item.fabricMeters) : undefined,
           quantity: orderType === "fabric" ? 1 : parseInt(item.quantity)
         })),
@@ -489,7 +492,7 @@ const CreateOrder = () => {
         discountValue: discountValue ? parseFloat(discountValue) : 0,
         taxRate: parseFloat(taxRate),
         advancePayment: advancePayment ? parseFloat(advancePayment) : 0,
-        paymentMethod,
+        paymentMethod: paymentMethod || undefined,
         paymentNotes,
         shippingDetails: {
           shippingAddress: shippingDetails.shippingAddress,
@@ -522,7 +525,8 @@ const CreateOrder = () => {
         // Generate bill for the created order (server computes totals and creates bill)
         const billRes = await generateBill({ orderId: createdOrderId, dueDate: new Date().toISOString() });
         if (!billRes.data?.success) {
-          toast.error(billRes.data?.message || "Failed to generate bill");
+          const billErrorMsg = billRes.data?.message || billRes.error?.data?.message || "Failed to generate bill";
+          toast.error(billErrorMsg);
           return;
         }
 
@@ -533,18 +537,53 @@ const CreateOrder = () => {
           const normalized = {
             ...inv,
             gstin: inv.gstin || inv.clientDetails?.gstin || inv.client?.gstin || finalClientDetails?.gstin || clientDetails?.gstin,
+            pdfUrl: inv.pdfUrl, // Include PDF URL from Cloudinary (image format for free plan)
+            pdfOriginalUrl: inv.pdfOriginalUrl, // Original PDF URL
+            pdfDeliveryFormat: inv.pdfDeliveryFormat, // Delivery format
+            pdfPublicId: inv.pdfPublicId, // Include PDF public ID
           };
           setInvoiceData(normalized);
           setShowInvoiceViewer(true);
+          
+          // Show success message with PDF URL
+          if (inv.pdfUrl) {
+            toast.success(`Order created`);
+          } else {
+            toast.success("Order created successfully!");
+          }
         } else {
-          toast.error(invRes.data?.message || "Failed to load invoice data");
+          const invErrorMsg = invRes.data?.message || invRes.error?.data?.message || "Failed to load invoice data";
+          toast.error(invErrorMsg);
         }
       } else {
         toast.error(response.data?.message || "Failed to create order");
       }
     } catch (error) {
       console.error("Error creating order:", error);
-      toast.error("An error occurred while creating the order");
+      
+      // Extract specific error message from the error response
+      let errorMessage = "An error occurred while creating the order";
+      
+      if (error?.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      // Handle specific validation errors
+      if (errorMessage.includes("validation failed")) {
+        const validationErrors = error?.data?.errors || error?.response?.data?.errors;
+        if (validationErrors) {
+          const fieldErrors = Object.keys(validationErrors).map(field => {
+            return `${field}: ${validationErrors[field].message}`;
+          }).join(", ");
+          errorMessage = `Validation Error: ${fieldErrors}`;
+        }
+      }
+      
+      toast.error(errorMessage);
     }
   };
 
@@ -1426,6 +1465,30 @@ const CreateOrder = () => {
           <div className="flex items-center justify-between p-4 border-b">
             <h3 className="text-lg font-semibold">Invoice Preview</h3>
             <div className="flex gap-2">
+              {invoiceData?.pdfUrl && (
+                <>
+                  <Button
+                    onClick={() => {
+                      // Open PDF in new tab using the raw URL
+                      window.open(invoiceData.pdfUrl, '_blank');
+                    }}
+                    variant="default"
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    Download PDF
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      // Show PDF in iframe modal
+                      setShowPDFModal(true);
+                    }}
+                    variant="outline"
+                    className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                  >
+                    View PDF
+                  </Button>
+                </>
+              )}
               <Button
                 onClick={() => {
                   setShowInvoiceViewer(false);
@@ -1443,6 +1506,32 @@ const CreateOrder = () => {
             >
               <InvoiceDocument {...invoiceData} />
             </PDFViewer>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* PDF Modal with iframe */}
+    {showPDFModal && invoiceData?.pdfUrl && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg w-full max-w-6xl h-[90vh] flex flex-col">
+          <div className="flex items-center justify-between p-4 border-b">
+            <h3 className="text-lg font-semibold">PDF Viewer</h3>
+            <Button
+              onClick={() => setShowPDFModal(false)}
+              variant="outline"
+            >
+              Close
+            </Button>
+          </div>
+          <div className="flex-1 overflow-hidden">
+            <iframe
+              src={invoiceData.pdfUrl}
+              width="100%"
+              height="100%"
+              style={{ border: 'none' }}
+              title="Invoice PDF"
+            />
           </div>
         </div>
       </div>

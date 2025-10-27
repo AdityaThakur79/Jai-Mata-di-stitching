@@ -13,6 +13,10 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@babel/core": "^7.28.4",
+    "@babel/preset-react": "^7.27.1",
+    "@babel/register": "^7.28.3",
+    "@react-pdf/renderer": "^4.3.1",
     "bcryptjs": "^3.0.2",
     "bwip-js": "^4.7.0",
     "cloudinary": "^2.6.1",
@@ -27,9 +31,12 @@
     "mongoose": "^8.13.1",
     "multer": "^1.4.5-lts.2",
     "multer-storage-cloudinary": "^4.0.0",
+    "node-cache": "^5.1.2",
     "node-fetch": "^3.3.2",
     "nodemailer": "^6.10.0",
     "nodemon": "^3.1.9",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
     "uuid": "^11.1.0"
   }
 }

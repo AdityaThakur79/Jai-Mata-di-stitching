@@ -10,10 +10,10 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 // Removed @react-pdf/renderer import - will be handled on frontend
-import { sendInvoiceEmail } from "../utils/common/sendMail.js";
-import { sendInvoiceWhatsapp } from "../utils/common/sendWhatsapp.js";
+import { sendInvoiceEmail, sendOrderConfirmationEmail } from "../utils/common/sendMail.js";
+import { sendInvoiceWhatsapp, sendOrderConfirmationWhatsapp } from "../utils/common/sendWhatsapp.js";
+import orderService from "../services/orderService.js";
 
-// Helper function to convert image to base64
 const convertImageToBase64 = (imagePath) => {
   try {
     const __filename = fileURLToPath(import.meta.url);
@@ -69,6 +69,15 @@ export const createOrder = async (req, res) => {
       paymentNotes,
       shippingDetails,
     } = req.body;
+
+    // Fix empty itemType strings to null for fabric orders
+    if (items && Array.isArray(items)) {
+      items.forEach(item => {
+        if (item.itemType === "" || item.itemType === undefined) {
+          item.itemType = null;
+        }
+      });
+    }
 
     // Normalize Indian mobile numbers to 91XXXXXXXXXX format
     const normalizeIndianMobile = (val) => {
@@ -139,7 +148,7 @@ export const createOrder = async (req, res) => {
 
     for (const item of items) {
       // Skip itemType requirement for fabric-only; enforce for others
-      if (orderType !== "fabric" && !item.itemType) {
+      if (orderType !== "fabric" && (!item.itemType || item.itemType.trim() === "")) {
         return res.status(400).json({
           success: false,
           message: "Item type is required for this order type",
@@ -159,13 +168,21 @@ export const createOrder = async (req, res) => {
           }
         }
         subtotal += fabricCost;
-        processedItems.push({
+        const fabricProcessedItem = {
           ...item,
+          itemType: item.itemType && item.itemType.trim() !== "" ? item.itemType : null,
           style: null,
           unitPrice: fabricCost,
           totalPrice: fabricCost,
           quantity: 1,
-        });
+        };
+        
+        // Remove fabric field if empty or invalid
+        if (!item.fabric || item.fabric.trim() === "") {
+          delete fabricProcessedItem.fabric;
+        }
+        
+        processedItems.push(fabricProcessedItem);
         continue;
       }
 
@@ -200,16 +217,23 @@ export const createOrder = async (req, res) => {
         selectedStyle = itemMaster.styles.find(s => s.styleId === item.style);
       }
 
-      processedItems.push({
+      const processedItem = {
         ...item,
         style: selectedStyle ? {
           styleId: selectedStyle.styleId,
           styleName: selectedStyle.styleName,
           description: selectedStyle.description
         } : null,
-        unitPrice: stitchingCost / item.quantity + (fabricCost / item.quantity), // Cost per unit including fabric and stitching
+        unitPrice: stitchingCost / item.quantity + (fabricCost / item.quantity),
         totalPrice: totalItemPrice,
-      });
+      };
+      
+      // Remove fabric field if empty or invalid (for stitching-only orders)
+      if (!item.fabric || item.fabric.trim() === "") {
+        delete processedItem.fabric;
+      }
+      
+      processedItems.push(processedItem);
     }
 
     // Extract discount and tax information from request
@@ -253,7 +277,7 @@ export const createOrder = async (req, res) => {
       taxAmount,
       totalAmount,
       advancePayment: advancePayment ? parseFloat(advancePayment) : 0,
-      paymentMethod: paymentMethod || "",
+      paymentMethod: paymentMethod && paymentMethod.trim() !== "" ? paymentMethod : undefined,
       paymentNotes: paymentNotes || "",
       notes,
       specialInstructions,
@@ -285,6 +309,193 @@ export const createOrder = async (req, res) => {
       .populate("items.fabric", "name pricePerMeter")
       .populate("branchId", "branchName address")
       .populate("createdBy", "name employeeId");
+
+    // Send order confirmation notifications (fire-and-forget, following clinic pattern)
+    console.log('[ORDER] Starting notification process...', {
+      orderId: populatedOrder._id,
+      orderType: orderType,
+      timestamp: new Date().toISOString()
+    });
+
+    // Run notifications in background to not block order creation
+    (async () => {
+      try {
+        console.log('[ORDER] Fetching notification recipients...');
+        
+        // Get director emails (admins)
+        const directors = await Employee.find({ role: "director" }).select("name email").lean();
+        const directorEmails = directors
+          .filter(dir => dir.email && dir.email.trim() !== "")
+          .map(dir => dir.email);
+        
+        console.log('[ORDER] Found directors:', directors.length, directorEmails);
+        
+        // Generate order confirmation PDF
+        console.log('[ORDER] Generating order confirmation PDF...');
+        let orderPdfBuffer = null;
+        try {
+          // Use the same invoice template but for order confirmation
+          const orderConfirmationData = {
+            companyName: "JMD STITCHING PRIVATE LIMITED",
+            companyAddress: populatedOrder.branchId?.address || "",
+            companyPhone: populatedOrder.branchId?.phone || "",
+            companyEmail: populatedOrder.branchId?.email || "",
+            companyGST: populatedOrder.branchId?.gst || "",
+            companyPAN: populatedOrder.branchId?.pan || "",
+            companyCIN: populatedOrder.branchId?.cin || "",
+            logo: convertImageToBase64('images/jmd_logo.jpeg'),
+            bankName: populatedOrder.branchId?.bankDetails?.bankName || "Union Bank of India",
+            accountName: "JMD STITCHING PRIVATE LIMITED",
+            accountNumber: populatedOrder.branchId?.bankDetails?.accountNumber || "11111111111",
+            ifscCode: populatedOrder.branchId?.bankDetails?.ifsc || "BCCB3578435",
+            upiId: `${populatedOrder.branchId?.phone || "9082150556"}@okbizaxis`,
+            invoiceNumber: `ORDER-${populatedOrder.orderNumber || populatedOrder._id}`,
+            invoiceDate: new Date().toLocaleDateString('en-IN'),
+            dueDate: new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString('en-IN'),
+            orderType: orderType || "",
+            clientName: finalClientDetails.name || "Client Name",
+            clientAddress: finalClientDetails.address || "Client Address",
+            clientCity: finalClientDetails.city || "City",
+            clientState: finalClientDetails.state || "State",
+            clientPincode: finalClientDetails.pincode || "000000",
+            clientMobile: finalClientDetails.mobile || "0000000000",
+            clientEmail: finalClientDetails.email || "",
+            gstin: finalClientDetails.gstin || "",
+            items: populatedOrder.items.map(item => ({
+              name: item.itemType?.name || 'Item',
+              description: item.style?.styleName || '',
+              quantity: item.quantity || 1,
+              unitPrice: item.unitPrice || 0,
+              totalPrice: item.totalPrice || 0,
+              fabric: item.fabric?.name || '',
+              fabricMeters: item.fabricMeters || 0,
+            })),
+            subtotal: populatedOrder.subtotal || 0,
+            discountType: populatedOrder.discountType || "percentage",
+            discountValue: populatedOrder.discountValue || 0,
+            discountAmount: populatedOrder.discountAmount || 0,
+            taxableAmount: populatedOrder.taxableAmount || 0,
+            taxRate: populatedOrder.taxRate || 5,
+            taxAmount: populatedOrder.taxAmount || 0,
+            totalAmount: populatedOrder.totalAmount || 0,
+            advancePayment: populatedOrder.advancePayment || 0,
+            balanceAmount: (populatedOrder.totalAmount || 0) - (populatedOrder.advancePayment || 0),
+            paymentStatus: populatedOrder.paymentStatus || 'pending',
+            paymentMethod: populatedOrder.paymentMethod || '',
+            paymentNotes: populatedOrder.paymentNotes || '',
+            notes: populatedOrder.notes || '',
+            shippingDetails: populatedOrder.shippingDetails || null,
+          };
+          
+          const pdfServiceModule = await import("../services/pdfService.js");
+          const pdfService = pdfServiceModule.default;
+          orderPdfBuffer = await pdfService.generatePDFBuffer(orderConfirmationData);
+          console.log('[ORDER] PDF generated successfully, size:', orderPdfBuffer.length);
+        } catch (pdfError) {
+          console.error('[ORDER] Failed to generate PDF:', pdfError?.message || pdfError);
+        }
+        
+        // Email: Client + Directors (WITH PDF ATTACHMENT)
+        if (finalClientDetails.email) {
+          console.log('[ORDER] Sending email to client:', finalClientDetails.email);
+          try {
+            await sendOrderConfirmationEmail({
+              clientName: finalClientDetails.name,
+              clientEmail: finalClientDetails.email,
+              billNumber: `ORDER-${populatedOrder.orderNumber || populatedOrder._id}`,
+              orderType: orderType,
+              totalAmount: totalAmount,
+              paymentStatus: advancePayment > 0 ? 'Partial' : 'Pending',
+              isAdminCopy: false,
+              pdfBuffer: orderPdfBuffer // Attach generated PDF
+            });
+            console.log('[ORDER] Client email sent successfully!');
+          } catch (emailError) {
+            console.error('[ORDER] Failed to send client email:', emailError?.message || emailError);
+          }
+        }
+        
+        // Email: Directors (admin copies WITH PDF ATTACHMENT)
+        for (const directorEmail of directorEmails) {
+          if (directorEmail) {
+            console.log('[ORDER] Sending email to director:', directorEmail);
+            try {
+              await sendOrderConfirmationEmail({
+                clientName: finalClientDetails.name,
+                clientEmail: directorEmail, // Send as admin copy
+                billNumber: `ORDER-${populatedOrder.orderNumber || populatedOrder._id}`,
+                orderType: orderType,
+                totalAmount: totalAmount,
+                paymentStatus: advancePayment > 0 ? 'Partial' : 'Pending',
+                isAdminCopy: true, // Mark as admin copy
+                pdfBuffer: orderPdfBuffer // Attach generated PDF to directors too
+              });
+              console.log('[ORDER] Director email sent successfully!');
+            } catch (emailError) {
+              console.error('[ORDER] Failed to send director email:', emailError?.message || emailError);
+            }
+          }
+        }
+        
+        // WhatsApp: Only to client (with PDF if available)
+        if (finalClientDetails.mobile) {
+          console.log('[ORDER] Sending WhatsApp to client:', finalClientDetails.mobile);
+          try {
+            // Upload PDF to Cloudinary for WhatsApp (same as bill generation)
+            let pdfUrlForWhatsApp = null;
+            if (orderPdfBuffer) {
+              try {
+                console.log('[ORDER] Uploading PDF to Cloudinary for WhatsApp...');
+                const cloudinary = (await import('cloudinary')).v2;
+                const uploadResult = await new Promise((resolve, reject) => {
+                  const stream = cloudinary.uploader.upload_stream(
+                    {
+                      resource_type: 'raw',
+                      folder: 'orders',
+                      public_id: `ORDER-${populatedOrder.orderNumber || populatedOrder._id}`,
+                      format: 'pdf',
+                      use_filename: true,
+                      unique_filename: false,
+                      overwrite: true,
+                    },
+                    (err, result) => (err ? reject(err) : resolve(result))
+                  );
+                  stream.end(orderPdfBuffer);
+                });
+                
+                pdfUrlForWhatsApp = uploadResult.secure_url;
+                console.log('[ORDER] PDF uploaded for WhatsApp:', pdfUrlForWhatsApp);
+              } catch (uploadError) {
+                console.error('[ORDER] Failed to upload PDF for WhatsApp:', uploadError?.message || uploadError);
+              }
+            }
+            
+            await sendOrderConfirmationWhatsapp({
+              phone: finalClientDetails.mobile,
+              clientName: finalClientDetails.name,
+              billNumber: `ORDER-${populatedOrder.orderNumber || populatedOrder._id}`,
+              orderType: orderType,
+              totalAmount: totalAmount,
+              paymentStatus: advancePayment > 0 ? 'Partial' : 'Pending',
+              pdfUrl: pdfUrlForWhatsApp // Pass the Cloudinary URL (same as bill generation)
+            });
+            console.log('[ORDER] WhatsApp notification sent successfully!');
+          } catch (whatsappError) {
+            console.error('[ORDER] Failed to send WhatsApp notification:', whatsappError?.message || whatsappError);
+          }
+        } else {
+          console.log('[ORDER] No mobile number provided, skipping WhatsApp notification');
+        }
+
+        console.log('[ORDER] All notifications processed!');
+      } catch (notificationError) {
+        console.error('[ORDER] Notification error details:', {
+          error: notificationError?.message || notificationError,
+          stack: notificationError?.stack,
+          timestamp: new Date().toISOString()
+        });
+      }
+    })();
 
     res.status(201).json({
       success: true,
@@ -414,201 +625,21 @@ export const getOrderById = async (req, res) => {
 export const generateBill = async (req, res) => {
   try {
     const { orderId, dueDate, notes } = req.body;
-
-    const order = await Order.findById(orderId)
-      .populate("client", "name mobile email address city state pincode")
-      .populate("items.itemType", "name stitchingCharge")
-      .populate("items.fabric", "name pricePerMeter")
-      .populate("branchId", "branchName address phone email gst pan")
-      .populate("createdBy", "name employeeId");
-
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found",
-      });
-    }
-
-    // Block only if a bill already exists, not merely by status
-    if (order.bill) {
-      return res.status(400).json({
-        success: false,
-        message: "Bill already generated for this order",
-      });
-    }
-
-    // Generate bill number
-    const currentYear = new Date().getFullYear();
-    const currentMonth = String(new Date().getMonth() + 1).padStart(2, "0");
     
-    const lastBill = await Bill.findOne(
-      { billNumber: new RegExp(`^JMD-BILL-${currentYear}${currentMonth}-\\d{4}$`) },
-      {},
-      { sort: { billNumber: -1 } }
-    );
-
-    let nextIdNum = 1;
-    if (lastBill && lastBill.billNumber) {
-      const lastIdNum = parseInt(lastBill.billNumber.split("-")[2]);
-      nextIdNum = lastIdNum + 1;
-    }
+    const result = await orderService.generateBill(orderId, dueDate, notes);
     
-    let billNumber = `JMD-BILL-${currentYear}${currentMonth}-${String(nextIdNum).padStart(4, "0")}`;
-    
-    // Check if bill number already exists and generate a new one if needed
-    let existingBill = await Bill.findOne({ billNumber });
-    while (existingBill) {
-      nextIdNum++;
-      billNumber = `JMD-BILL-${currentYear}${currentMonth}-${String(nextIdNum).padStart(4, "0")}`;
-      existingBill = await Bill.findOne({ billNumber });
-    }
-
-    // Create bill document
-    const bill = await Bill.create({
-      billNumber,
-      billDate: new Date(),
-      dueDate: dueDate ? new Date(dueDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-      subtotal: order.subtotal,
-      discountType: order.discountType,
-      discountValue: order.discountValue,
-      discountAmount: order.discountAmount,
-      taxableAmount: order.taxableAmount,
-      taxRate: order.taxRate,
-      taxAmount: order.taxAmount,
-      totalAmount: order.totalAmount,
-      paymentStatus: "pending",
-      notes: notes || "",
-    });
-
-    // Update order with bill reference; do not force status if already set
-    order.bill = bill._id;
-    if (order.status !== "completed") {
-      order.status = "completed";
-    }
-    if (!order.actualDeliveryDate) {
-      order.actualDeliveryDate = new Date();
-    }
-
-    await order.save();
-
-    // Generate invoice PDF buffer using server-side template
-    const invoiceData = {
-      companyName: "JMD STITCHING PRIVATE LIMITED",
-      companyAddress: order.branchId?.address || "",
-      companyPhone: order.branchId?.phone || "",
-      companyEmail: order.branchId?.email || "",
-      companyGST: order.branchId?.gst || "",
-      companyPAN: order.branchId?.pan || "",
-      logo: null,
-      invoiceNumber: bill.billNumber,
-      invoiceDate: new Date(bill.billDate).toLocaleDateString('en-IN'),
-      dueDate: new Date(bill.dueDate).toLocaleDateString('en-IN'),
-      clientName: order.client?.name || order.clientDetails?.name,
-      clientAddress: order.client?.address || order.clientDetails?.address,
-      clientCity: order.client?.city || order.clientDetails?.city,
-      clientState: order.client?.state || order.clientDetails?.state,
-      clientPincode: order.client?.pincode || order.clientDetails?.pincode,
-      clientMobile: order.client?.mobile || order.clientDetails?.mobile,
-      clientEmail: order.client?.email || order.clientDetails?.email,
-      items: order.items.map(item => ({
-        name: item.itemType?.name || 'Item',
-        description: item.style?.styleName || '',
-        quantity: item.quantity || 1,
-        unitPrice: item.unitPrice || 0,
-        totalPrice: item.totalPrice || 0,
-        fabric: item.fabric?.name || '',
-        fabricMeters: item.fabricMeters || 0,
-      })),
-      subtotal: bill.subtotal,
-      discountType: bill.discountType,
-      discountValue: bill.discountValue,
-      discountAmount: bill.discountAmount,
-      taxableAmount: bill.taxableAmount,
-      taxRate: bill.taxRate,
-      taxAmount: bill.taxAmount,
-      totalAmount: bill.totalAmount,
-      advancePayment: order.advancePayment || 0,
-      balanceAmount: (bill.totalAmount || 0) - (order.advancePayment || 0),
-      paymentStatus: order.paymentStatus || 'pending',
-      paymentMethod: order.paymentMethod || '',
-      paymentNotes: order.paymentNotes || '',
-      notes: bill.notes || '',
-      shippingDetails: order.shippingDetails || null,
-      orderType: order.orderType,
-    };
-
-    // Lazy import server-side template and renderer to avoid requiring react globally
-    const { pdf } = await import('@react-pdf/renderer');
-    const { default: InvoiceDocument } = await import('../utils/invoiceTemplateServer.jsx');
-    const pdfBuffer = await pdf(InvoiceDocument(invoiceData)).toBuffer();
-
-    // Upload PDF to Cloudinary as raw
-    const uploaded = await new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        {
-          resource_type: 'raw',
-          type: 'upload',
-          folder: 'invoices',
-          public_id: bill.billNumber,
-          format: 'pdf',
-          use_filename: true,
-          unique_filename: false,
-          overwrite: true,
-        },
-        (err, result) => (err ? reject(err) : resolve(result))
-      );
-      stream.end(pdfBuffer);
-    });
-
-    bill.pdfUrl = uploaded.secure_url;
-    bill.pdfPublicId = uploaded.public_id;
-    await bill.save();
-
-    // Fire-and-forget notifications (email/whatsapp); ignore failures
-    try {
-      if (invoiceData.clientEmail) {
-        await sendInvoiceEmail({
-          to: invoiceData.clientEmail,
-          subject: `Invoice ${bill.billNumber}`,
-          htmlText: `Dear ${invoiceData.clientName}, your invoice ${bill.billNumber} total ₹${invoiceData.totalAmount} is ready. Download: ${bill.pdfUrl}`,
-          attachments: [
-            { filename: `Invoice-${bill.billNumber}.pdf`, content: pdfBuffer, contentType: 'application/pdf' }
-          ]
-        });
-      }
-    } catch (e) { console.warn('Email send failed:', e?.message); }
-
-    try {
-      if (invoiceData.clientMobile) {
-        await sendInvoiceWhatsapp({
-          phone: invoiceData.clientMobile,
-          pdfUrl: bill.pdfUrl,
-          orderNumber: order.orderNumber,
-          totalAmount: bill.totalAmount
-        });
-      }
-    } catch (e) { console.warn('WhatsApp send failed:', e?.message); }
-
-    // Populate the order with bill information
-    const populatedOrder = await Order.findById(order._id)
-      .populate("client", "name mobile email address city state pincode")
-      .populate("items.itemType", "name stitchingCharge")
-      .populate("items.fabric", "name pricePerMeter")
-      .populate("branchId", "branchName address phone email gst pan")
-      .populate("createdBy", "name employeeId")
-      .populate("bill", "billNumber billDate dueDate subtotal taxAmount totalAmount paymentStatus notes");
-
     res.status(200).json({
       success: true,
       message: "Bill generated successfully",
-      order: populatedOrder,
-      pdfUrl: bill.pdfUrl,
+      order: result.order,
+      pdfUrl: result.pdfUrl,
+      pdfSize: result.pdfSize
     });
   } catch (err) {
     console.error("Error generating bill:", err);
     res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: err.message || "Internal server error",
       error: err.message,
     });
   }
@@ -1437,121 +1468,18 @@ export const getAllOrdersStats = async (req, res) => {
 export const getOrderForInvoice = async (req, res) => {
   try {
     const { orderId } = req.params;
-
-    const order = await Order.findById(orderId)
-      .populate("client", "name mobile email address city state pincode")
-      .populate("items.itemType", "name stitchingCharge")
-      .populate("items.fabric", "name pricePerMeter")
-      .populate("branchId", "branchName address phone email gst pan cin bankDetails")
-      .populate("createdBy", "name employeeId")
-      .populate("bill", "billNumber billDate dueDate subtotal taxAmount totalAmount paymentStatus notes");
-
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found",
-      });
-    }
-
-    if (!order.bill) {
-      return res.status(400).json({
-        success: false,
-        message: "No bill found for this order",
-      });
-    }
-
     
-    // Convert logo to base64
-    const logoBase64 = convertImageToBase64("images/jmd_logo.jpeg");
-
-    // Create invoice data
-    const invoiceData = {
-      companyName: "JMD STITCHING PRIVATE LIMITED",
-      companyAddress: order.branchId?.address || "Company Address",
-      companyPhone: order.branchId?.phone || "9082150556",
-      companyEmail: order.branchId?.email || "info@jmdstithing.com",
-      companyGST: order.branchId?.gst || "GST123456789",
-      companyPAN: order.branchId?.pan || "PAN123456789",
-      companyCIN: order.branchId?.cin || "",
-      logo: logoBase64,
-      // Payment Information from branch profile
-      bankName: order.branchId?.bankDetails?.bankName || "Union Bank of India",
-      accountName: "JMD STITCHING PRIVATE LIMITED",
-      accountNumber: order.branchId?.bankDetails?.accountNumber || "11111111111",
-      ifscCode: order.branchId?.bankDetails?.ifsc || "BCCB3578435",
-      upiId: `${order.branchId?.phone || "9082150556"}@okbizaxis`,
-      invoiceNumber: order.bill.billNumber,
-      invoiceDate: new Date(order.bill.billDate).toLocaleDateString('en-IN'),
-      dueDate: new Date(order.bill.dueDate).toLocaleDateString('en-IN'),
-      orderType: order.orderType,
-      clientName: order.client?.name || order.clientDetails?.name,
-      clientAddress: order.client?.address || order.clientDetails?.address,
-      clientCity: order.client?.city || order.clientDetails?.city,
-      clientState: order.client?.state || order.clientDetails?.state,
-      clientPincode: order.client?.pincode || order.clientDetails?.pincode,
-      clientMobile: order.client?.mobile || order.clientDetails?.mobile,
-      clientEmail: order.client?.email || order.clientDetails?.email,
-      items: order.items.map(item => ({
-        name: item.itemType?.name || "Item",
-        description: item.style?.styleName || "",
-        quantity: item.quantity,
-        unitPrice: item.unitPrice || 0,
-        totalPrice: item.totalPrice || 0,
-        fabric: item.fabric?.name || "",
-        fabricMeters: item.fabricMeters || 0,
-        stitchingCharge: item.itemType?.stitchingCharge || 0
-      })),
-      subtotal: order.bill.subtotal || 0,
-      discountType: order.discountType || "percentage",
-      discountValue: order.discountValue || 0,
-      discountAmount: order.discountAmount || order.bill.discountAmount || 0,
-      taxableAmount: order.taxableAmount || order.bill.taxableAmount || 0,
-      taxRate: order.taxRate || 18,
-      taxAmount: order.taxAmount || order.bill.taxAmount || 0,
-      totalAmount: order.bill.totalAmount || 0,
-      advancePayment: order.advancePayment || 0,
-      balanceAmount: (order.bill.totalAmount || 0) - (order.advancePayment || 0),
-      paymentStatus: order.paymentStatus || "pending",
-      paymentMethod: order.paymentMethod || "",
-      paymentNotes: order.paymentNotes || "",
-      notes: order.bill.notes || "",
-      shippingDetails: order.shippingDetails || null
-    };
-
-    console.log("Order discount details:", {
-      orderDiscountType: order.discountType,
-      orderDiscountValue: order.discountValue,
-      orderDiscountAmount: order.discountAmount,
-      billDiscountAmount: order.bill.discountAmount,
-      subtotal: order.bill.subtotal,
-      totalAmount: order.bill.totalAmount
-    });
-    
-    console.log("Branch details:", {
-      branchId: order.branchId?._id,
-      branchName: order.branchId?.branchName,
-      bankDetails: order.branchId?.bankDetails,
-      bankName: order.branchId?.bankDetails?.bankName,
-      accountNumber: order.branchId?.bankDetails?.accountNumber,
-      ifsc: order.branchId?.bankDetails?.ifsc,
-      finalBankName: invoiceData.bankName,
-      finalAccountNumber: invoiceData.accountNumber,
-      finalIfscCode: invoiceData.ifscCode
-    });
-    
-    console.log("Sending invoice data:", JSON.stringify(invoiceData, null, 2));
+    const result = await orderService.getOrderForInvoice(orderId);
     
     res.status(200).json({
       success: true,
-      message: "Order data fetched successfully",
-      invoiceData,
+      invoiceData: result.invoiceData
     });
-
   } catch (err) {
-    console.error("Error fetching order for invoice:", err);
+    console.error("Error getting order for invoice:", err);
     res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: err.message || "Internal server error",
       error: err.message,
     });
   }

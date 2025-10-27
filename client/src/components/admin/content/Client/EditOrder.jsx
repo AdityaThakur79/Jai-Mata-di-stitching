@@ -278,7 +278,7 @@ const EditOrder = () => {
         discountValue: parseFloat(formData.discountValue),
         taxRate: parseFloat(formData.taxRate),
         advancePayment: parseFloat(formData.advancePayment) || 0,
-        paymentMethod: formData.paymentMethod,
+        paymentMethod: formData.paymentMethod || undefined,
         paymentNotes: formData.paymentNotes,
       };
 
@@ -292,7 +292,30 @@ const EditOrder = () => {
       }
     } catch (error) {
       console.error("Error updating order:", error);
-      toast.error("Error updating order");
+      
+      // Extract specific error message from the error response
+      let errorMessage = "Error updating order";
+      
+      if (error?.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      // Handle specific validation errors
+      if (errorMessage.includes("validation failed")) {
+        const validationErrors = error?.data?.errors || error?.response?.data?.errors;
+        if (validationErrors) {
+          const fieldErrors = Object.keys(validationErrors).map(field => {
+            return `${field}: ${validationErrors[field].message}`;
+          }).join(", ");
+          errorMessage = `Validation Error: ${fieldErrors}`;
+        }
+      }
+      
+      toast.error(errorMessage);
     }
   };
 

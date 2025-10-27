@@ -1,5 +1,8 @@
 import nodemailer from "nodemailer";
 
+// Logo is now hosted at https://jmdstitching.com/images/jmd_logo.jpeg
+// No need for local file conversion
+
 // Create transporter with better error handling
 const createTransporter = () => {
   // Check if email credentials are configured
@@ -33,7 +36,17 @@ const verifyTransporter = async (transporter) => {
     console.log("Email transporter verified successfully");
     return true;
   } catch (error) {
-    console.error("Email transporter verification failed:", error);
+    console.error("Email transporter verification failed:", error.message);
+    
+    // Provide specific guidance based on error type
+    if (error.code === 'EAUTH') {
+      console.error("🔧 EMAIL AUTHENTICATION ERROR:");
+      console.error("1. Enable 2-Factor Authentication on Gmail");
+      console.error("2. Generate an App Password (16 characters)");
+      console.error("3. Use App Password as EMAIL_PASS (not regular password)");
+      console.error("4. Remove spaces from App Password");
+    }
+    
     return false;
   }
 };
@@ -205,4 +218,145 @@ export const sendInvoiceEmail = async ({ to, subject, htmlText, attachments }) =
     attachments: attachments || [],
   };
   return transporter.sendMail(mailOptions);
+};
+
+// Send order confirmation email
+export const sendOrderConfirmationEmail = async ({ clientName, clientEmail, billNumber, orderType, totalAmount, paymentStatus, isAdminCopy = false, pdfUrl = null, pdfBuffer = null }) => {
+  try {
+    const transporter = createTransporter();
+    const isVerified = await verifyTransporter(transporter);
+    if (!isVerified) {
+      throw new Error("Email service not available");
+    }
+    
+    let pdfAttachment = null;
+    
+    if (pdfBuffer && Buffer.isBuffer(pdfBuffer)) {
+      pdfAttachment = {
+        filename: `Invoice-${billNumber}.pdf`,
+        content: pdfBuffer,
+        contentType: 'application/pdf'
+      };
+    } else if (pdfUrl) {
+      try {
+        const pdfResponse = await fetch(pdfUrl);
+        if (pdfResponse.ok) {
+          const pdfArrayBuffer = await pdfResponse.arrayBuffer();
+          pdfAttachment = {
+            filename: `Invoice-${billNumber}.pdf`,
+            content: Buffer.from(pdfArrayBuffer),
+            contentType: 'application/pdf'
+          };
+        }
+      } catch (error) {
+        // PDF attachment failed, continue without it
+      }
+    }
+
+    const logoUrl = 'https://jmdstitching.com/images/jmd_logo.jpeg';
+    
+    const greeting = isAdminCopy ? "New Order Alert" : `Dear ${clientName}`;
+    const headerText = isAdminCopy ? "Order Notification" : "Order Confirmation";
+    
+    const orderConfirmationHTML = `
+      <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; background: #f8f9fa; padding: 20px;">
+        <!-- Header with Logo -->
+        <div style="background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%); padding: 30px 25px; border-radius: 12px; text-align: center; margin-bottom: 25px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+          <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto 20px;">
+            <tr>
+              <td>
+                <img src="${logoUrl}" alt="JMD Stitching Logo" width="200" height="150" style="max-width: 200px; height: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); display: block;" />
+              </td>
+            </tr>
+          </table>
+          <h2 style="color: white; margin: 0; font-size: 32px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); letter-spacing: 1px;">JMD STITCHING PRIVATE LIMITED</h2>
+          <p style="color: #fff5f0; margin: 10px 0 0 0; font-size: 18px; font-weight: 500;">${headerText}</p>
+        </div>
+        
+        <!-- Message Content -->
+        <div style="background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; border-left: 5px solid #ff6b35; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <p style="color: #333; font-size: 18px; margin: 0 0 15px 0; font-weight: 600;">${greeting},</p>
+          ${!isAdminCopy ? `
+          <p style="color: #666; margin: 0 0 15px 0; font-size: 16px; line-height: 1.5;">Thank you for your order with JMD Stitching PVT LTD!</p>
+          <p style="color: #666; margin: 0 0 20px 0; font-size: 16px; line-height: 1.5;">Your order is confirmed.</p>
+          ` : `
+          <p style="color: #666; margin: 0 0 15px 0; font-size: 16px; line-height: 1.5;">A new order has been placed with JMD Stitching PVT LTD.</p>
+          `}
+          ${!isAdminCopy ? `
+          <p style="color: #ff6b35; font-weight: bold; margin: 0; font-size: 16px;">If you have any questions, just reply to this message.</p>
+          <p style="color: #ff6b35; font-weight: bold; margin: 20px 0 0 0; font-size: 16px;">Team JMD Stitching</p>
+          ` : ''}
+        </div>
+        
+        <!-- Order Details -->
+        <div style="background: white; padding: 25px; border-radius: 12px; border: 2px solid #ff6b35; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <div style='color:#ff6b35;font-size:20px;font-weight:bold;margin:0 0 25px 0;text-align:center;background:linear-gradient(135deg, #fff5f0 0%, #f8f9fa 100%);padding:15px;border-radius:8px;letter-spacing:1px;'>
+            📋 ORDER DETAILS
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+            <div style="background: linear-gradient(135deg, #fff5f0 0%, #f8f9fa 100%); padding: 20px; border-radius: 10px; border-left: 5px solid #ff6b35; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+              <h3 style="color: #ff6b35; border-bottom: 2px solid #ff6b35; padding-bottom: 10px; margin: 0 0 15px 0; font-size: 16px; font-weight: bold;">📄 Order Information</h3>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 8px 0; color: #666; font-weight: 500; font-size: 14px;">Bill No:</td>
+                  <td style="padding: 8px 0; font-weight: bold; color: #333; font-size: 15px;">${billNumber}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #666; font-weight: 500; font-size: 14px;">Order Type:</td>
+                  <td style="padding: 8px 0; font-weight: bold; color: #333; font-size: 15px; text-transform: capitalize;">${orderType}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #666; font-weight: 500; font-size: 14px;">Payment Status:</td>
+                  <td style="padding: 8px 0; font-weight: bold; font-size: 15px;">
+                    <span style="background: ${paymentStatus.toLowerCase() === 'pending' ? '#fff3cd' : paymentStatus.toLowerCase() === 'partial' ? '#cfe2ff' : '#d1e7dd'}; color: ${paymentStatus.toLowerCase() === 'pending' ? '#856404' : paymentStatus.toLowerCase() === 'partial' ? '#084298' : '#0f5132'}; padding: 4px 10px; border-radius: 5px; display: inline-block;">
+                      ${paymentStatus}
+                    </span>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            
+            <div style="background: linear-gradient(135deg, #fff5f0 0%, #f8f9fa 100%); padding: 20px; border-radius: 10px; border-left: 5px solid #ff6b35; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+              <h3 style="color: #ff6b35; border-bottom: 2px solid #ff6b35; padding-bottom: 10px; margin: 0 0 15px 0; font-size: 16px; font-weight: bold;">💰 Payment Summary</h3>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr style="border-top: 3px solid #ff6b35; background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%); border-radius: 8px; margin-top: 10px;">
+                  <td style="padding: 15px 10px; font-weight: bold; font-size: 18px; color: white;">Total:</td>
+                  <td style="padding: 15px 10px; font-weight: bold; font-size: 22px; color: white;">₹${Number(totalAmount).toLocaleString('en-IN')}</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Footer -->
+        <div style="text-align: center; color: #666; font-size: 14px; border-top: 2px solid #ff6b35; padding-top: 20px; background: linear-gradient(135deg, #f8f9fa 0%, #fff5f0 100%); margin: 0 -20px -20px -20px; padding: 25px 20px; border-radius: 0 0 10px 10px;">
+          <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #ff6b35;">
+            <p style="margin: 3px 0; color: #ff6b35; font-weight: bold; font-size: 16px;">JMD STITCHING PRIVATE LIMITED</p>
+            <p style="margin: 3px 0; color: #666; font-size: 13px;">Visit Us: www.jmdstitching.com</p>
+          </div>
+          <p style="margin: 5px 0; color: #ff6b35; font-weight: bold; font-size: 13px;">Generated on: ${new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          <p style="margin: 10px 0 0 0; color: #999; font-size: 12px;">This is an automated order confirmation. Please contact us for any queries.</p>
+        </div>
+      </div>
+    `;
+
+    const subject = isAdminCopy 
+      ? `New Order Alert - ${billNumber} - ${orderType}` 
+      : `JMD Stitching - Order Confirmation ${billNumber}`;
+    
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: clientEmail,
+      subject: subject,
+      html: orderConfirmationHTML,
+      attachments: pdfAttachment ? [pdfAttachment] : []
+    };
+
+        const result = await transporter.sendMail(mailOptions);
+        return result;
+  } catch (error) {
+    console.error("Error sending order confirmation email:", error);
+    throw error;
+  }
 };
