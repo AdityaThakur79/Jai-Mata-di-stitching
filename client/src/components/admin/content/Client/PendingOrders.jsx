@@ -110,6 +110,7 @@ const PendingOrders = () => {
   const [showInvoiceViewer, setShowInvoiceViewer] = useState(false);
   const [invoiceData, setInvoiceData] = useState(null);
   const [isLoadingInvoice, setIsLoadingInvoice] = useState(false);
+  const [showPDFModal, setShowPDFModal] = useState(false);
 
   // Reset to page 1 whenever filters/search change to ensure correct refetch window
   useEffect(() => {
@@ -182,6 +183,10 @@ const PendingOrders = () => {
         const normalized = {
           ...inv,
           gstin: inv.gstin || inv.clientDetails?.gstin || inv.client?.gstin,
+          pdfUrl: inv.pdfUrl, // Include PDF URL from Cloudinary (image format for free plan)
+          pdfOriginalUrl: inv.pdfOriginalUrl, // Original PDF URL
+          pdfDeliveryFormat: inv.pdfDeliveryFormat, // Delivery format
+          pdfPublicId: inv.pdfPublicId, // Include PDF public ID
         };
         setInvoiceData(normalized);
         setShowInvoiceViewer(true);
@@ -1225,15 +1230,50 @@ const PendingOrders = () => {
           </div>
         )}
         {showInvoiceViewer && invoiceData && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg w-full max-w-6xl h-[90vh] flex flex-col">
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            onClick={() => {
+              setShowInvoiceViewer(false);
+              setInvoiceData(null);
+              setShowPDFModal(false);
+            }}
+          >
+            <div 
+              className="bg-white rounded-lg w-full max-w-6xl h-[90vh] flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="flex items-center justify-between p-4 border-b">
                 <h3 className="text-lg font-semibold">Invoice Preview</h3>
                 <div className="flex gap-2">
+                  {invoiceData?.pdfUrl && (
+                    <>
+                      <Button
+                        onClick={() => {
+                          // Open PDF in new tab using the raw URL
+                          window.open(invoiceData.pdfUrl, '_blank');
+                        }}
+                        variant="default"
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        Download PDF
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          // Show PDF in iframe modal
+                          setShowPDFModal(true);
+                        }}
+                        variant="outline"
+                        className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                      >
+                        View PDF
+                      </Button>
+                    </>
+                  )}
                   <Button
                     onClick={() => {
                       setShowInvoiceViewer(false);
                       setInvoiceData(null);
+                      setShowPDFModal(false);
                     }}
                     variant="outline"
                   >
@@ -1242,11 +1282,50 @@ const PendingOrders = () => {
                 </div>
               </div>
               <div className="flex-1 overflow-hidden">
-                <PDFViewer 
-                  className="w-full h-full"
+                {isLoadingInvoice ? (
+                  <div className="flex items-center justify-center h-full">
+                    <Loader2 className="w-6 h-6 animate-spin text-orange-600 mr-2" />
+                    <span>Loading invoice...</span>
+                  </div>
+                ) : (
+                  <PDFViewer 
+                    className="w-full h-full"
+                  >
+                    <InvoiceDocument {...invoiceData} />
+                  </PDFViewer>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* PDF Modal with iframe */}
+        {showPDFModal && invoiceData?.pdfUrl && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            onClick={() => setShowPDFModal(false)}
+          >
+            <div 
+              className="bg-white rounded-lg w-full max-w-6xl h-[90vh] flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between p-4 border-b">
+                <h3 className="text-lg font-semibold">PDF Viewer</h3>
+                <Button
+                  onClick={() => setShowPDFModal(false)}
+                  variant="outline"
                 >
-                  <InvoiceDocument {...invoiceData} />
-                </PDFViewer>
+                  Close
+                </Button>
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <iframe
+                  src={invoiceData.pdfUrl}
+                  width="100%"
+                  height="100%"
+                  style={{ border: 'none' }}
+                  title="Invoice PDF"
+                />
               </div>
             </div>
           </div>
