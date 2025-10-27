@@ -14,7 +14,6 @@ export const createClient = async (req, res) => {
       city,
       state,
       pincode,
-      
       notes,
       gstin,
     } = req.body;
@@ -87,8 +86,6 @@ export const createClient = async (req, res) => {
       city: city.trim(),
       state: state.trim(),
       pincode: pincode.trim(),
-      dateOfBirth: dateOfBirth || null,
-      gender: gender || null,
       profileImage,
       profileImagePublicId,
       notes: notes || "",
@@ -225,8 +222,6 @@ export const updateClient = async (req, res) => {
       city,
       state,
       pincode,
-      dateOfBirth,
-      gender,
       notes,
       isActive,
       branchId,
