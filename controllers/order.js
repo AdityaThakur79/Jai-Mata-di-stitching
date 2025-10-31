@@ -68,6 +68,7 @@ export const createOrder = async (req, res) => {
       paymentMethod,
       paymentNotes,
       shippingDetails,
+      clientOrderNumber, // new field
     } = req.body;
 
     // Fix empty itemType strings to null for fabric orders
@@ -298,6 +299,7 @@ export const createOrder = async (req, res) => {
         deliveryPerson: shippingDetails.deliveryPerson || "",
         deliveryStatus: shippingDetails.deliveryStatus || "pending",
       } : {},
+      ...(clientOrderNumber ? {clientOrderNumber} : {}), // new field
     };
     
     const order = await Order.create(orderData);
@@ -307,7 +309,7 @@ export const createOrder = async (req, res) => {
       .populate("client", "name mobile email")
       .populate("items.itemType", "name stitchingCharge")
       .populate("items.fabric", "name pricePerMeter")
-      .populate("branchId", "branchName address")
+      .populate("branchId", "branchName address phone email gst pan cin bankDetails qrCodeImage")
       .populate("createdBy", "name employeeId");
 
     // Send order confirmation notifications (fire-and-forget, following clinic pattern)
@@ -361,6 +363,7 @@ export const createOrder = async (req, res) => {
             clientMobile: finalClientDetails.mobile || "0000000000",
             clientEmail: finalClientDetails.email || "",
             gstin: finalClientDetails.gstin || "",
+            qrCodeImage: populatedOrder.branchId?.qrCodeImage || "",
             items: populatedOrder.items.map(item => ({
               name: item.itemType?.name || 'Item',
               description: item.style?.styleName || '',
@@ -369,6 +372,7 @@ export const createOrder = async (req, res) => {
               totalPrice: item.totalPrice || 0,
               fabric: item.fabric?.name || '',
               fabricMeters: item.fabricMeters || 0,
+              clientOrderNumber: populatedOrder.clientOrderNumber || "",
             })),
             subtotal: populatedOrder.subtotal || 0,
             discountType: populatedOrder.discountType || "percentage",
@@ -817,6 +821,8 @@ export const updateOrder = async (req, res) => {
       paymentMethod,
       paymentNotes,
       shippingDetails,
+      clientOrderNumber, // new field
+      paymentStatus,     // add
     } = req.body;
 
     // Debug logging
@@ -899,6 +905,7 @@ export const updateOrder = async (req, res) => {
     const taxAmount = (taxableAmount * taxRate) / 100;
     const totalAmount = taxableAmount + taxAmount;
 
+    // Compose update data
     const updateData = {
       client: clientId,
       orderType,
@@ -933,6 +940,8 @@ export const updateOrder = async (req, res) => {
         deliveryPerson: shippingDetails.deliveryPerson || "",
         deliveryStatus: shippingDetails.deliveryStatus || "pending",
       } : {},
+      ...(clientOrderNumber ? {clientOrderNumber} : {}), // new field
+      ...(paymentStatus ? { paymentStatus } : {}),          // add
     };
 
     const order = await Order.findByIdAndUpdate(

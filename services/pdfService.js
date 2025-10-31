@@ -320,7 +320,9 @@ class PDFService {
             React.createElement(Text, { style: styles.label }, 'Email:'),
             React.createElement(Text, { style: styles.value }, invoiceData.companyEmail || ''),
             React.createElement(Text, { style: styles.label }, 'GST:'),
-            React.createElement(Text, { style: styles.value }, invoiceData.companyGST || ''),
+            React.createElement(Text, { style: styles.value }, invoiceData.companyGST || invoiceData.gstin || ''),
+            React.createElement(Text, { style: styles.label }, 'PAN:'),
+            React.createElement(Text, { style: styles.value }, invoiceData.companyPAN || invoiceData.pan || ''),
           ),
           
           // Invoice Details
@@ -350,6 +352,9 @@ class PDFService {
               // Table Header
               React.createElement(View, { style: styles.tableRow },
                 React.createElement(View, { style: styles.tableCol },
+                  React.createElement(Text, { style: styles.tableCell }, 'Order No'),
+                ),
+                React.createElement(View, { style: styles.tableCol },
                   React.createElement(Text, { style: styles.tableCell }, 'Item'),
                 ),
                 React.createElement(View, { style: styles.tableCol },
@@ -365,6 +370,9 @@ class PDFService {
               // Table Rows
               ...(invoiceData.items || []).map((item, index) =>
                 React.createElement(View, { key: index, style: styles.tableRow },
+                  React.createElement(View, { style: styles.tableCol },
+                    React.createElement(Text, { style: styles.tableCell }, item.clientOrderNumber || ''),
+                  ),
                   React.createElement(View, { style: styles.tableCol },
                     React.createElement(Text, { style: styles.tableCell }, item.name || 'Item'),
                   ),
@@ -395,6 +403,16 @@ class PDFService {
             React.createElement(Text, { style: styles.label }, 'Balance Amount:'),
             React.createElement(Text, { style: styles.value }, `₹${invoiceData.balanceAmount || 0}`),
           ),
+          // Payment Section: Render QR code if present
+          ...(invoiceData.qrCodeImage ? [
+            React.createElement(Text, { style: styles.label }, 'Scan for Payment:'),
+            React.createElement(View, { style: { alignItems: 'center', marginVertical: 8 } },
+              React.createElement((await import('@react-pdf/renderer')).Image, {
+                style: { width: 120, height: 120, marginVertical: 8 },
+                src: invoiceData.qrCodeImage
+              })
+            ),
+          ] : []),
         )
       );
       
@@ -577,7 +595,16 @@ class PDFService {
             React.createElement(Page, { size: 'A4' },
               React.createElement(Text, null, `Invoice: ${invoiceData.invoiceNumber}`),
               React.createElement(Text, null, `Client: ${invoiceData.clientName}`),
-              React.createElement(Text, null, `Amount: ₹${invoiceData.totalAmount}`)
+              React.createElement(Text, null, `Amount: ₹${invoiceData.totalAmount}`),
+              React.createElement(Text, { style: { fontSize: 14, marginTop: 5 } }, `GST: ${invoiceData.companyGST || invoiceData.gstin || ''}`),
+              React.createElement(Text, { style: { fontSize: 14, marginTop: 5 } }, `PAN: ${invoiceData.companyPAN || invoiceData.pan || ''}`),
+              ...(invoiceData.qrCodeImage ? [
+                React.createElement(Text, { style: { fontSize: 14, marginTop: 10 } }, 'Scan for Payment:'),
+                React.createElement((await import('@react-pdf/renderer')).Image, {
+                  style: { width: 120, height: 120, marginTop: 4 },
+                  src: invoiceData.qrCodeImage
+                }),
+              ] : [])
             )
           ));
           

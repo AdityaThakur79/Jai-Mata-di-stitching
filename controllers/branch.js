@@ -14,7 +14,11 @@ export const createBranch = async (req, res) => {
     if (existing) {
       return res.status(400).json({ success: false, message: "Branch with this name already exists." });
     }
-    const branch = await Branch.create({ branchName, address, gst, pan, cin, phone, email, bankDetails, status });
+    let qrCodeImage = "";
+    if (req.files && req.files.qrCodeImage && req.files.qrCodeImage[0]) {
+      qrCodeImage = req.files.qrCodeImage[0].path;
+    }
+    const branch = await Branch.create({ branchName, address, gst, pan, cin, phone, email, bankDetails, status, qrCodeImage });
     res.status(201).json({ success: true, message: "Branch created successfully.", branch });
   } catch (err) {
     console.error("Error creating branch:", err);
@@ -103,6 +107,9 @@ export const updateBranch = async (req, res) => {
       };
     }
     branch.status = status || branch.status;
+    if (req.files && req.files.qrCodeImage && req.files.qrCodeImage[0]) {
+      branch.qrCodeImage = req.files.qrCodeImage[0].path;
+    }
     await branch.save();
     res.status(200).json({ success: true, message: "Branch updated successfully", branch });
   } catch (err) {

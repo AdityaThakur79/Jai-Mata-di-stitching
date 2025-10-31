@@ -341,6 +341,12 @@ const styles = StyleSheet.create({
     lineHeight: 1.3,
     marginBottom: 2,
   },
+  qrImage: {
+    width: 90,
+    height: 90,
+    marginTop: 8,
+    marginLeft: 10,
+  },
 });
 
 // Convert numbers to words in Indian numbering system (Rupees/Paise)
@@ -404,6 +410,16 @@ const InvoiceDocumentServer = (data) => {
   }
   
   console.log('Final logo status:', logoBase64 ? 'Present' : 'Missing');
+  
+  // Resolve QR code image similarly to client template logic
+  const resolvedQrCodeImage = (() => {
+    const candidate = data.branchQrCodeImage || data.qrCodeImage || (data.branch && data.branch.qrCodeImage) || '';
+    if (!candidate) {
+      return '';
+    }
+    // Accept base64 or URL directly; @react-pdf Image can fetch URLs server-side
+    return candidate;
+  })();
   
   // Safe field extraction with defaults
   const safeData = {
@@ -541,6 +557,7 @@ const InvoiceDocumentServer = (data) => {
       React.createElement(View, { style: styles.itemsTable },
         React.createElement(View, { style: styles.tableHeader },
           React.createElement(Text, { style: styles.tableHeaderText }, "S.No"),
+          React.createElement(Text, { style: styles.tableHeaderText }, "Order No"),
           React.createElement(Text, { style: styles.tableHeaderText }, "Item Description"),
           React.createElement(Text, { style: styles.tableHeaderText }, "Qty"),
           React.createElement(Text, { style: styles.tableHeaderText }, "Unit Price"),
@@ -554,6 +571,7 @@ const InvoiceDocumentServer = (data) => {
             style: index % 2 === 0 ? styles.tableRow : styles.tableRowAlt 
           },
             React.createElement(Text, { style: styles.tableCell }, index + 1),
+            React.createElement(Text, { style: styles.tableCell }, safeString(item.clientOrderNumber, '')),
             React.createElement(Text, { style: styles.tableCellLeft },
               safeString(item.name, 'Item'),
               safeString(item.description) && `\nStyle: ${safeString(item.description)}`,
@@ -568,6 +586,7 @@ const InvoiceDocumentServer = (data) => {
         
         // Total row
         React.createElement(View, { style: styles.tableTotalRow },
+          React.createElement(Text, { style: styles.tableTotalText }, ""),
           React.createElement(Text, { style: styles.tableTotalText }, ""),
           React.createElement(Text, { style: styles.tableTotalText }, "Total"),
           React.createElement(Text, { style: styles.tableTotalText }, ""),
@@ -586,7 +605,9 @@ const InvoiceDocumentServer = (data) => {
               '\nAccount: ', safeData.accountName,
               '\nAccount No: ', safeData.accountNumber,
               '\nIFSC: ', safeData.ifscCode
-            )
+            ),
+            // --- QR code rendering ---
+          resolvedQrCodeImage ? React.createElement(Image, { style: styles.qrImage, src: resolvedQrCodeImage }) : null
           )
         ),
         
@@ -678,6 +699,13 @@ const InvoiceDocumentServer = (data) => {
         
         React.createElement(Link, { src: "https://jmdstitching.com/track-order", style: styles.footerLink },
           "Track your order: https://jmdstitching.com/track-order"
+        ),
+        React.createElement(View, { style: { marginTop: 8, flexDirection: 'row', justifyContent: 'center' } },
+          React.createElement(Link, { src: "https://facebook.com/jmdstitching", style: styles.footerLink }, "Facebook"),
+          React.createElement(Text, null, "  |  "),
+          React.createElement(Link, { src: "https://instagram.com/jmdstitching", style: styles.footerLink }, "Instagram"),
+          React.createElement(Text, null, "  |  "),
+          React.createElement(Link, { src: "https://x.com/jmdstitching", style: styles.footerLink }, "X (Twitter)")
         )
       )
     )

@@ -29,6 +29,9 @@ const UpdateBranch = () => {
   const [accountNumber, setAccountNumber] = useState("");
   const [ifsc, setIfsc] = useState("");
   const [status, setStatus] = useState("active");
+  const [qrCodeImage, setQrCodeImage] = useState(null);
+  const [qrCodeImagePreview, setQrCodeImagePreview] = useState(null);
+  const [existingQrCodeImage, setExistingQrCodeImage] = useState("");
 
   const location = useLocation();
   const branchId = location.state?.branchId;
@@ -55,26 +58,34 @@ const UpdateBranch = () => {
       setAccountNumber(b.bankDetails?.accountNumber || "");
       setIfsc(b.bankDetails?.ifsc || "");
       setStatus(b.status || "active");
+      setExistingQrCodeImage(b.qrCodeImage || "");
+      setQrCodeImagePreview("");
+      setQrCodeImage(null);
     }
   }, [data, isSuccess]);
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    setQrCodeImage(file);
+    setQrCodeImagePreview(file ? URL.createObjectURL(file) : null);
+  };
+
   const handleUpdate = async () => {
-    await updateBranch({
-      branchId,
-      branchName,
-      address,
-      gst,
-      pan,
-      cin,
-      phone,
-      email,
-      bankDetails: {
-        bankName,
-        accountNumber,
-        ifsc,
-      },
-      status,
-    });
+    const data = new FormData();
+    data.append('branchId', branchId);
+    data.append('branchName', branchName);
+    data.append('address', address);
+    data.append('gst', gst);
+    data.append('pan', pan);
+    data.append('cin', cin);
+    data.append('phone', phone);
+    data.append('email', email);
+    data.append('status', status);
+    data.append('bankDetails[bankName]', bankName);
+    data.append('bankDetails[accountNumber]', accountNumber);
+    data.append('bankDetails[ifsc]', ifsc);
+    if (qrCodeImage) data.append('qrCodeImage', qrCodeImage);
+    await updateBranch(data);
   };
 
   useEffect(() => {
@@ -158,6 +169,18 @@ const UpdateBranch = () => {
                 placeholder="Enter email"
                 className="h-8 text-sm bg-white border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-md transition-all duration-200 hover:border-gray-400"
               />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium text-gray-700">Branch QR Code/Payment Scanner</Label>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="h-8 text-sm bg-white"
+              />
+              {(qrCodeImagePreview || existingQrCodeImage) && (
+                <img src={qrCodeImagePreview || existingQrCodeImage} alt="QR Code Preview" className="mt-2 w-28 h-28 object-contain border rounded" />
+              )}
             </div>
             <div className="space-y-1">
               <Label className="text-xs font-medium text-gray-700">Bank Name</Label>

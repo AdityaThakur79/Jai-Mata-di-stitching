@@ -413,11 +413,19 @@ const styles = StyleSheet.create({
     lineHeight: 1.3,
     marginBottom: 2,
   },
+  qrImage: {
+    width: 90,
+    height: 90,
+    marginTop: 8,
+    border: '1 solid #EEE',
+    alignSelf: 'center',
+  },
 });
 
 const InvoiceDocument = (data) => {
   const [logoDataUrl, setLogoDataUrl] = useState(null);
   const [isMounted, setIsMounted] = useState(true);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState(null);
 
   useEffect(() => {
     // Use base64 logo from data if provided, otherwise convert from URL
@@ -434,6 +442,33 @@ const InvoiceDocument = (data) => {
       setIsMounted(false);
     };
   }, [isMounted, data.logo, data.logoUrl]);
+
+  useEffect(() => {
+    const qrUrl = data.branchQrCodeImage || data.qrCodeImage || (data.branch && data.branch.qrCodeImage);
+    console.log('[Invoice PDF] QR Code Source Chosen:', qrUrl);
+    if (!qrUrl) {
+      setQrCodeDataUrl(null);
+      console.log('[Invoice PDF] No QR code image found in props.');
+      return;
+    }
+    if (/^data:image/.test(qrUrl)) {
+      setQrCodeDataUrl(qrUrl);
+      console.log('[Invoice PDF] QR code already in base64 format.');
+    } else {
+      toDataUrl(qrUrl)
+        .then(dUrl => {
+          setQrCodeDataUrl(dUrl);
+          if (dUrl) {
+            console.log('[Invoice PDF] Successfully converted QR code URL to base64.');
+          } else {
+            console.log('[Invoice PDF] Failed to convert QR code URL to base64:', qrUrl);
+          }
+        })
+        .catch(err => {
+          console.error('[Invoice PDF] Error converting QR code image to base64:', err, qrUrl);
+        });
+    }
+  }, [data.branchQrCodeImage, data.qrCodeImage, data.branch]);
 
   try {
     console.log("Invoice data received:", data);
@@ -539,6 +574,7 @@ const InvoiceDocument = (data) => {
       <View style={styles.itemsTable}>
         <View style={styles.tableHeader}>
           <Text style={styles.tableHeaderText}>S.No</Text>
+          <Text style={styles.tableHeaderText}>Order No</Text>
           <Text style={styles.tableHeaderText}>Item Description</Text>
           <Text style={styles.tableHeaderText}>Qty</Text>
           <Text style={styles.tableHeaderText}>Unit Price</Text>
@@ -548,6 +584,7 @@ const InvoiceDocument = (data) => {
         {data.items.map((item, index) => (
           <View key={index} style={index % 2 === 0 ? styles.tableRow : styles.tableRowAlt}>
             <Text style={styles.tableCell}>{index + 1}</Text>
+            <Text style={styles.tableCell}>{item.clientOrderNumber || ""}</Text>
             <Text style={styles.tableCellLeft}>
               {item.name}
               {item.description && `\nStyle: ${item.description}`}
@@ -580,6 +617,9 @@ const InvoiceDocument = (data) => {
               {'\n'}Account No: {data.accountNumber || ""}
               {'\n'}IFSC: {data.ifscCode || ""}
             </Text>
+            {qrCodeDataUrl && (
+              <Image style={styles.qrImage} src={qrCodeDataUrl} />
+            )}
           </View>
         </View>
         
@@ -678,6 +718,13 @@ const InvoiceDocument = (data) => {
         <Link src="https://jmdstitching.com/track-order" style={styles.footerLink}>
           Track your order: https://jmdstitching.com/track-order
         </Link>
+        <View style={{ marginTop: 8, flexDirection: 'row', justifyContent: 'center', gap: 14 }}>
+          <Link src="https://facebook.com/jmdstitching" style={styles.footerLink}>Facebook</Link>
+          <Text> | </Text>
+          <Link src="https://instagram.com/jmdstitching" style={styles.footerLink}>Instagram</Link>
+          <Text> | </Text>
+          <Link src="https://x.com/jmdstitching" style={styles.footerLink}>X (Twitter)</Link>
+        </View>
       </View>
     </Page>
   </Document>

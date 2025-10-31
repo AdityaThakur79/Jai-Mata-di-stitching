@@ -32,6 +32,9 @@ const CreateBranch = () => {
     status: "active",
   });
 
+  const [qrCodeImage, setQrCodeImage] = useState(null);
+  const [qrCodeImagePreview, setQrCodeImagePreview] = useState(null);
+
   const [createBranch, { isLoading, isSuccess, isError, error, data }] =
     useCreateBranchMutation();
 
@@ -55,13 +58,29 @@ const CreateBranch = () => {
     setForm((prev) => ({ ...prev, status: val }));
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    setQrCodeImage(file);
+    setQrCodeImagePreview(file ? URL.createObjectURL(file) : null);
+  };
+
   const handleSubmit = async () => {
     if (!form.branchName || !form.address) {
       toast.error("Branch name and address are required");
       return;
     }
-
-    await createBranch(form);
+    const data = new FormData();
+    Object.entries(form).forEach(([k, v]) => {
+      if (typeof v === "object" && v !== null) {
+        Object.entries(v).forEach(([subk, subv]) => {
+          data.append(`bankDetails[${subk}]`, subv);
+        });
+      } else {
+        data.append(k, v);
+      }
+    });
+    if (qrCodeImage) data.append("qrCodeImage", qrCodeImage);
+    await createBranch(data);
   };
 
   useEffect(() => {
@@ -152,6 +171,18 @@ const CreateBranch = () => {
                 placeholder="Enter branch email"
                 className="h-8 text-sm bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md transition-all duration-200 hover:border-gray-400"
               />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium text-gray-700">Branch QR Code/Payment Scanner</Label>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="h-8 text-sm bg-white"
+              />
+              {qrCodeImagePreview && (
+                <img src={qrCodeImagePreview} alt="QR Code Preview" className="mt-2 w-28 h-28 object-contain border rounded" />
+              )}
             </div>
             <div className="space-y-1">
               <Label className="text-xs font-medium text-gray-700">Bank Name</Label>

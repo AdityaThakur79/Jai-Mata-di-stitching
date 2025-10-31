@@ -97,6 +97,14 @@ const UpdateOrder = () => {
     itemBreakdowns: [],
   });
 
+  // --- State additions ---
+  const [clientOrderNumber, setClientOrderNumber] = useState("");
+  const [paymentStatus, setPaymentStatus] = useState("pending");
+  const [showMeasurementIdxs, setShowMeasurementIdxs] = useState([]);
+  const toggleShowMeasurements = (idx) => {
+    setShowMeasurementIdxs(prev => prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]);
+  };
+
   // API hooks
   const [getOrderById, { isLoading: getOrderLoading }] = useGetOrderByIdMutation();
   const [updateOrder, { isLoading: isUpdating }] = useUpdateOrderMutation();
@@ -176,7 +184,9 @@ const UpdateOrder = () => {
                 styleName: item.style?.styleName || "",
                 description: item.style?.description || ""
               },
-              specialInstructions: item.specialInstructions || ""
+              specialInstructions: item.specialInstructions || "",
+              // Add measurement fields if they exist in the backend item
+              measurement: item.measurement || {}
             };
           });
           console.log("Mapped items:", mappedItems);
@@ -202,6 +212,10 @@ const UpdateOrder = () => {
               deliveryStatus: order.shippingDetails.deliveryStatus || "pending",
             });
           }
+          // Load new fields if they exist
+          setClientOrderNumber(order.clientOrderNumber || "");
+          setPaymentStatus(order.paymentStatus || "pending");
+
         } else {
           toast.error(data?.message || "Order not found or failed to load");
         }
@@ -373,12 +387,20 @@ const UpdateOrder = () => {
         styleName: "",
         description: ""
       },
-      specialInstructions: ""
+      specialInstructions: "",
+      // Add measurement fields if they exist in the backend item
+      measurement: {}
     }]);
   };
 
   const removeItem = (index) => {
     const newItems = items.filter((_, i) => i !== index);
+    setItems(newItems);
+  };
+
+  const handleMeasurementChange = (index, field, value) => {
+    const newItems = [...items];
+    newItems[index].measurement[field] = value;
     setItems(newItems);
   };
 
@@ -414,7 +436,9 @@ const UpdateOrder = () => {
             styleName: item.style?.styleName || "",
             description: item.style?.description || ""
           },
-          specialInstructions: item.specialInstructions || ""
+          specialInstructions: item.specialInstructions || "",
+          // Add measurement fields if they exist in the backend item
+          measurement: item.measurement || {}
         })),
         discountType: formData.discountType,
         discountValue: parseFloat(formData.discountValue),
@@ -437,6 +461,8 @@ const UpdateOrder = () => {
           deliveryPerson: shippingDetails.deliveryPerson,
           deliveryStatus: shippingDetails.deliveryStatus,
         },
+        clientOrderNumber: clientOrderNumber || undefined,
+        paymentStatus: paymentStatus || undefined,
       };
 
       console.log("Sending order data:", orderData);
@@ -981,6 +1007,37 @@ const UpdateOrder = () => {
                       placeholder="Add special instructions for this item..."
                     />
                   </div>
+
+                  {/* Measurement toggle logic in Order Items section: */}
+                  {formData.orderType !== "fabric" && (
+                    <div className="mb-3">
+                      <Button variant="outline" type="button" size="sm" onClick={() => toggleShowMeasurements(index)}>
+                        {showMeasurementIdxs.includes(index) ? "Hide" : "Add"} Measurement
+                      </Button>
+                    </div>
+                  )}
+                  {/* Measurements shown only if toggled */}
+                  {formData.orderType !== "fabric" && showMeasurementIdxs.includes(index) && itemData?.items?.find((i) => i._id === item.itemType)?.fields && (
+                    <div className="mb-4">
+                      <Label className="text-sm font-medium mb-2 block">
+                        Measurements
+                      </Label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {itemData.items
+                          .find((i) => i._id === item.itemType)
+                          ?.fields?.map((field) => (
+                            <Input
+                              key={field}
+                              type="number"
+                              placeholder={`${field} (cm)`}
+                              value={item.measurement[field] || ""}
+                              onChange={(e) => handleMeasurementChange(index, field, e.target.value)}
+                              className="h-8 text-sm"
+                            />
+                          ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
 
@@ -1113,6 +1170,40 @@ const UpdateOrder = () => {
                   </div>
                 )}
               </div>
+          </FormSection>
+
+          {/* Pricing and Payment Section */}
+          <FormSection title="Pricing and Payment" icon={ShoppingCart}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="clientOrderNumber">Client Order Number</Label>
+                <Input
+                  id="clientOrderNumber"
+                  placeholder="Client's Order Number (optional)"
+                  value={clientOrderNumber}
+                  onChange={e => setClientOrderNumber(e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="paymentStatus">Payment Status</Label>
+                <Select
+                  value={paymentStatus}
+                  onValueChange={setPaymentStatus}
+                >
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue placeholder="Payment Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="partial">Partial</SelectItem>
+                    <SelectItem value="paid">Paid</SelectItem>
+                    <SelectItem value="overdue">Overdue</SelectItem>
+                    <SelectItem value="refunded">Refunded</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </FormSection>
 
           {/* Submit Button */}

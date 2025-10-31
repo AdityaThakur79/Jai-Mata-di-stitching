@@ -132,6 +132,7 @@ class OrderService {
         totalPrice: item.totalPrice || 0,
         fabric: item.fabric?.name || '',
         fabricMeters: item.fabricMeters || 0,
+        clientOrderNumber: item.clientOrderNumber || order.clientOrderNumber || ""
       })),
       subtotal: bill.subtotal || 0,
       discountType: bill.discountType || "percentage",
@@ -148,6 +149,11 @@ class OrderService {
       paymentNotes: order.paymentNotes || '',
       notes: bill.notes || '',
       shippingDetails: order.shippingDetails || null,
+      qrCodeImage: (() => {
+        const qr = order.branchId?.qrCodeImage || "";
+        console.log('[InvoiceData] Resolved qrCodeImage for invoice:', qr);
+        return qr;
+      })(),
     };
   }
 

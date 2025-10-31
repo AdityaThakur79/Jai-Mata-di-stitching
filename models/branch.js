@@ -31,6 +31,11 @@ const branchSchema = new mongoose.Schema({
     type: String,
     default: "",
   },
+  qrCodeImage: {
+    type: String,
+    default: "",
+    // Payment QR or scanner image URL
+  },
   bankDetails: {
     bankName: String,
     accountNumber: String,

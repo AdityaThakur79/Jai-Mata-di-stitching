@@ -26,7 +26,8 @@ const imageFields = [
   "secondaryServiceImage",
   "categoryPrimaryImage",
   "categorySecondaryImage",
-  "galleryImage"
+  "galleryImage",
+  "qrCodeImage"
 ];
 
 const videoFields = ["videoUpload"];
@@ -85,6 +86,7 @@ const upload = multer({
   { name: "categoryPrimaryImage", maxCount: 1 },
   { name: "categorySecondaryImage", maxCount: 1 },
   { name: "galleryImage", maxCount: 1 },
+  { name: "qrCodeImage", maxCount: 1 },
 ]);
  
 

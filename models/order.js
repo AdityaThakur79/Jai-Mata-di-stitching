@@ -126,6 +126,10 @@ const orderSchema = new mongoose.Schema({
   orderNumber: {
     type: String,
   },
+  clientOrderNumber: {
+    type: String,
+    // Optional client-provided or external order reference
+  },
   orderType: {
     type: String,
     enum: ["fabric", "fabric_stitching", "stitching", "readymade"],

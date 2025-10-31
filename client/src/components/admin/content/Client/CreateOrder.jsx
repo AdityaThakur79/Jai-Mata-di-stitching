@@ -111,6 +111,11 @@ const CreateOrder = () => {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [paymentNotes, setPaymentNotes] = useState("");
 
+  // --- STATE ADDITIONS ---
+  const [clientOrderNumber, setClientOrderNumber] = useState("");
+  const [paymentStatus, setPaymentStatus] = useState("pending"); // default as in model
+  // --- STATE ADDITIONS ---
+
   // API calls
   const { data: itemData } = useGetAllItemMastersQuery({ page: 1, limit: 100 });
   const { data: branchesData } = useGetAllBranchesQuery();
@@ -375,6 +380,15 @@ const CreateOrder = () => {
     }
   };
 
+  // --- MEASUREMENT BUTTON LOGIC ---
+  const [showMeasurementIdxs, setShowMeasurementIdxs] = useState([]); // array of indices
+  const toggleShowMeasurements = (idx) => {
+    setShowMeasurementIdxs(prev =>
+      prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]
+    );
+  };
+  // --- MEASUREMENT BUTTON LOGIC ---
+
   const validateForm = () => {
     // Check required fields
     if (!orderType) {
@@ -474,6 +488,8 @@ const CreateOrder = () => {
         orderType,
         client: clientId,
         clientDetails: finalClientDetails,
+        clientOrderNumber: clientOrderNumber || undefined,
+        paymentStatus,
         items: items.map(item => ({
           ...item,
           itemType: item.itemType && item.itemType.trim() !== "" ? item.itemType : null,
@@ -827,6 +843,14 @@ const CreateOrder = () => {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
+                  <FormField label="Client Order Number">
+                <Input
+                  placeholder="Client's Order Number"
+                  value={clientOrderNumber}
+                  onChange={e => setClientOrderNumber(e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </FormField>
                     {orderType !== "fabric" && (
                     <FormField label="Item Type" required>
                       <Select
@@ -952,7 +976,15 @@ const CreateOrder = () => {
                   </div>
 
                   {/* Measurements */}
-                  {orderType !== "fabric" && itemData?.items?.find((i) => i._id === item.itemType)?.fields && (
+                  {orderType !== "fabric" && (
+                    <div className="mb-3">
+                      <Button variant="outline" type="button" size="sm" onClick={() => toggleShowMeasurements(index)}>
+                        {showMeasurementIdxs.includes(index) ? "Hide" : "Add"} Measurement
+                      </Button>
+                    </div>
+                  )}
+                  {/* Measurements shown only if toggled */}
+                  {orderType !== "fabric" && showMeasurementIdxs.includes(index) && itemData?.items?.find((i) => i._id === item.itemType)?.fields && (
                     <div className="mb-4">
                       <Label className="text-sm font-medium mb-2 block">
                         Measurements
@@ -1169,6 +1201,10 @@ const CreateOrder = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6 mb-6">
           <FormSection title="Pricing & Discount" icon={Package}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* Client Order Number */}
+             
+            
+
               <FormField label="Discount Type">
                 <Select value={discountType} onValueChange={setDiscountType}>
                   <SelectTrigger className="h-8 text-sm">
@@ -1252,6 +1288,22 @@ const CreateOrder = () => {
                     <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
                     <SelectItem value="cheque">Cheque</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormField>
+
+   {/* Payment Status */}
+   <FormField label="Payment Status" required>
+                <Select value={paymentStatus} onValueChange={setPaymentStatus}>
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue placeholder="Payment Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="partial">Partial</SelectItem>
+                    <SelectItem value="paid">Paid</SelectItem>
+                    <SelectItem value="overdue">Overdue</SelectItem>
+                    <SelectItem value="refunded">Refunded</SelectItem>
                   </SelectContent>
                 </Select>
               </FormField>
