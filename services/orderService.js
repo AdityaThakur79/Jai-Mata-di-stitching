@@ -139,19 +139,27 @@ class OrderService {
       clientMobile: order.client?.mobile || order.clientDetails?.mobile || "0000000000",
       clientEmail: order.client?.email || order.clientDetails?.email || "",
       gstin: order.client?.gstin || order.clientDetails?.gstin || "",
-      items: order.items.map(item => ({
-        name: item.itemType?.name || 'Item',
-        description: item.style?.styleName || '',
-        quantity: item.quantity || 1,
-        unitPrice: item.unitPrice || 0,
-        totalPrice: item.totalPrice || 0,
-        fabric: item.fabric?.name || '',
-        fabricMeters: item.fabricMeters || 0,
-        clientOrderNumber: item.clientOrderNumber || order.clientOrderNumber || "",
-        alteration: item.alteration || 0,
-        handwork: item.handwork || 0,
-        otherCharges: item.otherCharges || 0
-      })),
+      items: order.items.map(item => {
+        // Debug: Log clientOrderNumber for each item
+        console.log('[prepareInvoiceData] Item clientOrderNumber:', item.clientOrderNumber, 'Type:', typeof item.clientOrderNumber);
+        console.log('[prepareInvoiceData] Order clientOrderNumber:', order.clientOrderNumber, 'Type:', typeof order.clientOrderNumber);
+        
+        return {
+          name: item.itemType?.name || 'Item',
+          description: item.style?.styleName || '',
+          quantity: item.quantity || 1,
+          unitPrice: item.unitPrice || 0,
+          totalPrice: item.totalPrice || 0,
+          fabric: item.fabric?.name || '',
+          fabricMeters: item.fabricMeters || 0,
+          clientOrderNumber: (item.clientOrderNumber !== undefined && item.clientOrderNumber !== null && String(item.clientOrderNumber).trim() !== "") 
+            ? String(item.clientOrderNumber).trim() 
+            : (order.clientOrderNumber !== undefined && order.clientOrderNumber !== null && String(order.clientOrderNumber).trim() !== "" ? String(order.clientOrderNumber).trim() : ""),
+          alteration: item.alteration || 0,
+          handwork: item.handwork || 0,
+          otherCharges: item.otherCharges || 0
+        };
+      }),
       subtotal: bill.subtotal || 0,
       discountType: bill.discountType || "percentage",
       discountValue: bill.discountValue || 0,
@@ -160,6 +168,7 @@ class OrderService {
       taxRate: bill.taxRate || 18,
       taxAmount: bill.taxAmount || 0,
       totalAmount: bill.totalAmount || 0,
+      clientOrderNumber: order.clientOrderNumber || "",
       advancePayment: order.advancePayment || 0,
       paidAmount: bill.paidAmount || order.advancePayment || 0,
       pendingAmount: bill.pendingAmount || Math.max(0, (bill.totalAmount || 0) - (order.advancePayment || 0)),

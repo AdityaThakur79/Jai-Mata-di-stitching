@@ -186,6 +186,9 @@ export const createOrder = async (req, res) => {
           handwork: handwork,
           otherCharges: otherCharges,
           quantity: 1,
+          clientOrderNumber: item.clientOrderNumber !== undefined && item.clientOrderNumber !== null 
+            ? item.clientOrderNumber 
+            : undefined,
         };
         
         // Remove fabric field if empty or invalid
@@ -246,6 +249,7 @@ export const createOrder = async (req, res) => {
         alteration: alteration,
         handwork: handwork,
         otherCharges: otherCharges,
+        clientOrderNumber: item.clientOrderNumber || (item.clientOrderNumber === "" ? "" : undefined),
       };
       
       // Remove fabric field if empty or invalid (for stitching-only orders)
@@ -374,6 +378,7 @@ export const createOrder = async (req, res) => {
             invoiceDate: new Date().toLocaleDateString('en-IN'),
             dueDate: new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString('en-IN'),
             orderType: orderType || "",
+            clientOrderNumber: populatedOrder.clientOrderNumber || "",
             clientName: finalClientDetails.name || "Client Name",
             clientAddress: finalClientDetails.address || "Client Address",
             clientCity: finalClientDetails.city || "City",
@@ -391,7 +396,7 @@ export const createOrder = async (req, res) => {
               totalPrice: item.totalPrice || 0,
               fabric: item.fabric?.name || '',
               fabricMeters: item.fabricMeters || 0,
-              clientOrderNumber: populatedOrder.clientOrderNumber || "",
+              clientOrderNumber: item.clientOrderNumber || populatedOrder.clientOrderNumber || "",
               alteration: item.alteration || 0,
               handwork: item.handwork || 0,
               otherCharges: item.otherCharges || 0,

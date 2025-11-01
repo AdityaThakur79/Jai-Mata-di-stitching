@@ -584,7 +584,7 @@ const InvoiceDocument = (data) => {
         {data.items.map((item, index) => (
           <View key={index} style={index % 2 === 0 ? styles.tableRow : styles.tableRowAlt}>
             <Text style={styles.tableCell}>{index + 1}</Text>
-            <Text style={styles.tableCell}>{item.clientOrderNumber || ""}</Text>
+            <Text style={styles.tableCell}>{item.clientOrderNumber || data.clientOrderNumber || ""}</Text>
             <Text style={styles.tableCellLeft}>
               {item.name}
               {item.description && `\nStyle: ${item.description}`}

@@ -447,6 +447,7 @@ const InvoiceDocumentServer = (data) => {
     invoiceDate: safeDate(data.invoiceDate, new Date().toLocaleDateString('en-IN')),
     dueDate: safeDate(data.dueDate, new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-IN')),
     orderType: safeString(data.orderType, ''),
+    clientOrderNumber: safeString(data.clientOrderNumber, ''),
     clientName: safeString(data.clientName, 'Client Name'),
     clientAddress: safeString(data.clientAddress, 'Client Address'),
     clientCity: safeString(data.clientCity, 'City'),
@@ -455,7 +456,14 @@ const InvoiceDocumentServer = (data) => {
     clientMobile: safeString(data.clientMobile, '0000000000'),
     clientEmail: safeString(data.clientEmail, ''),
     gstin: safeString(data.gstin, ''),
-    items: safeArray(data.items, []),
+    items: safeArray(data.items, []).map((item, idx) => {
+      // Debug: Log items before mapping - check if clientOrderNumber exists
+      if (item && typeof item === 'object') {
+        console.log(`[InvoiceTemplateServer] safeData.items[${idx}] - Full item:`, JSON.stringify(item, null, 2));
+        console.log(`[InvoiceTemplateServer] safeData.items[${idx}] clientOrderNumber:`, item.clientOrderNumber, 'Type:', typeof item.clientOrderNumber, 'Has property:', 'clientOrderNumber' in item);
+      }
+      return item;
+    }),
     subtotal: safeNumber(data.subtotal, 0),
     discountType: safeString(data.discountType, 'percentage'),
     discountValue: safeNumber(data.discountValue, 0),
@@ -465,6 +473,8 @@ const InvoiceDocumentServer = (data) => {
     taxAmount: safeNumber(data.taxAmount, 0),
     totalAmount: safeNumber(data.totalAmount, 0),
     advancePayment: safeNumber(data.advancePayment, 0),
+    paidAmount: safeNumber(data.paidAmount, 0),
+    pendingAmount: safeNumber(data.pendingAmount, 0),
     balanceAmount: safeNumber(data.balanceAmount, 0),
     paymentStatus: safeString(data.paymentStatus, 'pending'),
     paymentMethod: safeString(data.paymentMethod, ''),
@@ -573,13 +583,21 @@ const InvoiceDocumentServer = (data) => {
         ),
         
         // Items rows
-        ...safeData.items.map((item, index) => 
-          React.createElement(View, { 
+        ...safeData.items.map((item, index) => {
+          // Match frontend template logic exactly: item.clientOrderNumber || data.clientOrderNumber || ""
+          const clientOrderNumToDisplay = item?.clientOrderNumber || safeData?.clientOrderNumber || "";
+          
+          console.log(`[InvoiceTemplateServer] Item ${index + 1}:`);
+          console.log('  - item.clientOrderNumber:', item?.clientOrderNumber);
+          console.log('  - safeData.clientOrderNumber:', safeData?.clientOrderNumber);
+          console.log('  - Final display value:', clientOrderNumToDisplay);
+          
+          return React.createElement(View, { 
             key: index, 
             style: index % 2 === 0 ? styles.tableRow : styles.tableRowAlt 
           },
-            React.createElement(Text, { style: styles.tableCell }, index + 1),
-            React.createElement(Text, { style: styles.tableCell }, safeString(item.clientOrderNumber, '')),
+            React.createElement(Text, { style: styles.tableCell }, String(index + 1)),
+            React.createElement(Text, { style: styles.tableCell }, String(clientOrderNumToDisplay || '')),
             React.createElement(Text, { style: styles.tableCellLeft },
               safeString(item.name, 'Item'),
               safeString(item.description) && `\nStyle: ${safeString(item.description)}`,
@@ -592,8 +610,8 @@ const InvoiceDocumentServer = (data) => {
             React.createElement(Text, { style: styles.tableCell }, safeNumber(item.quantity, 1)),
             React.createElement(Text, { style: styles.tableCell }, safeNumber(item.unitPrice, 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })),
             React.createElement(Text, { style: styles.tableCell }, safeNumber(item.totalPrice, 0).toLocaleString('en-IN', { minimumFractionDigits: 2 }))
-          )
-        ),
+          );
+        }),
         
         // Total row
         React.createElement(View, { style: styles.tableTotalRow },

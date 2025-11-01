@@ -574,7 +574,9 @@ const CreateOrder = () => {
           alteration: parseFloat(item.alteration) || 0,
           handwork: parseFloat(item.handwork) || 0,
           otherCharges: parseFloat(item.otherCharges) || 0,
-          clientOrderNumber: item.clientOrderNumber || undefined,
+          clientOrderNumber: item.clientOrderNumber !== undefined && item.clientOrderNumber !== null 
+            ? item.clientOrderNumber 
+            : undefined,
         })),
         branchId,
         expectedDeliveryDate: expectedDeliveryDate || null,

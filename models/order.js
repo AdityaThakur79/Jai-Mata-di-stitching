@@ -156,7 +156,6 @@ const orderSchema = new mongoose.Schema({
   },
   clientOrderNumber: {
     type: String,
-    // Optional client-provided or external order reference
   },
   orderType: {
     type: String,
