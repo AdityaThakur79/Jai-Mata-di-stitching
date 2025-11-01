@@ -79,6 +79,7 @@ const CreateOrder = () => {
       alteration: 0,
       handwork: 0,
       otherCharges: 0,
+      clientOrderNumber: "",
     },
   ]);
   const [notes, setNotes] = useState("");
@@ -115,7 +116,6 @@ const CreateOrder = () => {
   const [paymentNotes, setPaymentNotes] = useState("");
 
   // --- STATE ADDITIONS ---
-  const [clientOrderNumber, setClientOrderNumber] = useState("");
   const [paymentStatus, setPaymentStatus] = useState("pending"); // default as in model
   // --- STATE ADDITIONS ---
 
@@ -446,6 +446,7 @@ const CreateOrder = () => {
         alteration: 0,
         handwork: 0,
         otherCharges: 0,
+        clientOrderNumber: "",
       },
     ]);
   };
@@ -564,7 +565,6 @@ const CreateOrder = () => {
         orderType,
         client: clientId,
         clientDetails: finalClientDetails,
-        clientOrderNumber: clientOrderNumber || undefined,
         paymentStatus,
         items: items.map(item => ({
           ...item,
@@ -574,6 +574,7 @@ const CreateOrder = () => {
           alteration: parseFloat(item.alteration) || 0,
           handwork: parseFloat(item.handwork) || 0,
           otherCharges: parseFloat(item.otherCharges) || 0,
+          clientOrderNumber: item.clientOrderNumber || undefined,
         })),
         branchId,
         expectedDeliveryDate: expectedDeliveryDate || null,
@@ -925,8 +926,8 @@ const CreateOrder = () => {
                   <FormField label="Client Order Number">
                 <Input
                   placeholder="Client's Order Number"
-                  value={clientOrderNumber}
-                  onChange={e => setClientOrderNumber(e.target.value)}
+                  value={item.clientOrderNumber || ""}
+                  onChange={e => handleItemChange(index, "clientOrderNumber", e.target.value)}
                   className="h-8 text-sm"
                 />
               </FormField>

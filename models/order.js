@@ -42,6 +42,9 @@ const orderItemSchema = new mongoose.Schema({
   description: {
     type: String,
   },
+  clientOrderNumber: {
+    type: String,
+  },
   unitPrice: {
     type: Number,
     default: 0,
