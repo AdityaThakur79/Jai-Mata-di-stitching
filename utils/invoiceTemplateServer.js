@@ -414,10 +414,18 @@ const InvoiceDocumentServer = (data) => {
   // Resolve QR code image similarly to client template logic
   const resolvedQrCodeImage = (() => {
     const candidate = data.branchQrCodeImage || data.qrCodeImage || (data.branch && data.branch.qrCodeImage) || '';
+    console.log('[InvoiceTemplateServer] QR Code resolution:', {
+      branchQrCodeImage: data.branchQrCodeImage || 'not provided',
+      qrCodeImage: data.qrCodeImage || 'not provided',
+      branch: data.branch ? 'provided' : 'not provided',
+      finalCandidate: candidate || 'EMPTY'
+    });
     if (!candidate) {
+      console.log('[InvoiceTemplateServer] ⚠️ No QR code image found');
       return '';
     }
     // Accept base64 or URL directly; @react-pdf Image can fetch URLs server-side
+    console.log('[InvoiceTemplateServer] ✅ QR code image resolved:', candidate.substring(0, 50) + '...');
     return candidate;
   })();
   
@@ -576,7 +584,10 @@ const InvoiceDocumentServer = (data) => {
               safeString(item.name, 'Item'),
               safeString(item.description) && `\nStyle: ${safeString(item.description)}`,
               safeString(item.fabric) && `\nFabric: ${safeString(item.fabric)}`,
-              safeNumber(item.fabricMeters, 0) > 0 && ` (${safeNumber(item.fabricMeters, 0)}m)`
+              safeNumber(item.fabricMeters, 0) > 0 && ` (${safeNumber(item.fabricMeters, 0)}m)`,
+              safeNumber(item.alteration, 0) > 0 && `\nAlteration: ₹${safeNumber(item.alteration, 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,
+              safeNumber(item.handwork, 0) > 0 && `\nHandwork: ₹${safeNumber(item.handwork, 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,
+              safeNumber(item.otherCharges, 0) > 0 && `\nOther Charges: ₹${safeNumber(item.otherCharges, 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
             ),
             React.createElement(Text, { style: styles.tableCell }, safeNumber(item.quantity, 1)),
             React.createElement(Text, { style: styles.tableCell }, safeNumber(item.unitPrice, 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })),
@@ -607,7 +618,9 @@ const InvoiceDocumentServer = (data) => {
               '\nIFSC: ', safeData.ifscCode
             ),
             // --- QR code rendering ---
-          resolvedQrCodeImage ? React.createElement(Image, { style: styles.qrImage, src: resolvedQrCodeImage }) : null
+            resolvedQrCodeImage ? 
+              React.createElement(Image, { style: styles.qrImage, src: resolvedQrCodeImage }) : 
+              React.createElement(Text, { style: { fontSize: 7, color: '#999', marginTop: 8, textAlign: 'center' } }, 'QR Code not available')
           )
         ),
         
@@ -619,6 +632,28 @@ const InvoiceDocumentServer = (data) => {
               React.createElement(Text, { style: styles.pricingLabel }, "Subtotal:"),
               React.createElement(Text, { style: styles.pricingValue }, safeData.subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 }))
             ),
+            
+            // Additional Charges Breakdown
+            (() => {
+              const totalAlteration = safeData.items.reduce((sum, item) => sum + safeNumber(item.alteration, 0), 0);
+              const totalHandwork = safeData.items.reduce((sum, item) => sum + safeNumber(item.handwork, 0), 0);
+              const totalOtherCharges = safeData.items.reduce((sum, item) => sum + safeNumber(item.otherCharges, 0), 0);
+              
+              return [
+                totalAlteration > 0 && React.createElement(View, { key: 'alteration', style: styles.pricingRow },
+                  React.createElement(Text, { style: styles.pricingLabel }, "Total Alteration:"),
+                  React.createElement(Text, { style: styles.pricingValue }, totalAlteration.toLocaleString('en-IN', { minimumFractionDigits: 2 }))
+                ),
+                totalHandwork > 0 && React.createElement(View, { key: 'handwork', style: styles.pricingRow },
+                  React.createElement(Text, { style: styles.pricingLabel }, "Total Handwork:"),
+                  React.createElement(Text, { style: styles.pricingValue }, totalHandwork.toLocaleString('en-IN', { minimumFractionDigits: 2 }))
+                ),
+                totalOtherCharges > 0 && React.createElement(View, { key: 'otherCharges', style: styles.pricingRow },
+                  React.createElement(Text, { style: styles.pricingLabel }, "Total Other Charges:"),
+                  React.createElement(Text, { style: styles.pricingValue }, totalOtherCharges.toLocaleString('en-IN', { minimumFractionDigits: 2 }))
+                )
+              ].filter(Boolean);
+            })(),
             
             React.createElement(View, { style: styles.pricingRow },
               React.createElement(Text, { style: styles.pricingLabel }, 

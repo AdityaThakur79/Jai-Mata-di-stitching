@@ -59,6 +59,24 @@ const EditOrder = () => {
     advancePayment: 0,
     paymentMethod: "",
     paymentNotes: "",
+    clientOrderNumber: "",
+    paymentStatus: "pending",
+  });
+
+  const [shippingDetails, setShippingDetails] = useState({
+    shippingAddress: "",
+    shippingCity: "",
+    shippingState: "",
+    shippingPincode: "",
+    shippingPhone: "",
+    shippingMethod: "home_delivery",
+    shippingCost: 0,
+    estimatedDeliveryDate: "",
+    actualDeliveryDate: "",
+    deliveryNotes: "",
+    deliveryPerson: "",
+    deliveryPersonContact: "",
+    deliveryStatus: "pending",
   });
 
   const [items, setItems] = useState([]);
@@ -102,8 +120,29 @@ const EditOrder = () => {
             advancePayment: order.advancePayment || 0,
             paymentMethod: order.paymentMethod || "",
             paymentNotes: order.paymentNotes || "",
+            clientOrderNumber: order.clientOrderNumber || "",
+            paymentStatus: order.paymentStatus || "pending",
           });
           setItems(order.items || []);
+          setShippingDetails({
+            shippingAddress: order.shippingDetails?.shippingAddress || "",
+            shippingCity: order.shippingDetails?.shippingCity || "",
+            shippingState: order.shippingDetails?.shippingState || "",
+            shippingPincode: order.shippingDetails?.shippingPincode || "",
+            shippingPhone: order.shippingDetails?.shippingPhone || "",
+            shippingMethod: order.shippingDetails?.shippingMethod || "home_delivery",
+            shippingCost: order.shippingDetails?.shippingCost || 0,
+            estimatedDeliveryDate: order.shippingDetails?.estimatedDeliveryDate 
+              ? new Date(order.shippingDetails.estimatedDeliveryDate).toISOString().split('T')[0] 
+              : "",
+            actualDeliveryDate: order.shippingDetails?.actualDeliveryDate 
+              ? new Date(order.shippingDetails.actualDeliveryDate).toISOString().split('T')[0] 
+              : "",
+            deliveryNotes: order.shippingDetails?.deliveryNotes || "",
+            deliveryPerson: order.shippingDetails?.deliveryPerson || "",
+            deliveryPersonContact: order.shippingDetails?.deliveryPersonContact || "",
+            deliveryStatus: order.shippingDetails?.deliveryStatus || "pending",
+          });
         }
       } catch (error) {
         console.error("Error loading order:", error);
@@ -143,23 +182,59 @@ const EditOrder = () => {
     }
 
     // Calculate stitching cost
-    stitchingCost = selectedItem.stitchingCharge || 0;
-    breakdown.push({
-      name: "Stitching Charge",
-      rate: stitchingCost,
-      quantity: 1,
-      unit: "item",
-      total: stitchingCost,
-    });
+    stitchingCost = (selectedItem.stitchingCharge || 0) * parseInt(item.quantity);
+    if ((selectedItem.stitchingCharge || 0) > 0) {
+      breakdown.push({
+        name: "Stitching Charge",
+        rate: selectedItem.stitchingCharge || 0,
+        quantity: parseInt(item.quantity),
+        unit: "per item",
+        total: stitchingCost,
+      });
+    }
 
-    itemPrice = fabricCost + stitchingCost;
-    const totalItemPrice = itemPrice * parseInt(item.quantity);
+    // Additional charges
+    const alteration = parseFloat(item.alteration) || 0;
+    const handwork = parseFloat(item.handwork) || 0;
+    const otherCharges = parseFloat(item.otherCharges) || 0;
+    const additionalCharges = alteration + handwork + otherCharges;
+
+    // Add additional charges to breakdown
+    if (alteration > 0) {
+      breakdown.push({
+        name: "Alteration",
+        rate: alteration,
+        quantity: 1,
+        unit: "one-time",
+        total: alteration,
+      });
+    }
+    if (handwork > 0) {
+      breakdown.push({
+        name: "Handwork",
+        rate: handwork,
+        quantity: 1,
+        unit: "one-time",
+        total: handwork,
+      });
+    }
+    if (otherCharges > 0) {
+      breakdown.push({
+        name: "Other Charges",
+        rate: otherCharges,
+        quantity: 1,
+        unit: "one-time",
+        total: otherCharges,
+      });
+    }
+
+    itemPrice = fabricCost + stitchingCost + additionalCharges;
 
     return {
       itemName: selectedItem.name,
       quantity: parseInt(item.quantity),
-      unitPrice: itemPrice,
-      totalPrice: totalItemPrice,
+      unitPrice: itemPrice / parseInt(item.quantity),
+      totalPrice: itemPrice,
       breakdown,
       fabric: item.fabric ? fabricsData?.fabrics?.find(f => f._id === item.fabric) : null,
     };
@@ -220,6 +295,13 @@ const EditOrder = () => {
     setItems(newItems);
   };
 
+  const handleShippingChange = (field, value) => {
+    setShippingDetails(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   const addItem = () => {
     setItems([...items, {
       itemType: "",
@@ -231,7 +313,10 @@ const EditOrder = () => {
         styleName: "",
         description: ""
       },
-      specialInstructions: ""
+      specialInstructions: "",
+      alteration: 0,
+      handwork: 0,
+      otherCharges: 0
     }]);
   };
 
@@ -262,6 +347,8 @@ const EditOrder = () => {
         expectedDeliveryDate: formData.expectedDeliveryDate,
         notes: formData.notes,
         specialInstructions: formData.specialInstructions,
+        clientOrderNumber: formData.clientOrderNumber || undefined,
+        paymentStatus: formData.paymentStatus,
         items: items.map(item => ({
           itemType: item.itemType,
           quantity: parseInt(item.quantity),
@@ -272,7 +359,10 @@ const EditOrder = () => {
             styleName: item.style?.styleName || "",
             description: item.style?.description || ""
           },
-          specialInstructions: item.specialInstructions || ""
+          specialInstructions: item.specialInstructions || "",
+          alteration: parseFloat(item.alteration) || 0,
+          handwork: parseFloat(item.handwork) || 0,
+          otherCharges: parseFloat(item.otherCharges) || 0
         })),
         discountType: formData.discountType,
         discountValue: parseFloat(formData.discountValue),
@@ -280,6 +370,21 @@ const EditOrder = () => {
         advancePayment: parseFloat(formData.advancePayment) || 0,
         paymentMethod: formData.paymentMethod || undefined,
         paymentNotes: formData.paymentNotes,
+        shippingDetails: {
+          shippingAddress: shippingDetails.shippingAddress || "",
+          shippingCity: shippingDetails.shippingCity || "",
+          shippingState: shippingDetails.shippingState || "",
+          shippingPincode: shippingDetails.shippingPincode || "",
+          shippingPhone: shippingDetails.shippingPhone || "",
+          shippingMethod: shippingDetails.shippingMethod || "home_delivery",
+          shippingCost: parseFloat(shippingDetails.shippingCost) || 0,
+          estimatedDeliveryDate: shippingDetails.estimatedDeliveryDate || null,
+          actualDeliveryDate: shippingDetails.actualDeliveryDate || null,
+          deliveryNotes: shippingDetails.deliveryNotes || "",
+          deliveryPerson: shippingDetails.deliveryPerson || "",
+          deliveryPersonContact: shippingDetails.deliveryPersonContact || "",
+          deliveryStatus: shippingDetails.deliveryStatus || "pending",
+        },
       };
 
       const { data } = await updateOrder({ orderId, orderData });
@@ -507,6 +612,35 @@ const EditOrder = () => {
                     </SelectContent>
                   </Select>
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="paymentStatus">Payment Status</Label>
+                  <Select
+                    value={formData.paymentStatus}
+                    onValueChange={(value) => handleInputChange("paymentStatus", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select payment status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="partial">Partial</SelectItem>
+                      <SelectItem value="paid">Paid</SelectItem>
+                      <SelectItem value="overdue">Overdue</SelectItem>
+                      <SelectItem value="refunded">Refunded</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="clientOrderNumber">Client Order Number</Label>
+                  <Input
+                    id="clientOrderNumber"
+                    value={formData.clientOrderNumber}
+                    onChange={(e) => handleInputChange("clientOrderNumber", e.target.value)}
+                    placeholder="Enter client order number (optional)"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -676,6 +810,45 @@ const EditOrder = () => {
                       placeholder="Add special instructions for this item..."
                     />
                   </div>
+
+                  {/* Additional Charges */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label>Alteration (₹)</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={item.alteration || 0}
+                        onChange={(e) => handleItemChange(index, "alteration", e.target.value)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Handwork (₹)</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={item.handwork || 0}
+                        onChange={(e) => handleItemChange(index, "handwork", e.target.value)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Other Charges (₹)</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={item.otherCharges || 0}
+                        onChange={(e) => handleItemChange(index, "otherCharges", e.target.value)}
+                      />
+                    </div>
+                  </div>
                 </div>
               ))}
 
@@ -686,6 +859,154 @@ const EditOrder = () => {
                   <p className="text-sm">Click "Add Item" to start adding items to this order</p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Shipping Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="w-5 h-5" />
+                Shipping Details
+              </CardTitle>
+              <CardDescription>Shipping and delivery information</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <Label>Shipping Address</Label>
+                  <Input
+                    value={shippingDetails.shippingAddress}
+                    onChange={(e) => handleShippingChange("shippingAddress", e.target.value)}
+                    placeholder="Enter shipping address"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>City</Label>
+                  <Input
+                    value={shippingDetails.shippingCity}
+                    onChange={(e) => handleShippingChange("shippingCity", e.target.value)}
+                    placeholder="City"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>State</Label>
+                  <Input
+                    value={shippingDetails.shippingState}
+                    onChange={(e) => handleShippingChange("shippingState", e.target.value)}
+                    placeholder="State"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Pincode</Label>
+                  <Input
+                    value={shippingDetails.shippingPincode}
+                    onChange={(e) => handleShippingChange("shippingPincode", e.target.value)}
+                    placeholder="Pincode"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Phone</Label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600">+91</span>
+                    <Input
+                      value={shippingDetails.shippingPhone}
+                      onChange={(e) => {
+                        const digitsOnly = (e.target.value || "").replace(/\D/g, "").slice(0, 10);
+                        handleShippingChange("shippingPhone", digitsOnly);
+                      }}
+                      placeholder="10-digit phone"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Shipping Method</Label>
+                  <Select
+                    value={shippingDetails.shippingMethod}
+                    onValueChange={(value) => handleShippingChange("shippingMethod", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select shipping method" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pickup">Pickup</SelectItem>
+                      <SelectItem value="home_delivery">Home Delivery</SelectItem>
+                      <SelectItem value="courier">Courier</SelectItem>
+                      <SelectItem value="express">Express</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Shipping Cost (₹)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={shippingDetails.shippingCost}
+                    onChange={(e) => handleShippingChange("shippingCost", e.target.value)}
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Estimated Delivery Date</Label>
+                  <Input
+                    type="date"
+                    value={shippingDetails.estimatedDeliveryDate}
+                    onChange={(e) => handleShippingChange("estimatedDeliveryDate", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Actual Delivery Date</Label>
+                  <Input
+                    type="date"
+                    value={shippingDetails.actualDeliveryDate}
+                    onChange={(e) => handleShippingChange("actualDeliveryDate", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Delivery Person</Label>
+                  <Input
+                    value={shippingDetails.deliveryPerson}
+                    onChange={(e) => handleShippingChange("deliveryPerson", e.target.value)}
+                    placeholder="Delivery person"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Delivery Person Contact</Label>
+                  <Input
+                    value={shippingDetails.deliveryPersonContact}
+                    onChange={(e) => handleShippingChange("deliveryPersonContact", e.target.value)}
+                    placeholder="Contact number"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Delivery Status</Label>
+                  <Select
+                    value={shippingDetails.deliveryStatus}
+                    onValueChange={(value) => handleShippingChange("deliveryStatus", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select delivery status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="shipped">Shipped</SelectItem>
+                      <SelectItem value="in_transit">In Transit</SelectItem>
+                      <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
+                      <SelectItem value="delivered">Delivered</SelectItem>
+                      <SelectItem value="failed">Failed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2 md:col-span-2 lg:col-span-3">
+                  <Label>Delivery Notes</Label>
+                  <Input
+                    value={shippingDetails.deliveryNotes}
+                    onChange={(e) => handleShippingChange("deliveryNotes", e.target.value)}
+                    placeholder="Delivery notes"
+                  />
+                </div>
+              </div>
             </CardContent>
           </Card>
 

@@ -1,85 +1,78 @@
-import nodemailer from "nodemailer";
+import { TransactionalEmailsApi, TransactionalEmailsApiApiKeys, SendSmtpEmail } from '@getbrevo/brevo';
 
 // Logo is now hosted at https://jmdstitching.com/images/jmd_logo.jpeg
 // No need for local file conversion
 
-// Create transporter with better error handling
-const createTransporter = () => {
-  // Check if email credentials are configured
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    throw new Error("Email credentials not configured. Please set EMAIL_USER and EMAIL_PASS environment variables.");
+// Initialize Brevo API client
+const getBrevoClient = () => {
+  // Check if Brevo API key is configured
+  if (!process.env.BREVO_API_KEY) {
+    throw new Error("Brevo API key not configured. Please set BREVO_API_KEY environment variable.");
   }
 
-  // For Gmail, you need to use an App Password if 2FA is enabled
-  // Or use OAuth2 for better security
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS, // This should be an App Password, not your regular password
-    },
-    // Add additional options for better reliability
-    secure: true, // Use SSL
-    port: 465, // Gmail SMTP port
-    tls: {
-      rejectUnauthorized: false // For development, remove in production
-    }
-  });
+  // Initialize Brevo API client with proper authentication
+  const apiInstance = new TransactionalEmailsApi();
+  
+  // Set API key - using the correct method
+  try {
+    apiInstance.setApiKey(TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY.trim());
+    console.log('✅ Brevo API key set successfully');
+  } catch (error) {
+    console.error('❌ Error setting Brevo API key:', error);
+    throw new Error(`Failed to configure Brevo API: ${error.message}`);
+  }
 
-  return transporter;
+  return apiInstance;
 };
 
-// Verify transporter connection
-const verifyTransporter = async (transporter) => {
-  try {
-    await transporter.verify();
-    console.log("Email transporter verified successfully");
-    return true;
-  } catch (error) {
-    console.error("Email transporter verification failed:", error.message);
-    
-    // Provide specific guidance based on error type
-    if (error.code === 'EAUTH') {
-      console.error("🔧 EMAIL AUTHENTICATION ERROR:");
-      console.error("1. Enable 2-Factor Authentication on Gmail");
-      console.error("2. Generate an App Password (16 characters)");
-      console.error("3. Use App Password as EMAIL_PASS (not regular password)");
-      console.error("4. Remove spaces from App Password");
-    }
-    
-    return false;
+// Get sender email and name from environment variables
+const getSender = () => {
+  const senderEmail = process.env.BREVO_SENDER_EMAIL || process.env.EMAIL_USER;
+  const senderName = process.env.BREVO_SENDER_NAME || 'JMD Stitching';
+
+  if (!senderEmail) {
+    throw new Error("Sender email not configured. Please set BREVO_SENDER_EMAIL or EMAIL_USER environment variable.");
   }
+
+  return { email: senderEmail, name: senderName };
+};
+
+// Convert buffer to base64 for Brevo attachments
+const bufferToBase64 = (buffer) => {
+  if (Buffer.isBuffer(buffer)) {
+    return buffer.toString('base64');
+  }
+  return Buffer.from(buffer).toString('base64');
 };
 
 // Send OTP email
 export const sendOTPEmail = async (email, otp) => {
   try {
-    const transporter = createTransporter();
-    
-    // Verify connection before sending
-    const isVerified = await verifyTransporter(transporter);
-    if (!isVerified) {
-      throw new Error("Email service not available");
-    }
+    const apiInstance = getBrevoClient();
+    const sender = getSender();
 
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "OTP for Registration",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #333;">OTP Verification</h2>
-          <p>Your OTP for registration is: <strong style="color: #007bff; font-size: 24px;">${otp}</strong></p>
-          <p>This OTP will expire in 10 minutes.</p>
-          <p>If you didn't request this OTP, please ignore this email.</p>
-        </div>
-      `,
-    };
+    const sendSmtpEmail = new SendSmtpEmail();
+    sendSmtpEmail.subject = "OTP for Registration";
+    sendSmtpEmail.htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">OTP Verification</h2>
+        <p>Your OTP for registration is: <strong style="color: #007bff; font-size: 24px;">${otp}</strong></p>
+        <p>This OTP will expire in 10 minutes.</p>
+        <p>If you didn't request this OTP, please ignore this email.</p>
+      </div>
+    `;
+    sendSmtpEmail.sender = { email: sender.email, name: sender.name };
+    sendSmtpEmail.to = [{ email: email }];
 
-    const result = await transporter.sendMail(mailOptions);
+    const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log('✅ OTP email sent successfully via Brevo');
     return result;
   } catch (error) {
-    console.error("Error sending OTP email:", error);
+    console.error("❌ Error sending OTP email:", error);
+    if (error.response?.status === 401) {
+      console.error('🔑 Authentication failed. Check your BREVO_API_KEY:', process.env.BREVO_API_KEY ? 'Key exists but invalid' : 'Key missing');
+      console.error('Response:', error.response?.data);
+    }
     throw error;
   }
 };
@@ -87,13 +80,8 @@ export const sendOTPEmail = async (email, otp) => {
 // Send salary slip email
 export const sendSalarySlipEmail = async (email, employeeData, salarySlip, month, pdfBuffer) => {
   try {
-    const transporter = createTransporter();
-    
-    // Verify connection before sending
-    const isVerified = await verifyTransporter(transporter);
-    if (!isVerified) {
-      throw new Error("Email service not available");
-    }
+    const apiInstance = getBrevoClient();
+    const sender = getSender();
 
     // Create salary slip HTML content with JMD theme
     const salarySlipHTML = `
@@ -161,81 +149,102 @@ export const sendSalarySlipEmail = async (email, employeeData, salarySlip, month
       </div>
     `;
 
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: `JMD Stitching PRIVATE LIMITED - Salary Slip for ${month} - ${employeeData.name}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; background: #f8f9fa; padding: 20px;">
-          <!-- Header -->
-          <div style="background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%); padding: 25px; border-radius: 12px; text-align: center; margin-bottom: 25px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-            <h2 style="color: white; margin: 0; font-size: 28px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">JMD STITCHING PRIVATE LIMITED</h2>
-            <p style="color: #fff5f0; margin: 8px 0 0 0; font-size: 18px; font-weight: 500;">Salary Slip for ${month}</p>
-          </div>
-          
-          <!-- Message Content -->
-          <div style="background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; border-left: 5px solid #ff6b35; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <p style="color: #333; font-size: 18px; margin: 0 0 15px 0; font-weight: 600;">Dear <strong>${employeeData.name}</strong>,</p>
-            <p style="color: #666; margin: 0 0 15px 0; font-size: 16px; line-height: 1.5;">Please find attached your official salary slip PDF for ${month}.</p>
-            <p style="color: #666; margin: 0 0 20px 0; font-size: 16px; line-height: 1.5;">Download the main salary slip from your employee dashboard on the website, login here: <a href="https://jdmstitching.com/login" style="color: #ff6b35; text-decoration: none; font-weight: bold;">https://jdmstitching.com/login</a></p>
-            <p style="color: #ff6b35; font-weight: bold; margin: 0; font-size: 16px;">Best regards,<br>JMD Stitching PRIVATE LIMITED Team</p>
-          </div>
-          
-          <!-- Salary Slip Preview -->
-          <div style="background: white; padding: 20px; border-radius: 12px; border: 2px solid #ff6b35; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <div style='color:#ff6b35;font-size:16px;font-weight:bold;margin:0 0 20px 0;text-align:center;background:#f8f9fa;padding:10px;border-radius:8px;'>📄 Salary Slip Preview</div>
-            ${salarySlipHTML}
-          </div>
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; background: #f8f9fa; padding: 20px;">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%); padding: 25px; border-radius: 12px; text-align: center; margin-bottom: 25px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+          <h2 style="color: white; margin: 0; font-size: 28px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">JMD STITCHING PRIVATE LIMITED</h2>
+          <p style="color: #fff5f0; margin: 8px 0 0 0; font-size: 18px; font-weight: 500;">Salary Slip for ${month}</p>
         </div>
-      `,
-      attachments: pdfBuffer ? [
-        {
-          filename: `SalarySlip-${employeeData.employeeId}-${month}.pdf`,
-          content: pdfBuffer,
-          contentType: 'application/pdf',
-        },
-      ] : [],
-    };
+        
+        <!-- Message Content -->
+        <div style="background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; border-left: 5px solid #ff6b35; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <p style="color: #333; font-size: 18px; margin: 0 0 15px 0; font-weight: 600;">Dear <strong>${employeeData.name}</strong>,</p>
+          <p style="color: #666; margin: 0 0 15px 0; font-size: 16px; line-height: 1.5;">Please find attached your official salary slip PDF for ${month}.</p>
+          <p style="color: #666; margin: 0 0 20px 0; font-size: 16px; line-height: 1.5;">Download the main salary slip from your employee dashboard on the website, login here: <a href="https://jdmstitching.com/login" style="color: #ff6b35; text-decoration: none; font-weight: bold;">https://jdmstitching.com/login</a></p>
+          <p style="color: #ff6b35; font-weight: bold; margin: 0; font-size: 16px;">Best regards,<br>JMD Stitching PRIVATE LIMITED Team</p>
+        </div>
+        
+        <!-- Salary Slip Preview -->
+        <div style="background: white; padding: 20px; border-radius: 12px; border: 2px solid #ff6b35; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <div style='color:#ff6b35;font-size:16px;font-weight:bold;margin:0 0 20px 0;text-align:center;background:#f8f9fa;padding:10px;border-radius:8px;'>📄 Salary Slip Preview</div>
+          ${salarySlipHTML}
+        </div>
+      </div>
+    `;
 
-    const result = await transporter.sendMail(mailOptions);
+    const sendSmtpEmail = new SendSmtpEmail();
+    sendSmtpEmail.subject = `JMD Stitching PRIVATE LIMITED - Salary Slip for ${month} - ${employeeData.name}`;
+    sendSmtpEmail.htmlContent = htmlContent;
+    sendSmtpEmail.sender = { email: sender.email, name: sender.name };
+    sendSmtpEmail.to = [{ email: email }];
+
+    // Add PDF attachment if provided
+    if (pdfBuffer) {
+      sendSmtpEmail.attachment = [{
+        name: `SalarySlip-${employeeData.employeeId}-${month}.pdf`,
+        content: bufferToBase64(pdfBuffer)
+      }];
+    }
+
+    const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log('✅ Salary slip email sent successfully via Brevo');
     return result;
   } catch (error) {
-    console.error("Error sending salary slip email:", error);
+    console.error("❌ Error sending salary slip email:", error);
+    if (error.response?.status === 401) {
+      console.error('🔑 Authentication failed. Check your BREVO_API_KEY');
+      console.error('Response:', error.response?.data);
+    }
     throw error;
   }
 };
 
 // Generic invoice email
 export const sendInvoiceEmail = async ({ to, subject, htmlText, attachments }) => {
-  const transporter = createTransporter();
-  const isVerified = await verifyTransporter(transporter);
-  if (!isVerified) throw new Error('Email service not available');
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to,
-    subject: subject || 'Your Invoice',
-    html: htmlText || '<p>Please find your invoice attached.</p>',
-    attachments: attachments || [],
-  };
-  return transporter.sendMail(mailOptions);
+  try {
+    const apiInstance = getBrevoClient();
+    const sender = getSender();
+
+    const sendSmtpEmail = new SendSmtpEmail();
+    sendSmtpEmail.subject = subject || 'Your Invoice';
+    sendSmtpEmail.htmlContent = htmlText || '<p>Please find your invoice attached.</p>';
+    sendSmtpEmail.sender = { email: sender.email, name: sender.name };
+    sendSmtpEmail.to = [{ email: to }];
+
+    // Add attachments if provided
+    if (attachments && attachments.length > 0) {
+      sendSmtpEmail.attachment = attachments.map(att => ({
+        name: att.filename,
+        content: bufferToBase64(att.content)
+      }));
+    }
+
+    const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log('✅ Invoice email sent successfully via Brevo');
+    return result;
+  } catch (error) {
+    console.error("❌ Error sending invoice email:", error);
+    if (error.response?.status === 401) {
+      console.error('🔑 Authentication failed. Check your BREVO_API_KEY');
+      console.error('Response:', error.response?.data);
+    }
+    throw error;
+  }
 };
 
 // Send order confirmation email
 export const sendOrderConfirmationEmail = async ({ clientName, clientEmail, billNumber, orderType, totalAmount, paymentStatus, isAdminCopy = false, pdfUrl = null, pdfBuffer = null }) => {
   try {
-    const transporter = createTransporter();
-    const isVerified = await verifyTransporter(transporter);
-    if (!isVerified) {
-      throw new Error("Email service not available");
-    }
+    const apiInstance = getBrevoClient();
+    const sender = getSender();
     
     let pdfAttachment = null;
     
     if (pdfBuffer && Buffer.isBuffer(pdfBuffer)) {
       pdfAttachment = {
-        filename: `Invoice-${billNumber}.pdf`,
-        content: pdfBuffer,
-        contentType: 'application/pdf'
+        name: `Invoice-${billNumber}.pdf`,
+        content: bufferToBase64(pdfBuffer)
       };
     } else if (pdfUrl) {
       try {
@@ -243,13 +252,13 @@ export const sendOrderConfirmationEmail = async ({ clientName, clientEmail, bill
         if (pdfResponse.ok) {
           const pdfArrayBuffer = await pdfResponse.arrayBuffer();
           pdfAttachment = {
-            filename: `Invoice-${billNumber}.pdf`,
-            content: Buffer.from(pdfArrayBuffer),
-            contentType: 'application/pdf'
+            name: `Invoice-${billNumber}.pdf`,
+            content: bufferToBase64(Buffer.from(pdfArrayBuffer))
           };
         }
       } catch (error) {
         // PDF attachment failed, continue without it
+        console.warn('Failed to fetch PDF from URL:', error);
       }
     }
 
@@ -345,18 +354,27 @@ export const sendOrderConfirmationEmail = async ({ clientName, clientEmail, bill
       ? `New Order Alert - ${billNumber} - ${orderType}` 
       : `JMD Stitching - Order Confirmation ${billNumber}`;
     
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: clientEmail,
-      subject: subject,
-      html: orderConfirmationHTML,
-      attachments: pdfAttachment ? [pdfAttachment] : []
-    };
+    const sendSmtpEmail = new SendSmtpEmail();
+    sendSmtpEmail.subject = subject;
+    sendSmtpEmail.htmlContent = orderConfirmationHTML;
+    sendSmtpEmail.sender = { email: sender.email, name: sender.name };
+    sendSmtpEmail.to = [{ email: clientEmail }];
 
-        const result = await transporter.sendMail(mailOptions);
+    // Add PDF attachment if available
+    if (pdfAttachment) {
+      sendSmtpEmail.attachment = [pdfAttachment];
+    }
+
+        const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
+        console.log('✅ Order confirmation email sent successfully via Brevo');
         return result;
   } catch (error) {
-    console.error("Error sending order confirmation email:", error);
+    console.error("❌ Error sending order confirmation email:", error);
+    if (error.response?.status === 401) {
+      console.error('🔑 Authentication failed. Check your BREVO_API_KEY');
+      console.error('API Key status:', process.env.BREVO_API_KEY ? `Key exists (${process.env.BREVO_API_KEY.substring(0, 10)}...)` : 'Key missing');
+      console.error('Response:', error.response?.data);
+    }
     throw error;
   }
 };

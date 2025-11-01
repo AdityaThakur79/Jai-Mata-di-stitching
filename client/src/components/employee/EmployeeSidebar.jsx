@@ -69,7 +69,7 @@ const EmployeeSidebar = () => {
     dispatch(employeeLoggedOut());
     localStorage.removeItem("employeeToken");
     toast.success("Logged out successfully");
-    window.location.href = "/employee/login";
+    window.location.href = "/login";
   };
 
   const getGreeting = () => {

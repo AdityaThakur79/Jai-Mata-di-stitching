@@ -22,7 +22,7 @@ class OrderService {
       .populate("client", "name mobile email address city state pincode gstin pan")
       .populate("items.itemType", "name stitchingCharge")
       .populate("items.fabric", "name pricePerMeter")
-      .populate("branchId", "branchName address phone email gst pan cin bankDetails")
+      .populate("branchId", "branchName address phone email gst pan cin bankDetails qrCodeImage")
       .populate("createdBy", "name employeeId")
       .populate("bill", "billNumber billDate dueDate subtotal taxAmount totalAmount paymentStatus notes pdfUrl pdfPublicId");
   }
@@ -132,7 +132,10 @@ class OrderService {
         totalPrice: item.totalPrice || 0,
         fabric: item.fabric?.name || '',
         fabricMeters: item.fabricMeters || 0,
-        clientOrderNumber: item.clientOrderNumber || order.clientOrderNumber || ""
+        clientOrderNumber: item.clientOrderNumber || order.clientOrderNumber || "",
+        alteration: item.alteration || 0,
+        handwork: item.handwork || 0,
+        otherCharges: item.otherCharges || 0
       })),
       subtotal: bill.subtotal || 0,
       discountType: bill.discountType || "percentage",
@@ -150,8 +153,13 @@ class OrderService {
       notes: bill.notes || '',
       shippingDetails: order.shippingDetails || null,
       qrCodeImage: (() => {
-        const qr = order.branchId?.qrCodeImage || "";
-        console.log('[InvoiceData] Resolved qrCodeImage for invoice:', qr);
+        const qr = order.branchId?.qrCodeImage || order.branch?.qrCodeImage || "";
+        console.log('[InvoiceData] Resolved qrCodeImage for invoice:', qr ? 'Found' : 'Not found', qr ? '(path exists)' : '');
+        return qr;
+      })(),
+      branchQrCodeImage: (() => {
+        const qr = order.branchId?.qrCodeImage || order.branch?.qrCodeImage || "";
+        console.log('[InvoiceData] Resolved branchQrCodeImage for invoice:', qr ? 'Found' : 'Not found');
         return qr;
       })(),
     };

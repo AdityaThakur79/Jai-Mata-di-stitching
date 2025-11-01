@@ -590,6 +590,9 @@ const InvoiceDocument = (data) => {
               {item.description && `\nStyle: ${item.description}`}
               {item.fabric && `\nFabric: ${item.fabric}`}
               {item.fabricMeters > 0 && ` (${item.fabricMeters}m)`}
+              {item.alteration > 0 && `\nAlteration: ₹${item.alteration.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
+              {item.handwork > 0 && `\nHandwork: ₹${item.handwork.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
+              {item.otherCharges > 0 && `\nOther Charges: ₹${item.otherCharges.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
             </Text>
             <Text style={styles.tableCell}>{item.quantity}</Text>
             <Text style={styles.tableCell}>{item.unitPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
@@ -631,6 +634,36 @@ const InvoiceDocument = (data) => {
               <Text style={styles.pricingLabel}>Subtotal:</Text>
               <Text style={styles.pricingValue}>{data.subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
             </View>
+
+            {/* Additional Charges Breakdown */}
+            {(() => {
+              const totalAlteration = (data.items || []).reduce((sum, item) => sum + (parseFloat(item.alteration) || 0), 0);
+              const totalHandwork = (data.items || []).reduce((sum, item) => sum + (parseFloat(item.handwork) || 0), 0);
+              const totalOtherCharges = (data.items || []).reduce((sum, item) => sum + (parseFloat(item.otherCharges) || 0), 0);
+              
+              return (
+                <>
+                  {totalAlteration > 0 && (
+                    <View style={styles.pricingRow}>
+                      <Text style={styles.pricingLabel}>Total Alteration:</Text>
+                      <Text style={styles.pricingValue}>{totalAlteration.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
+                    </View>
+                  )}
+                  {totalHandwork > 0 && (
+                    <View style={styles.pricingRow}>
+                      <Text style={styles.pricingLabel}>Total Handwork:</Text>
+                      <Text style={styles.pricingValue}>{totalHandwork.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
+                    </View>
+                  )}
+                  {totalOtherCharges > 0 && (
+                    <View style={styles.pricingRow}>
+                      <Text style={styles.pricingLabel}>Total Other Charges:</Text>
+                      <Text style={styles.pricingValue}>{totalOtherCharges.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
+                    </View>
+                  )}
+                </>
+              );
+            })()}
             
             <View style={styles.pricingRow}>
               <Text style={styles.pricingLabel}>

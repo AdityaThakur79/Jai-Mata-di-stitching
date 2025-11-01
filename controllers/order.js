@@ -168,13 +168,23 @@ export const createOrder = async (req, res) => {
             fabricCost = fabric.pricePerMeter * item.fabricMeters;
           }
         }
-        subtotal += fabricCost;
+        // Add alteration, handwork, and other charges
+        const alteration = parseFloat(item.alteration) || 0;
+        const handwork = parseFloat(item.handwork) || 0;
+        const otherCharges = parseFloat(item.otherCharges) || 0;
+        const additionalCharges = alteration + handwork + otherCharges;
+        const totalItemPrice = fabricCost + additionalCharges;
+        
+        subtotal += totalItemPrice;
         const fabricProcessedItem = {
           ...item,
           itemType: item.itemType && item.itemType.trim() !== "" ? item.itemType : null,
           style: null,
           unitPrice: fabricCost,
-          totalPrice: fabricCost,
+          totalPrice: totalItemPrice,
+          alteration: alteration,
+          handwork: handwork,
+          otherCharges: otherCharges,
           quantity: 1,
         };
         
@@ -209,7 +219,13 @@ export const createOrder = async (req, res) => {
       // Calculate item base cost (stitchingCharge) - per unit * quantity (always included)
       stitchingCost = (itemMaster.stitchingCharge || 0) * item.quantity;
 
-      const totalItemPrice = fabricCost + stitchingCost;
+      // Add alteration, handwork, and other charges
+      const alteration = parseFloat(item.alteration) || 0;
+      const handwork = parseFloat(item.handwork) || 0;
+      const otherCharges = parseFloat(item.otherCharges) || 0;
+      const additionalCharges = alteration + handwork + otherCharges;
+
+      const totalItemPrice = fabricCost + stitchingCost + additionalCharges;
       subtotal += totalItemPrice;
 
       // Find the selected style from the item's styles
@@ -227,6 +243,9 @@ export const createOrder = async (req, res) => {
         } : null,
         unitPrice: stitchingCost / item.quantity + (fabricCost / item.quantity),
         totalPrice: totalItemPrice,
+        alteration: alteration,
+        handwork: handwork,
+        otherCharges: otherCharges,
       };
       
       // Remove fabric field if empty or invalid (for stitching-only orders)
@@ -373,6 +392,9 @@ export const createOrder = async (req, res) => {
               fabric: item.fabric?.name || '',
               fabricMeters: item.fabricMeters || 0,
               clientOrderNumber: populatedOrder.clientOrderNumber || "",
+              alteration: item.alteration || 0,
+              handwork: item.handwork || 0,
+              otherCharges: item.otherCharges || 0,
             })),
             subtotal: populatedOrder.subtotal || 0,
             discountType: populatedOrder.discountType || "percentage",
@@ -878,7 +900,14 @@ export const updateOrder = async (req, res) => {
 
       // Calculate item base cost (stitchingCharge) - per unit * quantity (always included)
       stitchingCost = (selectedItem.stitchingCharge || 0) * parseInt(item.quantity);
-      const totalItemPrice = fabricCost + stitchingCost;
+      
+      // Add alteration, handwork, and other charges
+      const alteration = parseFloat(item.alteration) || 0;
+      const handwork = parseFloat(item.handwork) || 0;
+      const otherCharges = parseFloat(item.otherCharges) || 0;
+      const additionalCharges = alteration + handwork + otherCharges;
+      
+      const totalItemPrice = fabricCost + stitchingCost + additionalCharges;
       subtotal += totalItemPrice;
 
       processedItems.push({
@@ -894,6 +923,9 @@ export const updateOrder = async (req, res) => {
         specialInstructions: item.specialInstructions || "",
         unitPrice: stitchingCost / parseInt(item.quantity) + (fabricCost / parseInt(item.quantity)), // Cost per unit including fabric and stitching
         totalPrice: totalItemPrice,
+        alteration: alteration,
+        handwork: handwork,
+        otherCharges: otherCharges,
       });
     }
 

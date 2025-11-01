@@ -50,6 +50,21 @@ const orderItemSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  alteration: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
+  handwork: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
+  otherCharges: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
 }, { _id: false });
 
 // Bill schema for generated bills

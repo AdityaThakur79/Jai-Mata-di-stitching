@@ -76,6 +76,9 @@ const CreateOrder = () => {
       quantity: 1,
       designNumber: "",
       description: "",
+      alteration: 0,
+      handwork: 0,
+      otherCharges: 0,
     },
   ]);
   const [notes, setNotes] = useState("");
@@ -181,6 +184,12 @@ const CreateOrder = () => {
 
   // Calculate detailed item breakdown
   const calculateItemBreakdown = (item, index) => {
+    // Additional charges
+    const alteration = parseFloat(item.alteration) || 0;
+    const handwork = parseFloat(item.handwork) || 0;
+    const otherCharges = parseFloat(item.otherCharges) || 0;
+    const additionalCharges = alteration + handwork + otherCharges;
+
     // Fabric-only orders: compute only fabric cost, no itemType required
     if (orderType === "fabric") {
       let fabricCost = 0;
@@ -200,12 +209,44 @@ const CreateOrder = () => {
           });
         }
       }
-      if (fabricCost <= 0) return null;
+      // Add additional charges to breakdown
+      if (alteration > 0) {
+        breakdown.push({
+          type: 'alteration',
+          name: 'Alteration',
+          rate: alteration,
+          quantity: 1,
+          total: alteration,
+          unit: 'one-time'
+        });
+      }
+      if (handwork > 0) {
+        breakdown.push({
+          type: 'handwork',
+          name: 'Handwork',
+          rate: handwork,
+          quantity: 1,
+          total: handwork,
+          unit: 'one-time'
+        });
+      }
+      if (otherCharges > 0) {
+        breakdown.push({
+          type: 'other',
+          name: 'Other Charges',
+          rate: otherCharges,
+          quantity: 1,
+          total: otherCharges,
+          unit: 'one-time'
+        });
+      }
+      const totalPrice = fabricCost + additionalCharges;
+      if (totalPrice <= 0) return null;
       return {
         itemName: 'Fabric',
         quantity: 1,
-        unitPrice: fabricCost,
-        totalPrice: fabricCost,
+        unitPrice: totalPrice,
+        totalPrice: totalPrice,
         breakdown,
         fabric: item.fabric ? fabricsData?.fabrics?.find(f => f._id === item.fabric) : null
       };
@@ -249,7 +290,39 @@ const CreateOrder = () => {
       });
     }
 
-    const totalItemPrice = fabricCost + stitchingCost;
+    // Add additional charges to breakdown
+    if (alteration > 0) {
+      breakdown.push({
+        type: 'alteration',
+        name: 'Alteration',
+        rate: alteration,
+        quantity: 1,
+        total: alteration,
+        unit: 'one-time'
+      });
+    }
+    if (handwork > 0) {
+      breakdown.push({
+        type: 'handwork',
+        name: 'Handwork',
+        rate: handwork,
+        quantity: 1,
+        total: handwork,
+        unit: 'one-time'
+      });
+    }
+    if (otherCharges > 0) {
+      breakdown.push({
+        type: 'other',
+        name: 'Other Charges',
+        rate: otherCharges,
+        quantity: 1,
+        total: otherCharges,
+        unit: 'one-time'
+      });
+    }
+
+    const totalItemPrice = fabricCost + stitchingCost + additionalCharges;
     return {
       itemName: selectedItem.name,
       quantity: parseInt(item.quantity),
@@ -370,6 +443,9 @@ const CreateOrder = () => {
         quantity: 1,
         designNumber: "",
         description: "",
+        alteration: 0,
+        handwork: 0,
+        otherCharges: 0,
       },
     ]);
   };
@@ -494,7 +570,10 @@ const CreateOrder = () => {
           ...item,
           itemType: item.itemType && item.itemType.trim() !== "" ? item.itemType : null,
           fabricMeters: item.fabric ? parseFloat(item.fabricMeters) : undefined,
-          quantity: orderType === "fabric" ? 1 : parseInt(item.quantity)
+          quantity: orderType === "fabric" ? 1 : parseInt(item.quantity),
+          alteration: parseFloat(item.alteration) || 0,
+          handwork: parseFloat(item.handwork) || 0,
+          otherCharges: parseFloat(item.otherCharges) || 0,
         })),
         branchId,
         expectedDeliveryDate: expectedDeliveryDate || null,
@@ -969,6 +1048,51 @@ const CreateOrder = () => {
                         value={item.designNumber || ""}
                         onChange={(e) =>
                           handleItemChange(index, "designNumber", e.target.value)
+                        }
+                        className="h-8 text-sm"
+                      />
+                    </FormField>
+                  </div>
+
+                  {/* Additional Charges */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                    <FormField label="Alteration (₹)">
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={item.alteration || 0}
+                        onChange={(e) =>
+                          handleItemChange(index, "alteration", e.target.value)
+                        }
+                        className="h-8 text-sm"
+                      />
+                    </FormField>
+
+                    <FormField label="Handwork (₹)">
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={item.handwork || 0}
+                        onChange={(e) =>
+                          handleItemChange(index, "handwork", e.target.value)
+                        }
+                        className="h-8 text-sm"
+                      />
+                    </FormField>
+
+                    <FormField label="Other Charges (₹)">
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={item.otherCharges || 0}
+                        onChange={(e) =>
+                          handleItemChange(index, "otherCharges", e.target.value)
                         }
                         className="h-8 text-sm"
                       />

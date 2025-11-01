@@ -1,4 +1,4 @@
-import nodemailer from "nodemailer";
+import { TransactionalEmailsApi, TransactionalEmailsApiApiKeys, SendSmtpEmail } from '@getbrevo/brevo';
 import { registerOTPTemplate } from "../emailTemplate/resgiterTemplate.js";
 import dotenv from "dotenv";
 
@@ -8,64 +8,61 @@ dotenv.config();
 export const generateOTP = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
 
-// Create transporter with better error handling
-const createTransporter = () => {
-  // Check if email credentials are configured
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    throw new Error("Email credentials not configured. Please set EMAIL_USER and EMAIL_PASS environment variables.");
+// Initialize Brevo API client
+const getBrevoClient = () => {
+  // Check if Brevo API key is configured
+  if (!process.env.BREVO_API_KEY) {
+    throw new Error("Brevo API key not configured. Please set BREVO_API_KEY environment variable.");
   }
 
-  // For Gmail, you need to use an App Password if 2FA is enabled
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS, // This should be an App Password, not your regular password
-    },
-    // Add additional options for better reliability
-    secure: true, // Use SSL
-    port: 465, // Gmail SMTP port
-    tls: {
-      rejectUnauthorized: false // For development, remove in production
-    }
-  });
+  // Initialize Brevo API client with proper authentication
+  const apiInstance = new TransactionalEmailsApi();
+  
+  // Set API key - using the correct method
+  try {
+    apiInstance.setApiKey(TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY.trim());
+    console.log('✅ Brevo API key set successfully (registerOTP)');
+  } catch (error) {
+    console.error('❌ Error setting Brevo API key (registerOTP):', error);
+    throw new Error(`Failed to configure Brevo API: ${error.message}`);
+  }
 
-  return transporter;
+  return apiInstance;
 };
 
-// Verify transporter connection
-const verifyTransporter = async (transporter) => {
-  try {
-    await transporter.verify();
-    console.log("Email transporter verified successfully");
-    return true;
-  } catch (error) {
-    console.error("Email transporter verification failed:", error);
-    return false;
+// Get sender email and name from environment variables
+const getSender = () => {
+  const senderEmail = process.env.BREVO_SENDER_EMAIL || process.env.EMAIL_USER;
+  const senderName = process.env.BREVO_SENDER_NAME || 'JMD Stitching';
+
+  if (!senderEmail) {
+    throw new Error("Sender email not configured. Please set BREVO_SENDER_EMAIL or EMAIL_USER environment variable.");
   }
+
+  return { email: senderEmail, name: senderName };
 };
 
 // Function to send OTP via email
 export const sendOTPEmail = async (name, email, otp) => {
   try {
-    const transporter = createTransporter();
-    
-    // Verify connection before sending
-    const isVerified = await verifyTransporter(transporter);
-    if (!isVerified) {
-      throw new Error("Email service not available");
-    }
+    const apiInstance = getBrevoClient();
+    const sender = getSender();
 
-    let mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Your Registration OTP Code",
-      html: registerOTPTemplate(name, otp),
-    };
+    const sendSmtpEmail = new SendSmtpEmail();
+    sendSmtpEmail.subject = "Your Registration OTP Code";
+    sendSmtpEmail.htmlContent = registerOTPTemplate(name, otp);
+    sendSmtpEmail.sender = { email: sender.email, name: sender.name };
+    sendSmtpEmail.to = [{ email: email }];
 
-    await transporter.sendMail(mailOptions);
+    await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log(`✅ OTP email sent successfully to ${email} via Brevo`);
   } catch (error) {
-    console.error("Error sending OTP email:", error);
+    console.error("❌ Error sending OTP email:", error);
+    if (error.response?.status === 401) {
+      console.error('🔑 Authentication failed. Check your BREVO_API_KEY');
+      console.error('API Key status:', process.env.BREVO_API_KEY ? `Key exists (${process.env.BREVO_API_KEY.substring(0, 10)}...)` : 'Key missing');
+      console.error('Response:', error.response?.data);
+    }
     throw error;
   }
 };
