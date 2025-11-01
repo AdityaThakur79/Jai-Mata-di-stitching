@@ -129,6 +129,16 @@ const billSchema = new mongoose.Schema({
   paymentDate: {
     type: Date,
   },
+  paidAmount: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
+  pendingAmount: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
   notes: {
     type: String,
   },

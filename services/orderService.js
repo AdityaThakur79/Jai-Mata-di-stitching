@@ -24,7 +24,7 @@ class OrderService {
       .populate("items.fabric", "name pricePerMeter")
       .populate("branchId", "branchName address phone email gst pan cin bankDetails qrCodeImage")
       .populate("createdBy", "name employeeId")
-      .populate("bill", "billNumber billDate dueDate subtotal taxAmount totalAmount paymentStatus notes pdfUrl pdfPublicId");
+      .populate("bill", "billNumber billDate dueDate subtotal taxAmount totalAmount paidAmount pendingAmount paymentStatus notes pdfUrl pdfPublicId");
   }
 
   /**
@@ -63,6 +63,19 @@ class OrderService {
    * Create bill document
    */
   async createBill(order, billNumber, dueDate, notes) {
+    const advancePayment = order.advancePayment || 0;
+    const totalAmount = order.totalAmount || 0;
+    const paidAmount = Math.min(advancePayment, totalAmount); // Cannot exceed total
+    const pendingAmount = Math.max(0, totalAmount - advancePayment); // Cannot be negative
+    
+    // Determine payment status based on advance payment
+    let paymentStatus = "pending";
+    if (advancePayment >= totalAmount) {
+      paymentStatus = "paid";
+    } else if (advancePayment > 0) {
+      paymentStatus = "pending"; // Still pending since advance is partial
+    }
+    
     return await Bill.create({
       billNumber,
       billDate: new Date(),
@@ -74,8 +87,10 @@ class OrderService {
       taxableAmount: order.taxableAmount,
       taxRate: order.taxRate,
       taxAmount: order.taxAmount,
-      totalAmount: order.totalAmount,
-      paymentStatus: "pending",
+      totalAmount: totalAmount,
+      paidAmount: paidAmount,
+      pendingAmount: pendingAmount,
+      paymentStatus: paymentStatus,
       notes: notes || "",
     });
   }
@@ -146,8 +161,10 @@ class OrderService {
       taxAmount: bill.taxAmount || 0,
       totalAmount: bill.totalAmount || 0,
       advancePayment: order.advancePayment || 0,
+      paidAmount: bill.paidAmount || order.advancePayment || 0,
+      pendingAmount: bill.pendingAmount || Math.max(0, (bill.totalAmount || 0) - (order.advancePayment || 0)),
       balanceAmount: (bill.totalAmount || 0) - (order.advancePayment || 0),
-      paymentStatus: order.paymentStatus || 'pending',
+      paymentStatus: order.paymentStatus || bill.paymentStatus || 'pending',
       paymentMethod: order.paymentMethod || '',
       paymentNotes: order.paymentNotes || '',
       notes: bill.notes || '',
@@ -427,7 +444,7 @@ class OrderService {
       .populate("items.fabric", "name pricePerMeter")
       .populate("branchId", "branchName address phone email gst pan cin bankDetails")
       .populate("createdBy", "name employeeId")
-      .populate("bill", "billNumber billDate dueDate subtotal taxAmount totalAmount paymentStatus notes pdfUrl pdfPublicId");
+      .populate("bill", "billNumber billDate dueDate subtotal taxAmount totalAmount paidAmount pendingAmount paymentStatus notes pdfUrl pdfPublicId");
 
       if (!updatedOrder) {
         throw new Error("Order not found");

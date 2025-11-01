@@ -927,14 +927,24 @@ const PendingOrders = () => {
                           )}
                         </div>
                       ) : (
-                        <div 
-                          className="cursor-pointer rounded px-2 py-1 hover:bg-transparent flex items-center justify-center"
-                          onClick={() => { startEditing(order._id, 'payment'); setInlinePaymentStatus(order.paymentStatus || 'pending'); }}
-                          title="Click to change"
-                        >
-                          <Badge className={getPaymentStatusColor(order.paymentStatus)}>
-                            {order.paymentStatus || 'pending'}
-                          </Badge>
+                        <div className="space-y-1">
+                          <div 
+                            className="cursor-pointer rounded px-2 py-1 hover:bg-transparent flex items-center justify-center"
+                            onClick={() => { startEditing(order._id, 'payment'); setInlinePaymentStatus(order.paymentStatus || 'pending'); }}
+                            title="Click to change"
+                          >
+                            <Badge className={getPaymentStatusColor(order.paymentStatus)}>
+                              {order.paymentStatus || 'pending'}
+                            </Badge>
+                          </div>
+                          {(order.advancePayment > 0 || order.bill?.paidAmount > 0) && (
+                            <div className="text-xs text-gray-600 text-center">
+                              <div>Paid: {formatCurrency(order.bill?.paidAmount || order.advancePayment || 0)}</div>
+                              {(order.bill?.pendingAmount > 0 || ((order.bill?.totalAmount || order.totalAmount || 0) - (order.advancePayment || order.bill?.paidAmount || 0) > 0)) && (
+                                <div>Pending: {formatCurrency(order.bill?.pendingAmount || Math.max(0, (order.bill?.totalAmount || order.totalAmount || 0) - (order.advancePayment || order.bill?.paidAmount || 0)))}</div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       )}
                     </TableCell>

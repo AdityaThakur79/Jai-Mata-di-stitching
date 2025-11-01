@@ -541,19 +541,29 @@ const CompletedOrders = () => {
                           </div>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-2">
-                          <Badge className={getPaymentStatusColor(order.paymentStatus || order.bill?.paymentStatus)}>
-                            {order.paymentStatus || order.bill?.paymentStatus || "pending"}
-                          </Badge>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditPayment(order)}
-                            className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                            title="Edit Payment Status"
-                          >
-                            <CreditCard className="w-3 h-3" />
-                          </Button>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <Badge className={getPaymentStatusColor(order.paymentStatus || order.bill?.paymentStatus)}>
+                              {order.paymentStatus || order.bill?.paymentStatus || "pending"}
+                            </Badge>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditPayment(order)}
+                              className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              title="Edit Payment Status"
+                            >
+                              <CreditCard className="w-3 h-3" />
+                            </Button>
+                          </div>
+                          {(order.advancePayment > 0 || order.bill?.paidAmount > 0) && (
+                            <div className="text-xs text-gray-600">
+                              <div>Paid: {formatCurrency(order.bill?.paidAmount || order.advancePayment || 0)}</div>
+                              {(order.bill?.pendingAmount > 0 || ((order.bill?.totalAmount || order.totalAmount || 0) - (order.advancePayment || order.bill?.paidAmount || 0) > 0)) && (
+                                <div>Pending: {formatCurrency(order.bill?.pendingAmount || Math.max(0, (order.bill?.totalAmount || order.totalAmount || 0) - (order.advancePayment || order.bill?.paidAmount || 0)))}</div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       )}
                     </TableCell>

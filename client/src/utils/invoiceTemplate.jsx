@@ -696,27 +696,34 @@ const InvoiceDocument = (data) => {
               <Text style={styles.pricingValue}>{data.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
             </View>
             
-            {data.advancePayment > 0 && (
+            {(data.paidAmount || data.advancePayment) > 0 && (
               <View style={styles.pricingRow}>
-                <Text style={styles.pricingLabel}>Advance Payment:</Text>
-                <Text style={styles.pricingValue}>-{data.advancePayment.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
+                <Text style={styles.pricingLabel}>Paid Payment:</Text>
+                <Text style={styles.pricingValue}>{data.paidAmount ? data.paidAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : data.advancePayment.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
+              </View>
+            )}
+            
+            {(data.pendingAmount > 0 || (data.balanceAmount > 0 && (data.paidAmount || data.advancePayment) > 0)) && (
+              <View style={styles.pricingRow}>
+                <Text style={styles.pricingLabel}>Pending Payment:</Text>
+                <Text style={styles.pricingValue}>{data.pendingAmount ? data.pendingAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : (data.balanceAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
               </View>
             )}
             
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>
-                {data.advancePayment > 0 ? 'Balance Amount:' : 'Total Amount:'}
+                {((data.paidAmount || data.advancePayment) > 0 && (data.pendingAmount > 0 || data.balanceAmount > 0)) ? 'Balance Amount:' : 'Total Amount:'}
               </Text>
               <Text style={styles.totalValue}>
-                {data.advancePayment > 0 
-                  ? data.balanceAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })
+                {(data.paidAmount || data.advancePayment) > 0 
+                  ? (data.pendingAmount || data.balanceAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })
                   : data.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })
                 }
               </Text>
             </View>
             {/* Amount in words */}
             <Text style={styles.amountWords}>
-              Amount in words: {amountToWordsINR(data.advancePayment > 0 ? data.balanceAmount : data.totalAmount)}
+              Amount in words: {amountToWordsINR((data.paidAmount || data.advancePayment) > 0 ? (data.pendingAmount || data.balanceAmount || 0) : data.totalAmount)}
             </Text>
           </View>
         </View>

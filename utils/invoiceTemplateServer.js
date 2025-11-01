@@ -679,26 +679,32 @@ const InvoiceDocumentServer = (data) => {
               React.createElement(Text, { style: styles.pricingValue }, safeData.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 }))
             ),
             
-            safeData.advancePayment > 0 && 
+            (safeData.paidAmount > 0 || safeData.advancePayment > 0) && 
               React.createElement(View, { style: styles.pricingRow },
-                React.createElement(Text, { style: styles.pricingLabel }, "Advance Payment:"),
-                React.createElement(Text, { style: styles.pricingValue }, `-${safeData.advancePayment.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`)
+                React.createElement(Text, { style: styles.pricingLabel }, "Paid Payment:"),
+                React.createElement(Text, { style: styles.pricingValue }, (safeData.paidAmount || safeData.advancePayment || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 }))
+              ),
+            
+            (safeData.pendingAmount > 0 || (safeData.balanceAmount > 0 && (safeData.paidAmount || safeData.advancePayment) > 0)) &&
+              React.createElement(View, { style: styles.pricingRow },
+                React.createElement(Text, { style: styles.pricingLabel }, "Pending Payment:"),
+                React.createElement(Text, { style: styles.pricingValue }, (safeData.pendingAmount || safeData.balanceAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 }))
               ),
             
             React.createElement(View, { style: styles.totalRow },
               React.createElement(Text, { style: styles.totalLabel },
-                safeData.advancePayment > 0 ? 'Balance Amount:' : 'Total Amount:'
+                ((safeData.paidAmount || safeData.advancePayment) > 0 && (safeData.pendingAmount > 0 || safeData.balanceAmount > 0)) ? 'Balance Amount:' : 'Total Amount:'
               ),
               React.createElement(Text, { style: styles.totalValue },
-                safeData.advancePayment > 0 
-                  ? safeData.balanceAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })
+                (safeData.paidAmount || safeData.advancePayment) > 0 
+                  ? (safeData.pendingAmount || safeData.balanceAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })
                   : safeData.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })
               )
             ),
             
             // Amount in words
             React.createElement(Text, { style: styles.amountWords },
-              `Amount in words: ${amountToWordsINR(safeData.advancePayment > 0 ? safeData.balanceAmount : safeData.totalAmount)}`
+              `Amount in words: ${amountToWordsINR((safeData.paidAmount || safeData.advancePayment) > 0 ? (safeData.pendingAmount || safeData.balanceAmount || 0) : safeData.totalAmount)}`
             )
           )
         )

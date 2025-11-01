@@ -95,7 +95,7 @@ export const sendOrderConfirmationWhatsapp = async ({ phone, clientName, billNum
       clientName,
       billNumber,
       orderType,
-      `₹${Number(totalAmount).toLocaleString('en-IN')}`,
+      `${Number(totalAmount).toLocaleString('en-IN')}`,
       paymentStatus
     ],
     source: 'order-confirmation'

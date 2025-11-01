@@ -1189,6 +1189,43 @@ export const getCompletedOrdersStats = async (req, res) => {
       }
     });
 
+    // Calculate actual paid and pending amounts from bills
+    const ordersWithBills = await Order.find(query)
+      .populate("bill", "paidAmount pendingAmount totalAmount")
+      .lean();
+    
+    let totalPaidAmount = 0;
+    let totalPendingAmount = 0;
+    let paidCount = 0;
+    let pendingCount = 0;
+
+    ordersWithBills.forEach(order => {
+      if (order.bill) {
+        const paidAmount = order.bill.paidAmount || order.advancePayment || 0;
+        const pendingAmount = order.bill.pendingAmount || Math.max(0, (order.bill.totalAmount || order.totalAmount || 0) - (order.advancePayment || 0));
+        
+        totalPaidAmount += paidAmount;
+        totalPendingAmount += pendingAmount;
+        
+        if (paidAmount > 0) {
+          paidCount++;
+        }
+        if (pendingAmount > 0) {
+          pendingCount++;
+        }
+      }
+    });
+
+    // Update payment breakdown with actual paid/pending amounts
+    paymentBreakdown.paid = {
+      count: paidCount,
+      amount: totalPaidAmount
+    };
+    paymentBreakdown.pending = {
+      count: pendingCount,
+      amount: totalPendingAmount
+    };
+
     // Order type breakdown
     const orderTypeStats = await Order.aggregate([
       { $match: query },
@@ -1213,9 +1250,9 @@ export const getCompletedOrdersStats = async (req, res) => {
       }
     ]);
 
-    // Revenue calculations
-    const totalRevenue = paymentBreakdown.paid.amount + paymentBreakdown.partial.amount;
-    const pendingAmount = paymentBreakdown.pending.amount;
+    // Revenue calculations - use actual paid/pending amounts
+    const totalRevenue = paymentBreakdown.paid.amount; // Already calculated from bills
+    const pendingAmount = paymentBreakdown.pending.amount; // Already calculated from bills
     const overdueAmount = paymentBreakdown.overdue.amount;
     const totalOrderValue = Object.values(paymentBreakdown).reduce((sum, stat) => sum + stat.amount, 0);
 
@@ -1413,9 +1450,46 @@ export const getAllOrdersStats = async (req, res) => {
       }
     });
 
+    // Calculate actual paid and pending amounts from bills
+    const ordersWithBills = await Order.find({ ...query, bill: { $exists: true } })
+      .populate("bill", "paidAmount pendingAmount totalAmount")
+      .lean();
+    
+    let totalPaidAmount = 0;
+    let totalPendingAmount = 0;
+    let paidCount = 0;
+    let pendingCount = 0;
+
+    ordersWithBills.forEach(order => {
+      if (order.bill) {
+        const paidAmount = order.bill.paidAmount || order.advancePayment || 0;
+        const pendingAmount = order.bill.pendingAmount || Math.max(0, (order.bill.totalAmount || order.totalAmount || 0) - (order.advancePayment || 0));
+        
+        totalPaidAmount += paidAmount;
+        totalPendingAmount += pendingAmount;
+        
+        if (paidAmount > 0) {
+          paidCount++;
+        }
+        if (pendingAmount > 0) {
+          pendingCount++;
+        }
+      }
+    });
+
+    // Update payment breakdown with actual paid/pending amounts
+    paymentStats.paid = {
+      count: paidCount,
+      amount: totalPaidAmount
+    };
+    paymentStats.pending = {
+      count: pendingCount,
+      amount: totalPendingAmount
+    };
+
     // Revenue calculations
-    const totalRevenue = paymentStats.paid.amount + paymentStats.partial.amount;
-    const pendingAmount = paymentStats.pending.amount;
+    const totalRevenue = totalPaidAmount;
+    const pendingAmount = totalPendingAmount;
     const overdueAmount = paymentStats.overdue.amount;
     const totalOrderValue = Object.values(statusStats).reduce((sum, stat) => sum + stat.amount, 0);
 
@@ -1431,11 +1505,11 @@ export const getAllOrdersStats = async (req, res) => {
     const avgOrderValue = totalOrders > 0 ? totalOrderValue / totalOrders : 0;
 
     // Orders with bills vs without bills
-    const ordersWithBills = await Order.countDocuments({ ...query, bill: { $exists: true } });
-    const ordersWithoutBills = totalOrders - ordersWithBills;
+    const ordersWithBillsCount = await Order.countDocuments({ ...query, bill: { $exists: true } });
+    const ordersWithoutBills = totalOrders - ordersWithBillsCount;
 
     // Bill generation rate
-    const billGenerationRate = totalOrders > 0 ? (ordersWithBills / totalOrders) * 100 : 0;
+    const billGenerationRate = totalOrders > 0 ? (ordersWithBillsCount / totalOrders) * 100 : 0;
 
     // Monthly order trend (last 6 months)
     const sixMonthsAgo = new Date();
@@ -1485,7 +1559,7 @@ export const getAllOrdersStats = async (req, res) => {
           avgOrderValue,
           completionRate: Math.round(completionRate * 100) / 100,
           billGenerationRate: Math.round(billGenerationRate * 100) / 100,
-          ordersWithBills,
+          ordersWithBills: ordersWithBillsCount,
           ordersWithoutBills
         },
         statusBreakdown: statusStats,
