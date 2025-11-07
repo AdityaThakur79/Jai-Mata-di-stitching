@@ -470,6 +470,76 @@ const InvoiceDocument = (data) => {
     }
   }, [data.branchQrCodeImage, data.qrCodeImage, data.branch]);
 
+  // Derived payment fields and status
+  const totalAmountSafe = Number(data.totalAmount) || 0;
+  const normalizedPaymentStatus = String(data.paymentStatus || '').toLowerCase();
+  let paidAmountSafe = Number(data.paidAmount) || Number(data.advancePayment) || 0;
+  let pendingDerived = Number(data.pendingAmount) || Number(data.balanceAmount) || 0;
+
+  if (pendingDerived <= 0) {
+    pendingDerived = Math.max(totalAmountSafe - paidAmountSafe, 0);
+  }
+
+  if (normalizedPaymentStatus === 'paid') {
+    paidAmountSafe = paidAmountSafe > 0 ? paidAmountSafe : totalAmountSafe;
+    pendingDerived = 0;
+  } else if (normalizedPaymentStatus === 'refunded') {
+    pendingDerived = 0;
+    paidAmountSafe = paidAmountSafe > 0 ? paidAmountSafe : totalAmountSafe;
+  }
+
+  let computedPaymentStatus = 'PENDING';
+  switch (normalizedPaymentStatus) {
+    case 'paid':
+      computedPaymentStatus = 'PAID';
+      break;
+    case 'partial':
+      computedPaymentStatus = 'PARTIAL';
+      break;
+    case 'overdue':
+      computedPaymentStatus = 'OVERDUE';
+      break;
+    case 'refunded':
+      computedPaymentStatus = 'REFUNDED';
+      break;
+    default:
+      computedPaymentStatus = pendingDerived <= 0
+        ? 'PAID'
+        : (paidAmountSafe > 0 ? 'PARTIAL' : 'PENDING');
+      break;
+  }
+
+  const showQrForPayment = pendingDerived > 0 && computedPaymentStatus !== 'REFUNDED';
+  const wordsBaseAmount = computedPaymentStatus === 'PAID'
+    ? totalAmountSafe
+    : (computedPaymentStatus === 'REFUNDED'
+        ? paidAmountSafe
+        : (paidAmountSafe > 0 ? pendingDerived : totalAmountSafe));
+
+  const amountStatusText = (() => {
+    if (computedPaymentStatus === 'PAID') return 'Paid in full';
+    if (computedPaymentStatus === 'REFUNDED') return `Refunded: ₹${paidAmountSafe.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+    if (pendingDerived > 0) {
+      if (computedPaymentStatus === 'OVERDUE') {
+        return `Overdue Amount: ₹${pendingDerived.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+      }
+      return `Amount Due: ₹${pendingDerived.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+    }
+    return 'No Due';
+  })();
+
+  const totalRowLabel = computedPaymentStatus === 'PAID'
+    ? 'Total Paid:'
+    : computedPaymentStatus === 'REFUNDED'
+      ? 'Refunded Amount:'
+      : (paidAmountSafe > 0 ? 'Balance Amount:' : 'Total Amount:');
+
+  const totalRowValue = computedPaymentStatus === 'PAID'
+    ? totalAmountSafe
+    : computedPaymentStatus === 'REFUNDED'
+      ? paidAmountSafe
+      : (paidAmountSafe > 0 ? pendingDerived : totalAmountSafe);
+
   try {
     console.log("Invoice data received:", data);
     console.log("Bank details in template:", {
@@ -505,6 +575,12 @@ const InvoiceDocument = (data) => {
           <Text style={styles.invoiceTitle}>TAX INVOICE</Text>
           <Text style={styles.invoiceNumber}>{(data.invoiceNumber || '').replace('-BILL-', '-')}</Text>
         </View>
+      </View>
+
+      {/* Payment status bar */}
+      <View style={styles.amountDueBar}>
+        <Text style={styles.amountDueText}>Payment Status: {computedPaymentStatus}</Text>
+        <Text style={styles.amountDueValue}>{amountStatusText}</Text>
       </View>
 
      
@@ -562,7 +638,7 @@ const InvoiceDocument = (data) => {
               {'\n'}Invoice Date: {data.invoiceDate}
               {'\n'}Due Date: {data.dueDate}
               {data.orderType && (`\nOrder Type: ${String(data.orderType).replace('_', ' ')}`)}
-              {'\n'}Payment Status: {data.paymentStatus?.toUpperCase() || 'PENDING'}
+              {'\n'}Payment Status: {computedPaymentStatus}
               {data.paymentMethod && `\nPayment Method: ${data.paymentMethod}`}
               {'\n'}Payment Terms: 30 Days
             </Text>
@@ -620,7 +696,7 @@ const InvoiceDocument = (data) => {
               {'\n'}Account No: {data.accountNumber || ""}
               {'\n'}IFSC: {data.ifscCode || ""}
             </Text>
-            {qrCodeDataUrl && (
+            {qrCodeDataUrl && showQrForPayment && (
               <Image style={styles.qrImage} src={qrCodeDataUrl} />
             )}
           </View>
@@ -696,34 +772,27 @@ const InvoiceDocument = (data) => {
               <Text style={styles.pricingValue}>{data.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
             </View>
             
-            {(data.paidAmount || data.advancePayment) > 0 && (
+            {paidAmountSafe > 0 && (
               <View style={styles.pricingRow}>
                 <Text style={styles.pricingLabel}>Paid Payment:</Text>
-                <Text style={styles.pricingValue}>{data.paidAmount ? data.paidAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : data.advancePayment.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
+                <Text style={styles.pricingValue}>{paidAmountSafe.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
               </View>
             )}
             
-            {(data.pendingAmount > 0 || (data.balanceAmount > 0 && (data.paidAmount || data.advancePayment) > 0)) && (
+            {pendingDerived > 0 && (
               <View style={styles.pricingRow}>
                 <Text style={styles.pricingLabel}>Pending Payment:</Text>
-                <Text style={styles.pricingValue}>{data.pendingAmount ? data.pendingAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : (data.balanceAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
+                <Text style={styles.pricingValue}>{pendingDerived.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
               </View>
             )}
             
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>
-                {((data.paidAmount || data.advancePayment) > 0 && (data.pendingAmount > 0 || data.balanceAmount > 0)) ? 'Balance Amount:' : 'Total Amount:'}
-              </Text>
-              <Text style={styles.totalValue}>
-                {(data.paidAmount || data.advancePayment) > 0 
-                  ? (data.pendingAmount || data.balanceAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })
-                  : data.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })
-                }
-              </Text>
+              <Text style={styles.totalLabel}>{totalRowLabel}</Text>
+              <Text style={styles.totalValue}>{totalRowValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
             </View>
             {/* Amount in words */}
             <Text style={styles.amountWords}>
-              Amount in words: {amountToWordsINR((data.paidAmount || data.advancePayment) > 0 ? (data.pendingAmount || data.balanceAmount || 0) : data.totalAmount)}
+              Amount in words: {amountToWordsINR(wordsBaseAmount)}
             </Text>
           </View>
         </View>
