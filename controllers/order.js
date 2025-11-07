@@ -1041,23 +1041,7 @@ export const updatePaymentStatus = async (req, res) => {
       });
     }
 
-    const updateData = {
-      paymentStatus,
-      ...(paymentAmount !== undefined && { paymentAmount: parseFloat(paymentAmount) }),
-      ...(paymentMethod && { paymentMethod }),
-      ...(paymentNotes && { paymentNotes }),
-      ...(paymentStatus === "paid" && { paymentDate: new Date() })
-    };
-
-    const order = await Order.findByIdAndUpdate(
-      orderId,
-      updateData,
-      { new: true }
-    ).populate("client", "name mobile email")
-     .populate("items.itemType", "name stitchingCharge")
-     .populate("items.fabric", "name pricePerMeter")
-     .populate("branchId", "branchName address")
-     .populate("createdBy", "name employeeId");
+    const order = await Order.findById(orderId).populate("bill");
 
     if (!order) {
       return res.status(404).json({
@@ -1065,6 +1049,93 @@ export const updatePaymentStatus = async (req, res) => {
         message: "Order not found",
       });
     }
+
+    const parsedPaymentAmount = paymentAmount !== undefined && paymentAmount !== null
+      ? Number(paymentAmount)
+      : undefined;
+
+    order.paymentStatus = paymentStatus;
+
+    if (parsedPaymentAmount !== undefined && !Number.isNaN(parsedPaymentAmount)) {
+      order.paymentAmount = parsedPaymentAmount;
+    }
+
+    if (paymentMethod) {
+      order.paymentMethod = paymentMethod;
+    }
+
+    if (paymentNotes !== undefined) {
+      order.paymentNotes = paymentNotes;
+    }
+
+    const bill = order.bill;
+    const totalBillAmount = bill?.totalAmount ?? order.totalAmount ?? 0;
+
+    if (paymentStatus === "paid") {
+      const finalPaidAmount = !Number.isNaN(parsedPaymentAmount ?? NaN) && parsedPaymentAmount !== undefined
+        ? parsedPaymentAmount
+        : (bill?.totalAmount ?? order.totalAmount ?? order.paymentAmount ?? 0);
+      order.paymentAmount = finalPaidAmount || totalBillAmount;
+      order.paymentDate = new Date();
+
+      if (bill) {
+        bill.paidAmount = order.paymentAmount;
+        bill.pendingAmount = 0;
+        bill.paymentStatus = "paid";
+        bill.paymentDate = new Date();
+      }
+    } else {
+      order.paymentDate = undefined;
+
+      if (bill) {
+        if (paymentStatus === "partial") {
+          const paidValue = !Number.isNaN(parsedPaymentAmount ?? NaN) && parsedPaymentAmount !== undefined
+            ? parsedPaymentAmount
+            : (bill.paidAmount || order.paymentAmount || 0);
+
+          order.paymentAmount = paidValue;
+          bill.paidAmount = Math.min(paidValue, totalBillAmount);
+          bill.pendingAmount = Math.max(totalBillAmount - bill.paidAmount, 0);
+          bill.paymentStatus = bill.pendingAmount > 0 ? "pending" : "paid";
+          bill.paymentDate = bill.paymentStatus === "paid" ? new Date() : undefined;
+        } else if (paymentStatus === "pending") {
+          bill.paymentStatus = "pending";
+          bill.pendingAmount = totalBillAmount;
+          bill.paidAmount = order.advancePayment || 0;
+          if (bill.paidAmount >= totalBillAmount) {
+            bill.paymentStatus = "paid";
+            bill.pendingAmount = 0;
+            bill.paymentDate = new Date();
+          } else {
+            bill.paymentDate = undefined;
+          }
+        } else if (paymentStatus === "overdue") {
+          bill.paymentStatus = "overdue";
+          const paidValue = bill.paidAmount || order.paymentAmount || order.advancePayment || 0;
+          bill.pendingAmount = Math.max(totalBillAmount - paidValue, 0);
+          bill.paymentDate = undefined;
+        } else if (paymentStatus === "refunded") {
+          bill.paidAmount = 0;
+          bill.pendingAmount = 0;
+          bill.paymentStatus = "paid"; // Bill schema does not support "refunded"
+          bill.paymentDate = new Date();
+        }
+      }
+    }
+
+    if (bill) {
+      await bill.save();
+    }
+
+    await order.save();
+
+    await order.populate([
+      { path: "client", select: "name mobile email" },
+      { path: "items.itemType", select: "name stitchingCharge" },
+      { path: "items.fabric", select: "name pricePerMeter" },
+      { path: "branchId", select: "branchName address" },
+      { path: "createdBy", select: "name employeeId" }
+    ]);
 
     res.status(200).json({
       success: true,
@@ -1182,7 +1253,8 @@ export const getCompletedOrdersStats = async (req, res) => {
       pending: { count: 0, amount: 0 },
       paid: { count: 0, amount: 0 },
       partial: { count: 0, amount: 0 },
-      overdue: { count: 0, amount: 0 }
+      overdue: { count: 0, amount: 0 },
+      refunded: { count: 0, amount: 0 }
     };
 
     paymentStats.forEach(stat => {
@@ -1201,22 +1273,33 @@ export const getCompletedOrdersStats = async (req, res) => {
     
     let totalPaidAmount = 0;
     let totalPendingAmount = 0;
+    let totalRefundedAmount = 0;
     let paidCount = 0;
     let pendingCount = 0;
+    let refundedCount = 0;
 
     ordersWithBills.forEach(order => {
       if (order.bill) {
-        const paidAmount = order.bill.paidAmount || order.advancePayment || 0;
-        const pendingAmount = order.bill.pendingAmount || Math.max(0, (order.bill.totalAmount || order.totalAmount || 0) - (order.advancePayment || 0));
-        
-        totalPaidAmount += paidAmount;
-        totalPendingAmount += pendingAmount;
-        
-        if (paidAmount > 0) {
+        const billTotal = order.bill.totalAmount || order.totalAmount || 0;
+        const paidAmountRaw = order.bill.paidAmount || order.advancePayment || 0;
+        const isMarkedPaid = order.paymentStatus === "paid";
+        const effectivePaid = isMarkedPaid ? billTotal : paidAmountRaw;
+        const effectivePending = isMarkedPaid ? 0 : (order.bill.pendingAmount || Math.max(0, billTotal - (order.advancePayment || 0)));
+
+        totalPaidAmount += effectivePaid;
+        totalPendingAmount += effectivePending;
+
+        if (isMarkedPaid || effectivePaid > 0) {
           paidCount++;
         }
-        if (pendingAmount > 0) {
+        if (effectivePending > 0) {
           pendingCount++;
+        }
+
+        if (order.paymentStatus === "refunded") {
+          const refundBase = billTotal || effectivePaid;
+          totalRefundedAmount += refundBase;
+          refundedCount++;
         }
       }
     });
@@ -1229,6 +1312,10 @@ export const getCompletedOrdersStats = async (req, res) => {
     paymentBreakdown.pending = {
       count: pendingCount,
       amount: totalPendingAmount
+    };
+    paymentBreakdown.refunded = {
+      count: refundedCount,
+      amount: totalRefundedAmount
     };
 
     // Order type breakdown
@@ -1442,7 +1529,8 @@ export const getAllOrdersStats = async (req, res) => {
       pending: { count: 0, amount: 0 },
       paid: { count: 0, amount: 0 },
       partial: { count: 0, amount: 0 },
-      overdue: { count: 0, amount: 0 }
+      overdue: { count: 0, amount: 0 },
+      refunded: { count: 0, amount: 0 }
     };
 
     paymentBreakdown.forEach(stat => {
@@ -1462,22 +1550,33 @@ export const getAllOrdersStats = async (req, res) => {
     
     let totalPaidAmount = 0;
     let totalPendingAmount = 0;
+    let totalRefundedAmount = 0;
     let paidCount = 0;
     let pendingCount = 0;
+    let refundedCount = 0;
 
     ordersWithBills.forEach(order => {
       if (order.bill) {
-        const paidAmount = order.bill.paidAmount || order.advancePayment || 0;
-        const pendingAmount = order.bill.pendingAmount || Math.max(0, (order.bill.totalAmount || order.totalAmount || 0) - (order.advancePayment || 0));
-        
-        totalPaidAmount += paidAmount;
-        totalPendingAmount += pendingAmount;
-        
-        if (paidAmount > 0) {
+        const billTotal = order.bill.totalAmount || order.totalAmount || 0;
+        const paidAmountRaw = order.bill.paidAmount || order.advancePayment || 0;
+        const isMarkedPaid = order.paymentStatus === "paid";
+        const effectivePaid = isMarkedPaid ? billTotal : paidAmountRaw;
+        const effectivePending = isMarkedPaid ? 0 : (order.bill.pendingAmount || Math.max(0, billTotal - (order.advancePayment || 0)));
+
+        totalPaidAmount += effectivePaid;
+        totalPendingAmount += effectivePending;
+
+        if (isMarkedPaid || effectivePaid > 0) {
           paidCount++;
         }
-        if (pendingAmount > 0) {
+        if (effectivePending > 0) {
           pendingCount++;
+        }
+
+        if (order.paymentStatus === "refunded") {
+          const refundBase = billTotal || effectivePaid;
+          totalRefundedAmount += refundBase;
+          refundedCount++;
         }
       }
     });
@@ -1490,6 +1589,10 @@ export const getAllOrdersStats = async (req, res) => {
     paymentStats.pending = {
       count: pendingCount,
       amount: totalPendingAmount
+    };
+    paymentStats.refunded = {
+      count: refundedCount,
+      amount: totalRefundedAmount
     };
 
     // Revenue calculations
