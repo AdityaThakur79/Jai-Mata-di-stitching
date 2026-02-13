@@ -307,20 +307,11 @@ const UpdateOrder = () => {
   };
 
   const calculateOrderTotal = () => {
-    console.log("calculateOrderTotal called with items:", items);
-    console.log("calculateOrderTotal called with itemData:", itemData);
-    console.log("calculateOrderTotal called with fabricsData:", fabricsData);
-    console.log("items.length:", items.length);
-    console.log("itemData?.items?.length:", itemData?.items?.length);
-    console.log("fabricsData?.fabrics?.length:", fabricsData?.fabrics?.length);
-    
     let subtotal = 0;
     const itemBreakdowns = [];
 
     items.forEach((item, index) => {
-      console.log(`Processing item ${index}:`, item);
       const breakdown = calculateItemBreakdown(item, index);
-      console.log(`Breakdown for item ${index}:`, breakdown);
       if (breakdown) {
         subtotal += breakdown.totalPrice;
         itemBreakdowns.push(breakdown);
@@ -351,13 +342,12 @@ const UpdateOrder = () => {
       balanceAmount,
       itemBreakdowns,
     };
-    console.log("Setting order total to:", orderTotalData);
     setOrderTotal(orderTotalData);
   };
 
   useEffect(() => {
     calculateOrderTotal();
-  }, [items, formData.discountType, formData.discountValue, formData.taxRate, formData.advancePayment, itemData, fabricsData]);
+  }, [items, formData.discountType, formData.discountValue, formData.taxRate, formData.advancePayment, shippingDetails.shippingCost, itemData, fabricsData]);
 
   // Handle form changes
   const handleInputChange = (field, value) => {
@@ -511,7 +501,7 @@ const UpdateOrder = () => {
         notes: formData.notes,
         specialInstructions: formData.specialInstructions,
         items: items.map(item => ({
-          itemType: item.itemType,
+          itemType: item.itemType || null,
           quantity: parseInt(item.quantity),
           fabric: item.fabric || null,
           fabricMeters: item.fabricMeters || 0,
@@ -1052,7 +1042,7 @@ const UpdateOrder = () => {
                         value={item.fabricMeters}
                         onChange={(e) => handleItemChange(index, "fabricMeters", e.target.value)}
                         min="0"
-                        step="0.1"
+                        step="0.01"
                         disabled={!item.fabric}
                       />
                     </div>
@@ -1322,7 +1312,7 @@ const UpdateOrder = () => {
             </Button>
             <Button
               type="submit"
-              disabled={isUpdating || orderTotal.totalAmount === 0}
+              disabled={isUpdating || items.length === 0}
               className="bg-orange-600 hover:bg-orange-700 text-white"
             >
               {isUpdating ? (

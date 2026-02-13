@@ -1123,8 +1123,8 @@ const CreateOrder = () => {
                       <FormField label={`Fabric Meters ${item.fabric ? "*" : ""}`}>
                         <Input
                           type="number"
-                          min={0.1}
-                          step={0.1}
+                          min={0.01}
+                          step={0.01}
                           placeholder="Enter meters"
                           value={item.fabricMeters || ""}
                           onChange={(e) =>

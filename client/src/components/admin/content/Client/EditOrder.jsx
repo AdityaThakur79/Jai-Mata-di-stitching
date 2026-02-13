@@ -280,7 +280,7 @@ const EditOrder = () => {
 
   useEffect(() => {
     calculateOrderTotal();
-  }, [items, formData.discountType, formData.discountValue, formData.taxRate, formData.advancePayment, itemData, fabricsData]);
+  }, [items, formData.discountType, formData.discountValue, formData.taxRate, formData.advancePayment, shippingDetails.shippingCost, itemData, fabricsData]);
 
   // Handle form changes
   const handleInputChange = (field, value) => {
@@ -431,7 +431,7 @@ const EditOrder = () => {
         clientOrderNumber: formData.clientOrderNumber || undefined,
         paymentStatus: formData.paymentStatus,
         items: items.map(item => ({
-          itemType: item.itemType,
+          itemType: item.itemType || null,
           quantity: parseInt(item.quantity),
           fabric: item.fabric || null,
           fabricMeters: item.fabricMeters || 0,
@@ -850,7 +850,7 @@ const EditOrder = () => {
                         value={item.fabricMeters}
                         onChange={(e) => handleItemChange(index, "fabricMeters", e.target.value)}
                         min="0"
-                        step="0.1"
+                        step="0.01"
                         disabled={!item.fabric}
                       />
                     </div>
@@ -1256,7 +1256,7 @@ const EditOrder = () => {
             </Button>
             <Button
               type="submit"
-              disabled={isUpdating || orderTotal.totalAmount === 0}
+              disabled={isUpdating || items.length === 0}
               className="bg-orange-600 hover:bg-orange-700 text-white"
             >
               {isUpdating ? (

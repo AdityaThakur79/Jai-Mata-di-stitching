@@ -896,12 +896,17 @@ export const updateOrder = async (req, res) => {
     const processedItems = [];
 
     for (const item of items) {
-      const selectedItem = await ItemMaster.findById(item.itemType);
-      if (!selectedItem) {
-        return res.status(400).json({
-          success: false,
-          message: `Item with ID ${item.itemType} not found`,
-        });
+      let selectedItem = null;
+      
+      // Only look up ItemMaster if itemType is provided (not null/empty)
+      if (item.itemType && item.itemType.trim() !== '') {
+        selectedItem = await ItemMaster.findById(item.itemType);
+        if (!selectedItem) {
+          return res.status(400).json({
+            success: false,
+            message: `Item with ID ${item.itemType} not found`,
+          });
+        }
       }
 
       let itemPrice = 0;
@@ -917,7 +922,8 @@ export const updateOrder = async (req, res) => {
       }
 
       // Calculate item base cost (stitchingCharge) - per unit * quantity (always included)
-      stitchingCost = (selectedItem.stitchingCharge || 0) * parseInt(item.quantity);
+      // For fabric-only orders without an itemType, stitchingCost is 0
+      stitchingCost = selectedItem ? (selectedItem.stitchingCharge || 0) * parseInt(item.quantity) : 0;
       
       // Add alteration, handwork, and other charges
       const alteration = parseFloat(item.alteration) || 0;
@@ -928,9 +934,10 @@ export const updateOrder = async (req, res) => {
       const totalItemPrice = fabricCost + stitchingCost + additionalCharges;
       subtotal += totalItemPrice;
 
+      const quantity = parseInt(item.quantity) || 1;
       processedItems.push({
-        itemType: item.itemType,
-        quantity: parseInt(item.quantity),
+        itemType: item.itemType || null,
+        quantity: quantity,
         fabric: item.fabric || null,
         fabricMeters: item.fabricMeters || 0,
         style: {
@@ -939,7 +946,7 @@ export const updateOrder = async (req, res) => {
           description: item.style?.description || "",
         },
         specialInstructions: item.specialInstructions || "",
-        unitPrice: stitchingCost / parseInt(item.quantity) + (fabricCost / parseInt(item.quantity)), // Cost per unit including fabric and stitching
+        unitPrice: (stitchingCost / quantity) + (fabricCost / quantity), // Cost per unit including fabric and stitching
         totalPrice: totalItemPrice,
         alteration: alteration,
         handwork: handwork,
