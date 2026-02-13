@@ -71,12 +71,14 @@ const EditOrder = () => {
     shippingPhone: "",
     shippingMethod: "home_delivery",
     shippingCost: 0,
-    estimatedDeliveryDate: "",
-    actualDeliveryDate: "",
     deliveryNotes: "",
     deliveryPerson: "",
     deliveryPersonContact: "",
     deliveryStatus: "pending",
+    extraField1Label: "",
+    extraField1Value: "",
+    extraField2Label: "",
+    extraField2Value: "",
   });
 
   const [items, setItems] = useState([]);
@@ -132,16 +134,14 @@ const EditOrder = () => {
             shippingPhone: order.shippingDetails?.shippingPhone || "",
             shippingMethod: order.shippingDetails?.shippingMethod || "home_delivery",
             shippingCost: order.shippingDetails?.shippingCost || 0,
-            estimatedDeliveryDate: order.shippingDetails?.estimatedDeliveryDate 
-              ? new Date(order.shippingDetails.estimatedDeliveryDate).toISOString().split('T')[0] 
-              : "",
-            actualDeliveryDate: order.shippingDetails?.actualDeliveryDate 
-              ? new Date(order.shippingDetails.actualDeliveryDate).toISOString().split('T')[0] 
-              : "",
             deliveryNotes: order.shippingDetails?.deliveryNotes || "",
             deliveryPerson: order.shippingDetails?.deliveryPerson || "",
             deliveryPersonContact: order.shippingDetails?.deliveryPersonContact || "",
             deliveryStatus: order.shippingDetails?.deliveryStatus || "pending",
+            extraField1Label: order.shippingDetails?.extraField1Label || "",
+            extraField1Value: order.shippingDetails?.extraField1Value || "",
+            extraField2Label: order.shippingDetails?.extraField2Label || "",
+            extraField2Value: order.shippingDetails?.extraField2Value || "",
           });
         }
       } catch (error) {
@@ -252,11 +252,14 @@ const EditOrder = () => {
       }
     });
 
-    const discountAmount = formData.discountType === "percentage" 
-      ? (subtotal * formData.discountValue) / 100 
-      : formData.discountValue;
+    const discountAmount =
+      formData.discountType === "percentage"
+        ? (subtotal * formData.discountValue) / 100
+        : formData.discountValue;
 
-    const taxableAmount = subtotal - discountAmount;
+    const shippingCost = parseFloat(shippingDetails.shippingCost) || 0;
+
+    const taxableAmount = subtotal - discountAmount + shippingCost;
     const taxAmount = (taxableAmount * formData.taxRate) / 100;
     const totalAmount = taxableAmount + taxAmount;
     const advanceAmount = formData.advancePayment || 0;
@@ -267,6 +270,7 @@ const EditOrder = () => {
       discountAmount,
       taxableAmount,
       taxAmount,
+      shippingCost,
       totalAmount,
       advanceAmount,
       balanceAmount,
@@ -295,11 +299,57 @@ const EditOrder = () => {
     setItems(newItems);
   };
 
+  const SHIPPING_METHOD_CONFIG = {
+    pickup: {
+      extra1Label: "Transport Name",
+      extra2Label: "Transport GST Number",
+    },
+    home_delivery: {
+      extra1Label: "Delivery Partner",
+      extra2Label: "Vehicle Number",
+    },
+    courier: {
+      extra1Label: "Courier Name",
+      extra2Label: "Courier GST Number",
+    },
+    express: {
+      extra1Label: "Express Service Name",
+      extra2Label: "Tracking / AWB Number",
+    },
+    local_transport: {
+      extra1Label: "Transporter Name",
+      extra2Label: "Transport GST Number",
+    },
+    customer_courier: {
+      extra1Label: "Customer Courier Name",
+      extra2Label: "AWB / Docket Number",
+    },
+    aggregator: {
+      extra1Label: "Aggregator Name",
+      extra2Label: "Reference ID",
+    },
+    other: {
+      extra1Label: "Shipping Partner",
+      extra2Label: "Reference Details",
+    },
+  };
+
   const handleShippingChange = (field, value) => {
-    setShippingDetails(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setShippingDetails(prev => {
+      if (field === "shippingMethod") {
+        const config = SHIPPING_METHOD_CONFIG[value] || {};
+        return {
+          ...prev,
+          shippingMethod: value,
+          extraField1Label: config.extra1Label || prev.extraField1Label,
+          extraField2Label: config.extra2Label || prev.extraField2Label,
+        };
+      }
+      return {
+        ...prev,
+        [field]: value
+      };
+    });
   };
 
   const addItem = () => {
@@ -336,6 +386,37 @@ const EditOrder = () => {
 
     if (items.length === 0) {
       toast.error("Please add at least one item");
+      return;
+    }
+
+    // GST validation helper
+    const isValidGSTIN = (value) => {
+      if (!value) return true;
+      const gstin = String(value).trim().toUpperCase();
+      const regex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+      return regex.test(gstin);
+    };
+
+    // Validate any GST-like extra shipping fields
+    const gstLikeLabels = ["gst", "g.s.t"];
+    if (
+      gstLikeLabels.some((k) =>
+        (shippingDetails.extraField1Label || "").toLowerCase().includes(k)
+      ) &&
+      shippingDetails.extraField1Value &&
+      !isValidGSTIN(shippingDetails.extraField1Value)
+    ) {
+      toast.error("Please enter a valid GST number in shipping details");
+      return;
+    }
+    if (
+      gstLikeLabels.some((k) =>
+        (shippingDetails.extraField2Label || "").toLowerCase().includes(k)
+      ) &&
+      shippingDetails.extraField2Value &&
+      !isValidGSTIN(shippingDetails.extraField2Value)
+    ) {
+      toast.error("Please enter a valid GST number in shipping details");
       return;
     }
 
@@ -378,12 +459,14 @@ const EditOrder = () => {
           shippingPhone: shippingDetails.shippingPhone || "",
           shippingMethod: shippingDetails.shippingMethod || "home_delivery",
           shippingCost: parseFloat(shippingDetails.shippingCost) || 0,
-          estimatedDeliveryDate: shippingDetails.estimatedDeliveryDate || null,
-          actualDeliveryDate: shippingDetails.actualDeliveryDate || null,
           deliveryNotes: shippingDetails.deliveryNotes || "",
           deliveryPerson: shippingDetails.deliveryPerson || "",
           deliveryPersonContact: shippingDetails.deliveryPersonContact || "",
           deliveryStatus: shippingDetails.deliveryStatus || "pending",
+          extraField1Label: shippingDetails.extraField1Label || undefined,
+          extraField1Value: shippingDetails.extraField1Value || undefined,
+          extraField2Label: shippingDetails.extraField2Label || undefined,
+          extraField2Value: shippingDetails.extraField2Value || undefined,
         },
       };
 
@@ -933,6 +1016,10 @@ const EditOrder = () => {
                       <SelectItem value="home_delivery">Home Delivery</SelectItem>
                       <SelectItem value="courier">Courier</SelectItem>
                       <SelectItem value="express">Express</SelectItem>
+                      <SelectItem value="local_transport">Local Transport</SelectItem>
+                      <SelectItem value="customer_courier">Customer Courier</SelectItem>
+                      <SelectItem value="aggregator">Aggregator</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -947,22 +1034,31 @@ const EditOrder = () => {
                     placeholder="0"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Estimated Delivery Date</Label>
-                  <Input
-                    type="date"
-                    value={shippingDetails.estimatedDeliveryDate}
-                    onChange={(e) => handleShippingChange("estimatedDeliveryDate", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Actual Delivery Date</Label>
-                  <Input
-                    type="date"
-                    value={shippingDetails.actualDeliveryDate}
-                    onChange={(e) => handleShippingChange("actualDeliveryDate", e.target.value)}
-                  />
-                </div>
+
+                {shippingDetails.extraField1Label && (
+                  <div className="space-y-2">
+                    <Label>{shippingDetails.extraField1Label}</Label>
+                    <Input
+                      value={shippingDetails.extraField1Value}
+                      onChange={(e) =>
+                        handleShippingChange("extraField1Value", e.target.value)
+                      }
+                      placeholder={shippingDetails.extraField1Label}
+                    />
+                  </div>
+                )}
+                {shippingDetails.extraField2Label && (
+                  <div className="space-y-2">
+                    <Label>{shippingDetails.extraField2Label}</Label>
+                    <Input
+                      value={shippingDetails.extraField2Value}
+                      onChange={(e) =>
+                        handleShippingChange("extraField2Value", e.target.value)
+                      }
+                      placeholder={shippingDetails.extraField2Label}
+                    />
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label>Delivery Person</Label>
                   <Input
@@ -1096,6 +1192,15 @@ const EditOrder = () => {
                             {formatCurrency(orderTotal.taxableAmount)}
                           </span>
                         </div>
+                        
+                        {orderTotal.shippingCost > 0 && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium text-gray-600">Shipping Cost:</span>
+                            <span className="text-sm font-semibold text-gray-900">
+                              {formatCurrency(orderTotal.shippingCost)}
+                            </span>
+                          </div>
+                        )}
                         
                         <div className="flex justify-between items-center">
                           <span className="text-sm font-medium text-gray-600">GST ({formData.taxRate}%):</span>

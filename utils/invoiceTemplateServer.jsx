@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   termsContent: { fontSize: 7, color: '#000000', lineHeight: 1.3 },
   signatureSection: { alignItems: 'center', marginTop: 8 },
   shippingSection: { backgroundColor: '#FFFFFF', padding: 6, borderRadius: 3, marginBottom: 10, border: '1 solid #f77f2f', alignSelf: 'center', width: '90%' },
-  cardFixed: { height: 120 },
+  cardFixed: { height: 170 },
   shippingTitle: { fontSize: 10, fontWeight: 'bold', color: '#000000', marginBottom: 4 },
   shippingSubtitle: { fontSize: 8, fontWeight: 'bold', color: '#000000', marginBottom: 3 },
   shippingContent: { fontSize: 8, color: '#000000', lineHeight: 1.3, marginBottom: 2 },
@@ -125,6 +125,10 @@ const InvoiceDocumentServer = (data) => (
                 {data.shippingDetails.shippingPhone && `\nPhone: ${data.shippingDetails.shippingPhone}`}
                 {data.shippingDetails.shippingMethod && `\nMethod: ${String(data.shippingDetails.shippingMethod).replace('_', ' ').toUpperCase()}`}
                 {data.shippingDetails.deliveryStatus && `\nStatus: ${String(data.shippingDetails.deliveryStatus).replace('_', ' ').toUpperCase()}`}
+                {data.shippingDetails.extraField1Label && data.shippingDetails.extraField1Value &&
+                  `\n${data.shippingDetails.extraField1Label}: ${data.shippingDetails.extraField1Value}`}
+                {data.shippingDetails.extraField2Label && data.shippingDetails.extraField2Value &&
+                  `\n${data.shippingDetails.extraField2Label}: ${data.shippingDetails.extraField2Value}`}
               </Text>
             </View>
           )}

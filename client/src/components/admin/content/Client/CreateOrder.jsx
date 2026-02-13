@@ -94,12 +94,14 @@ const CreateOrder = () => {
     shippingMethod: "home_delivery",
     shippingCost: 0,
     // trackingNumber removed
-    estimatedDeliveryDate: "",
-    actualDeliveryDate: "",
     deliveryNotes: "",
     deliveryPerson: "",
     deliveryPersonContact: "",
     deliveryStatus: "pending",
+    extraField1Label: "",
+    extraField1Value: "",
+    extraField2Label: "",
+    extraField2Value: "",
   });
   
   // Pricing state
@@ -181,6 +183,14 @@ const CreateOrder = () => {
   }, [clientDetails.pincode]);
 
   const handleLookup = async () => {};
+
+  // Basic GSTIN validation (Indian format)
+  const isValidGSTIN = (value) => {
+    if (!value) return true; // empty allowed where optional
+    const gstin = String(value).trim().toUpperCase();
+    const regex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+    return regex.test(gstin);
+  };
 
   // Calculate detailed item breakdown
   const calculateItemBreakdown = (item, index) => {
@@ -360,8 +370,11 @@ const CreateOrder = () => {
       }
     }
     
-    // Calculate taxable amount
-    const taxableAmount = subtotal - discountAmount;
+    // Shipping cost
+    const shippingCost = parseFloat(shippingDetails.shippingCost) || 0;
+    
+    // Calculate taxable amount (including shipping)
+    const taxableAmount = subtotal - discountAmount + shippingCost;
     
     // Calculate tax
     const taxAmount = (taxableAmount * parseFloat(taxRate)) / 100;
@@ -378,6 +391,7 @@ const CreateOrder = () => {
       discountAmount,
       taxableAmount,
       taxAmount,
+      shippingCost,
       totalAmount,
       advanceAmount,
       balanceAmount,
@@ -424,11 +438,58 @@ const CreateOrder = () => {
     setItems(updated);
   };
 
+  const SHIPPING_METHOD_CONFIG = {
+    pickup: {
+      extra1Label: "Transport Name",
+      extra2Label: "Transport GST Number",
+    },
+    home_delivery: {
+      extra1Label: "Delivery Partner",
+      extra2Label: "Vehicle Number",
+    },
+    courier: {
+      extra1Label: "Courier Name",
+      extra2Label: "Courier GST Number",
+    },
+    express: {
+      extra1Label: "Express Service Name",
+      extra2Label: "Tracking / AWB Number",
+    },
+    local_transport: {
+      extra1Label: "Transporter Name",
+      extra2Label: "Vehicle Number",
+    },
+    customer_courier: {
+      extra1Label: "Customer Courier Name",
+      extra2Label: "AWB / Docket Number",
+    },
+    aggregator: {
+      extra1Label: "Aggregator Name",
+      extra2Label: "Reference ID",
+    },
+    other: {
+      extra1Label: "Shipping Partner",
+      extra2Label: "Reference Details",
+    },
+  };
+
   const handleShippingChange = (field, value) => {
-    setShippingDetails(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setShippingDetails(prev => {
+      if (field === "shippingMethod") {
+        const config = SHIPPING_METHOD_CONFIG[value] || {};
+        return {
+          ...prev,
+          shippingMethod: value,
+          extraField1Label: config.extra1Label || "",
+          extraField2Label: config.extra2Label || "",
+          // keep values so user can switch back if needed
+        };
+      }
+      return {
+        ...prev,
+        [field]: value,
+      };
+    });
   };
 
   const addItem = () => {
@@ -489,6 +550,11 @@ const CreateOrder = () => {
         toast.error("Please fill in all required client details");
         return false;
       }
+      // Validate client GSTIN if provided
+      if (clientDetails.gstin && !isValidGSTIN(clientDetails.gstin)) {
+        toast.error("Please enter a valid client GSTIN");
+        return false;
+      }
     }
 
     // Check items based on order type
@@ -513,6 +579,29 @@ const CreateOrder = () => {
           return false;
         }
       }
+    }
+
+    // Validate any GST fields in shipping extra fields
+    const gstLikeLabels = ["gst", "g.s.t"];
+    if (
+      gstLikeLabels.some((k) =>
+        (shippingDetails.extraField1Label || "").toLowerCase().includes(k)
+      ) &&
+      shippingDetails.extraField1Value &&
+      !isValidGSTIN(shippingDetails.extraField1Value)
+    ) {
+      toast.error("Please enter a valid GST number in shipping details");
+      return false;
+    }
+    if (
+      gstLikeLabels.some((k) =>
+        (shippingDetails.extraField2Label || "").toLowerCase().includes(k)
+      ) &&
+      shippingDetails.extraField2Value &&
+      !isValidGSTIN(shippingDetails.extraField2Value)
+    ) {
+      toast.error("Please enter a valid GST number in shipping details");
+      return false;
     }
 
     return true;
@@ -601,11 +690,13 @@ const CreateOrder = () => {
           shippingMethod: shippingDetails.shippingMethod,
           shippingCost: parseFloat(shippingDetails.shippingCost) || 0,
           trackingNumber: shippingDetails.trackingNumber,
-          estimatedDeliveryDate: shippingDetails.estimatedDeliveryDate,
-          actualDeliveryDate: shippingDetails.actualDeliveryDate,
           deliveryNotes: shippingDetails.deliveryNotes,
           deliveryPerson: shippingDetails.deliveryPerson,
           deliveryStatus: shippingDetails.deliveryStatus,
+          extraField1Label: shippingDetails.extraField1Label || undefined,
+          extraField1Value: shippingDetails.extraField1Value || undefined,
+          extraField2Label: shippingDetails.extraField2Label || undefined,
+          extraField2Value: shippingDetails.extraField2Value || undefined,
         },
       };
 
@@ -1250,6 +1341,10 @@ const CreateOrder = () => {
                     <SelectItem value="home_delivery">Home Delivery</SelectItem>
                     <SelectItem value="courier">Courier</SelectItem>
                     <SelectItem value="express">Express</SelectItem>
+                    <SelectItem value="local_transport">Local Transport</SelectItem>
+                    <SelectItem value="customer_courier">Customer Courier</SelectItem>
+                    <SelectItem value="aggregator">Aggregator</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </FormField>
@@ -1265,22 +1360,32 @@ const CreateOrder = () => {
                 />
               </FormField>
               
-              <FormField label="Estimated Delivery Date">
-                <Input
-                  type="date"
-                  value={shippingDetails.estimatedDeliveryDate}
-                  onChange={(e) => handleShippingChange("estimatedDeliveryDate", e.target.value)}
-                  className="h-8 text-sm"
-                />
-              </FormField>
-              <FormField label="Actual Delivery Date">
-                <Input
-                  type="date"
-                  value={shippingDetails.actualDeliveryDate}
-                  onChange={(e) => handleShippingChange("actualDeliveryDate", e.target.value)}
-                  className="h-8 text-sm"
-                />
-              </FormField>
+              {/* Dynamic extra fields based on shipping method */}
+              {shippingDetails.extraField1Label && (
+                <FormField label={shippingDetails.extraField1Label}>
+                  <Input
+                    type="text"
+                    value={shippingDetails.extraField1Value}
+                    onChange={(e) =>
+                      handleShippingChange("extraField1Value", e.target.value)
+                    }
+                    className="h-8 text-sm"
+                  />
+                </FormField>
+              )}
+              {shippingDetails.extraField2Label && (
+                <FormField label={shippingDetails.extraField2Label}>
+                  <Input
+                    type="text"
+                    value={shippingDetails.extraField2Value}
+                    onChange={(e) =>
+                      handleShippingChange("extraField2Value", e.target.value)
+                    }
+                    className="h-8 text-sm"
+                  />
+                </FormField>
+              )}
+              
               <FormField label="Delivery Person">
                 <Input
                   placeholder="Delivery person"
@@ -1532,6 +1637,15 @@ const CreateOrder = () => {
                           {formatCurrency(orderTotal.taxableAmount)}
                         </span>
                       </div>
+                      
+                      {orderTotal.shippingCost > 0 && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-gray-600">Shipping Cost:</span>
+                          <span className="text-sm font-semibold text-gray-900">
+                            {formatCurrency(orderTotal.shippingCost)}
+                          </span>
+                        </div>
+                      )}
                       
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-medium text-gray-600">GST ({taxRate}%):</span>

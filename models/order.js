@@ -222,9 +222,6 @@ const orderSchema = new mongoose.Schema({
   expectedDeliveryDate: {
     type: Date,
   },
-  actualDeliveryDate: {
-    type: Date,
-  },
   priority: {
     type: String,
     enum: ["low", "medium", "high", "urgent"],
@@ -326,7 +323,16 @@ const orderSchema = new mongoose.Schema({
     },
     shippingMethod: {
       type: String,
-      enum: ["pickup", "home_delivery", "courier", "express"],
+      enum: [
+        "pickup",
+        "home_delivery",
+        "courier",
+        "express",
+        "local_transport",
+        "customer_courier",
+        "aggregator",
+        "other",
+      ],
       default: "home_delivery",
     },
     shippingCost: {
@@ -335,11 +341,17 @@ const orderSchema = new mongoose.Schema({
       min: 0,
     },
     // trackingNumber removed
-    estimatedDeliveryDate: {
-      type: Date,
+    extraField1Label: {
+      type: String,
     },
-    actualDeliveryDate: {
-      type: Date,
+    extraField1Value: {
+      type: String,
+    },
+    extraField2Label: {
+      type: String,
+    },
+    extraField2Value: {
+      type: String,
     },
     deliveryNotes: {
       type: String,

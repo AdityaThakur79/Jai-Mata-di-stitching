@@ -264,6 +264,12 @@ export const createOrder = async (req, res) => {
     const discountType = req.body.discountType || "percentage";
     const discountValue = parseFloat(req.body.discountValue) || 0;
     const taxRate = parseFloat(req.body.taxRate) || 5; // Default 5% GST
+
+    // Shipping cost (included in taxable amount and total)
+    const shippingCostValue =
+      shippingDetails && shippingDetails.shippingCost
+        ? parseFloat(shippingDetails.shippingCost)
+        : 0;
     
     // Calculate discount amount
     let discountAmount = 0;
@@ -275,8 +281,8 @@ export const createOrder = async (req, res) => {
       }
     }
     
-    // Calculate taxable amount (after discount)
-    const taxableAmount = subtotal - discountAmount;
+    // Calculate taxable amount (after discount, including shipping)
+    const taxableAmount = subtotal - discountAmount + shippingCostValue;
     
     // Calculate tax amount
     const taxAmount = (taxableAmount * taxRate) / 100;
@@ -307,21 +313,28 @@ export const createOrder = async (req, res) => {
       specialInstructions,
       branchId: branchId || user.branchId,
       createdBy: createdById,
-      shippingDetails: shippingDetails ? {
-        shippingAddress: shippingDetails.shippingAddress || "",
-        shippingCity: shippingDetails.shippingCity || "",
-        shippingState: shippingDetails.shippingState || "",
-        shippingPincode: shippingDetails.shippingPincode || "",
-        shippingPhone: normalizeIndianMobile(shippingDetails.shippingPhone) || "",
-        shippingMethod: shippingDetails.shippingMethod || "home_delivery",
-        shippingCost: shippingDetails.shippingCost ? parseFloat(shippingDetails.shippingCost) : 0,
-        trackingNumber: shippingDetails.trackingNumber || "",
-        estimatedDeliveryDate: shippingDetails.estimatedDeliveryDate ? new Date(shippingDetails.estimatedDeliveryDate) : null,
-        actualDeliveryDate: shippingDetails.actualDeliveryDate ? new Date(shippingDetails.actualDeliveryDate) : null,
-        deliveryNotes: shippingDetails.deliveryNotes || "",
-        deliveryPerson: shippingDetails.deliveryPerson || "",
-        deliveryStatus: shippingDetails.deliveryStatus || "pending",
-      } : {},
+      shippingDetails: shippingDetails
+        ? {
+            shippingAddress: shippingDetails.shippingAddress || "",
+            shippingCity: shippingDetails.shippingCity || "",
+            shippingState: shippingDetails.shippingState || "",
+            shippingPincode: shippingDetails.shippingPincode || "",
+            shippingPhone:
+              normalizeIndianMobile(shippingDetails.shippingPhone) || "",
+            shippingMethod: shippingDetails.shippingMethod || "home_delivery",
+            shippingCost: shippingDetails.shippingCost
+              ? parseFloat(shippingDetails.shippingCost)
+              : 0,
+            trackingNumber: shippingDetails.trackingNumber || "",
+            deliveryNotes: shippingDetails.deliveryNotes || "",
+            deliveryPerson: shippingDetails.deliveryPerson || "",
+            deliveryStatus: shippingDetails.deliveryStatus || "pending",
+            extraField1Label: shippingDetails.extraField1Label || "",
+            extraField1Value: shippingDetails.extraField1Value || "",
+            extraField2Label: shippingDetails.extraField2Label || "",
+            extraField2Value: shippingDetails.extraField2Value || "",
+          }
+        : {},
       ...(clientOrderNumber ? {clientOrderNumber} : {}), // new field
     };
     
@@ -849,7 +862,7 @@ export const updateOrder = async (req, res) => {
       paymentNotes,
       shippingDetails,
       clientOrderNumber, // new field
-      paymentStatus,     // add
+      paymentStatus, // add
     } = req.body;
 
     // Debug logging
@@ -934,13 +947,55 @@ export const updateOrder = async (req, res) => {
       });
     }
 
-    const discountAmount = discountType === "percentage" 
-      ? (subtotal * discountValue) / 100 
-      : discountValue;
+    const discountAmount =
+      discountType === "percentage"
+        ? (subtotal * discountValue) / 100
+        : discountValue;
 
-    const taxableAmount = subtotal - discountAmount;
+    const shippingCostValue =
+      shippingDetails && shippingDetails.shippingCost
+        ? parseFloat(shippingDetails.shippingCost)
+        : 0;
+
+    const taxableAmount = subtotal - discountAmount + shippingCostValue;
     const taxAmount = (taxableAmount * taxRate) / 100;
     const totalAmount = taxableAmount + taxAmount;
+
+    // Validate GST-style shipping extra fields on backend as well
+    const isValidGSTIN = (value) => {
+      if (!value) return true;
+      const gstin = String(value).trim().toUpperCase();
+      const regex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+      return regex.test(gstin);
+    };
+
+    if (shippingDetails) {
+      const gstLikeLabels = ["gst", "g.s.t"];
+      if (
+        gstLikeLabels.some((k) =>
+          (shippingDetails.extraField1Label || "").toLowerCase().includes(k)
+        ) &&
+        shippingDetails.extraField1Value &&
+        !isValidGSTIN(shippingDetails.extraField1Value)
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid GST number in shipping details (field 1)",
+        });
+      }
+      if (
+        gstLikeLabels.some((k) =>
+          (shippingDetails.extraField2Label || "").toLowerCase().includes(k)
+        ) &&
+        shippingDetails.extraField2Value &&
+        !isValidGSTIN(shippingDetails.extraField2Value)
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid GST number in shipping details (field 2)",
+        });
+      }
+    }
 
     // Compose update data
     const updateData = {
@@ -962,21 +1017,27 @@ export const updateOrder = async (req, res) => {
       advancePayment: advancePayment ? parseFloat(advancePayment) : 0,
       paymentMethod: paymentMethod || "",
       paymentNotes: paymentNotes || "",
-      shippingDetails: shippingDetails ? {
-        shippingAddress: shippingDetails.shippingAddress || "",
-        shippingCity: shippingDetails.shippingCity || "",
-        shippingState: shippingDetails.shippingState || "",
-        shippingPincode: shippingDetails.shippingPincode || "",
-        shippingPhone: shippingDetails.shippingPhone || "",
-        shippingMethod: shippingDetails.shippingMethod || "home_delivery",
-        shippingCost: shippingDetails.shippingCost ? parseFloat(shippingDetails.shippingCost) : 0,
-        trackingNumber: shippingDetails.trackingNumber || "",
-        estimatedDeliveryDate: shippingDetails.estimatedDeliveryDate ? new Date(shippingDetails.estimatedDeliveryDate) : null,
-        actualDeliveryDate: shippingDetails.actualDeliveryDate ? new Date(shippingDetails.actualDeliveryDate) : null,
-        deliveryNotes: shippingDetails.deliveryNotes || "",
-        deliveryPerson: shippingDetails.deliveryPerson || "",
-        deliveryStatus: shippingDetails.deliveryStatus || "pending",
-      } : {},
+      shippingDetails: shippingDetails
+        ? {
+            shippingAddress: shippingDetails.shippingAddress || "",
+            shippingCity: shippingDetails.shippingCity || "",
+            shippingState: shippingDetails.shippingState || "",
+            shippingPincode: shippingDetails.shippingPincode || "",
+            shippingPhone: shippingDetails.shippingPhone || "",
+            shippingMethod: shippingDetails.shippingMethod || "home_delivery",
+            shippingCost: shippingDetails.shippingCost
+              ? parseFloat(shippingDetails.shippingCost)
+              : 0,
+            trackingNumber: shippingDetails.trackingNumber || "",
+            deliveryNotes: shippingDetails.deliveryNotes || "",
+            deliveryPerson: shippingDetails.deliveryPerson || "",
+            deliveryStatus: shippingDetails.deliveryStatus || "pending",
+            extraField1Label: shippingDetails.extraField1Label || "",
+            extraField1Value: shippingDetails.extraField1Value || "",
+            extraField2Label: shippingDetails.extraField2Label || "",
+            extraField2Value: shippingDetails.extraField2Value || "",
+          }
+        : {},
       ...(clientOrderNumber ? {clientOrderNumber} : {}), // new field
       ...(paymentStatus ? { paymentStatus } : {}),          // add
     };

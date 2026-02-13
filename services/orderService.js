@@ -103,9 +103,6 @@ class OrderService {
     if (order.status !== "completed") {
       order.status = "completed";
     }
-    if (!order.actualDeliveryDate) {
-      order.actualDeliveryDate = new Date();
-    }
     return await order.save();
   }
 
@@ -397,11 +394,17 @@ class OrderService {
         return sum + itemPrice;
       }, 0);
 
-      const discountAmount = updateData.discountType === "percentage" 
-        ? (subtotal * updateData.discountValue) / 100 
-        : updateData.discountValue;
+      const discountAmount =
+        updateData.discountType === "percentage"
+          ? (subtotal * updateData.discountValue) / 100
+          : updateData.discountValue;
 
-      const taxableAmount = subtotal - discountAmount;
+      const shippingCostValue =
+        updateData.shippingDetails && updateData.shippingDetails.shippingCost
+          ? parseFloat(updateData.shippingDetails.shippingCost)
+          : 0;
+
+      const taxableAmount = subtotal - discountAmount + shippingCostValue;
       const taxAmount = (taxableAmount * updateData.taxRate) / 100;
       const totalAmount = taxableAmount + taxAmount;
 
@@ -425,21 +428,29 @@ class OrderService {
         advancePayment: updateData.advancePayment ? parseFloat(updateData.advancePayment) : 0,
         paymentMethod: updateData.paymentMethod || undefined,
         paymentNotes: updateData.paymentNotes || "",
-        shippingDetails: updateData.shippingDetails ? {
-          shippingAddress: updateData.shippingDetails.shippingAddress || "",
-          shippingCity: updateData.shippingDetails.shippingCity || "",
-          shippingState: updateData.shippingDetails.shippingState || "",
-          shippingPincode: updateData.shippingDetails.shippingPincode || "",
-          shippingPhone: updateData.shippingDetails.shippingPhone || "",
-          shippingMethod: updateData.shippingDetails.shippingMethod || "home_delivery",
-          shippingCost: updateData.shippingDetails.shippingCost ? parseFloat(updateData.shippingDetails.shippingCost) : 0,
-          trackingNumber: updateData.shippingDetails.trackingNumber || "",
-          estimatedDeliveryDate: updateData.shippingDetails.estimatedDeliveryDate ? new Date(updateData.shippingDetails.estimatedDeliveryDate) : null,
-          actualDeliveryDate: updateData.shippingDetails.actualDeliveryDate ? new Date(updateData.shippingDetails.actualDeliveryDate) : null,
-          deliveryNotes: updateData.shippingDetails.deliveryNotes || "",
-          deliveryPerson: updateData.shippingDetails.deliveryPerson || "",
-          deliveryStatus: updateData.shippingDetails.deliveryStatus || "pending",
-        } : {},
+        shippingDetails: updateData.shippingDetails
+          ? {
+              shippingAddress: updateData.shippingDetails.shippingAddress || "",
+              shippingCity: updateData.shippingDetails.shippingCity || "",
+              shippingState: updateData.shippingDetails.shippingState || "",
+              shippingPincode: updateData.shippingDetails.shippingPincode || "",
+              shippingPhone: updateData.shippingDetails.shippingPhone || "",
+              shippingMethod:
+                updateData.shippingDetails.shippingMethod || "home_delivery",
+              shippingCost: updateData.shippingDetails.shippingCost
+                ? parseFloat(updateData.shippingDetails.shippingCost)
+                : 0,
+              trackingNumber: updateData.shippingDetails.trackingNumber || "",
+              deliveryNotes: updateData.shippingDetails.deliveryNotes || "",
+              deliveryPerson: updateData.shippingDetails.deliveryPerson || "",
+              deliveryStatus:
+                updateData.shippingDetails.deliveryStatus || "pending",
+              extraField1Label: updateData.shippingDetails.extraField1Label || "",
+              extraField1Value: updateData.shippingDetails.extraField1Value || "",
+              extraField2Label: updateData.shippingDetails.extraField2Label || "",
+              extraField2Value: updateData.shippingDetails.extraField2Value || "",
+            }
+          : {},
       };
 
       // Update order

@@ -167,24 +167,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: 'bold',
   },
-  amountDueBar: {
-    backgroundColor: '#f77f2f',
-    padding: 6,
-    marginBottom: 15,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  amountDueText: {
-    color: '#FFFFFF',
-    fontSize: 9,
-    fontWeight: 'bold',
-  },
-  amountDueValue: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
   content: {
     flexDirection: 'row',
     marginBottom: 15,
@@ -393,7 +375,7 @@ const styles = StyleSheet.create({
     width: '90%',
   },
   cardFixed: {
-    height: 120,
+    height: 170,
   },
   shippingTitle: {
     fontSize: 10,
@@ -577,12 +559,6 @@ const InvoiceDocument = (data) => {
         </View>
       </View>
 
-      {/* Payment status bar */}
-      <View style={styles.amountDueBar}>
-        <Text style={styles.amountDueText}>Payment Status: {computedPaymentStatus}</Text>
-        <Text style={styles.amountDueValue}>{amountStatusText}</Text>
-      </View>
-
      
 
       {/* Content - 3 Column Grid with equal gap */}
@@ -618,10 +594,55 @@ const InvoiceDocument = (data) => {
                 {data.shippingDetails.shippingPhone && `\nPhone: ${data.shippingDetails.shippingPhone}`}
                 {data.shippingDetails.shippingMethod && `\nMethod: ${data.shippingDetails.shippingMethod.replace('_', ' ').toUpperCase()}`}
                 {data.shippingDetails.deliveryStatus && `\nStatus: ${data.shippingDetails.deliveryStatus.replace('_', ' ').toUpperCase()}`}
-                {data.shippingDetails.estimatedDeliveryDate && `\nEst. Delivery: ${new Date(data.shippingDetails.estimatedDeliveryDate).toLocaleDateString()}`}
-                {data.shippingDetails.actualDeliveryDate && `\nDelivered: ${new Date(data.shippingDetails.actualDeliveryDate).toLocaleDateString()}`}
                 {data.shippingDetails.deliveryPerson && `\nDelivery Person: ${data.shippingDetails.deliveryPerson}`}
                 {data.shippingDetails.deliveryNotes && `\nNotes: ${data.shippingDetails.deliveryNotes}`}
+
+                {/* Generic label-based extras, if present */}
+                {data.shippingDetails.extraField1Label && data.shippingDetails.extraField1Value &&
+                  `\n${data.shippingDetails.extraField1Label}: ${data.shippingDetails.extraField1Value}`}
+                {data.shippingDetails.extraField2Label && data.shippingDetails.extraField2Value &&
+                  `\n${data.shippingDetails.extraField2Label}: ${data.shippingDetails.extraField2Value}`}
+
+                {/* Explicit method‑based naming to ensure courier/transport details are visible */}
+                {data.shippingDetails.shippingMethod === 'courier' && data.shippingDetails.extraField1Value &&
+                  `\nCourier Name: ${data.shippingDetails.extraField1Value}`}
+                {data.shippingDetails.shippingMethod === 'courier' && data.shippingDetails.extraField2Value &&
+                  `\nCourier GST: ${data.shippingDetails.extraField2Value}`}
+
+                {data.shippingDetails.shippingMethod === 'pickup' && data.shippingDetails.extraField1Value &&
+                  `\nTransport Name: ${data.shippingDetails.extraField1Value}`}
+                {data.shippingDetails.shippingMethod === 'pickup' && data.shippingDetails.extraField2Value &&
+                  `\nTransport GST : ${data.shippingDetails.extraField2Value}`}
+
+                {data.shippingDetails.shippingMethod === 'local_transport' && data.shippingDetails.extraField1Value &&
+                  `\nTransporter Name: ${data.shippingDetails.extraField1Value}`}
+                {data.shippingDetails.shippingMethod === 'local_transport' && data.shippingDetails.extraField2Value &&
+                  `\nTransport GST : ${data.shippingDetails.extraField2Value}`}
+
+                {data.shippingDetails.shippingMethod === 'customer_courier' && data.shippingDetails.extraField1Value &&
+                  `\nCustomer Courier Name: ${data.shippingDetails.extraField1Value}`}
+                {data.shippingDetails.shippingMethod === 'customer_courier' && data.shippingDetails.extraField2Value &&
+                  `\nCustomer Courier GST: ${data.shippingDetails.extraField2Value}`}
+
+                {data.shippingDetails.shippingMethod === 'express' && data.shippingDetails.extraField1Value &&
+                  `\nExpress Service: ${data.shippingDetails.extraField1Value}`}
+                {data.shippingDetails.shippingMethod === 'express' && data.shippingDetails.extraField2Value &&
+                  `\nAWB / Tracking No: ${data.shippingDetails.extraField2Value}`}
+
+                {data.shippingDetails.shippingMethod === 'aggregator' && data.shippingDetails.extraField1Value &&
+                  `\nAggregator: ${data.shippingDetails.extraField1Value}`}
+                {data.shippingDetails.shippingMethod === 'aggregator' && data.shippingDetails.extraField2Value &&
+                  `\nReference ID: ${data.shippingDetails.extraField2Value}`}
+
+                {data.shippingDetails.shippingMethod === 'home_delivery' && data.shippingDetails.extraField1Value &&
+                  `\nDelivery Partner: ${data.shippingDetails.extraField1Value}`}
+                {data.shippingDetails.shippingMethod === 'home_delivery' && data.shippingDetails.extraField2Value &&
+                  `\nVehicle Number: ${data.shippingDetails.extraField2Value}`}
+
+                {data.shippingDetails.shippingMethod === 'other' && data.shippingDetails.extraField1Value &&
+                  `\nShipping Partner: ${data.shippingDetails.extraField1Value}`}
+                {data.shippingDetails.shippingMethod === 'other' && data.shippingDetails.extraField2Value &&
+                  `\nReference: ${data.shippingDetails.extraField2Value}`}
               </Text>
             </View>
           )}
