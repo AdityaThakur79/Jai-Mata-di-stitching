@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { PDFViewer } from "@react-pdf/renderer";
 import EmployeeIdCard from "./EmployeeIdCard";
+import JsBarcode from "jsbarcode";
+
 const EmployeeIdCardPreview = ({ employee, onClose }) => {
   if (!employee) return null;
 
   const [logoDataUrl, setLogoDataUrl] = useState(null);
   const [profileImageDataUrl, setProfileImageDataUrl] = useState(null);
+  const [barcodeDataUrl, setBarcodeDataUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -30,6 +33,29 @@ const EmployeeIdCardPreview = ({ employee, onClose }) => {
       }
     };
 
+    // Generate barcode for employee profile URL
+    const generateBarcode = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        // Create URL that redirects to employee profile page
+        const profileUrl = `${window.location.origin}/employee/profile/${employee._id}`;
+        
+        JsBarcode(canvas, profileUrl, {
+          format: "CODE128",
+          width: 2,
+          height: 50,
+          displayValue: false,
+          margin: 5,
+          background: "#ffffff",
+        });
+        
+        const barcodeDataUrl = canvas.toDataURL('image/png');
+        if (isMounted) setBarcodeDataUrl(barcodeDataUrl);
+      } catch (e) {
+        console.error('Error generating barcode:', e);
+      }
+    };
+
     const logoUrl = "/images/jmd_logo.jpeg";
     toDataUrl(logoUrl).then((dataUrl) => {
       if (isMounted) setLogoDataUrl(dataUrl || null);
@@ -42,6 +68,9 @@ const EmployeeIdCardPreview = ({ employee, onClose }) => {
       });
     }
 
+    // Generate barcode
+    generateBarcode();
+
     // Set loading to false after a short delay to ensure images are processed
     setTimeout(() => {
       if (isMounted) setIsLoading(false);
@@ -50,7 +79,7 @@ const EmployeeIdCardPreview = ({ employee, onClose }) => {
     return () => {
       isMounted = false;
     };
-  }, [employee.profileImage]);
+  }, [employee.profileImage, employee._id]);
 
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
@@ -92,6 +121,7 @@ const EmployeeIdCardPreview = ({ employee, onClose }) => {
               employee={employee} 
               logoDataUrl={logoDataUrl} 
               profileImageDataUrl={profileImageDataUrl}
+              barcodeDataUrl={barcodeDataUrl}
             />
           </PDFViewer>
         </div>

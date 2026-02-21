@@ -10,7 +10,7 @@ import {
 
 // Note: Use built-in fonts (Helvetica) for maximum compatibility with react-pdf
 
-const EmployeeIdCard = ({ employee, logoDataUrl, profileImageDataUrl = null }) => {
+const EmployeeIdCard = ({ employee, logoDataUrl, profileImageDataUrl = null, barcodeDataUrl = null }) => {
   // Sample employee data with better defaults
   const defaultEmployee = {
     name: "John Doe",
@@ -111,71 +111,67 @@ const EmployeeIdCard = ({ employee, logoDataUrl, profileImageDataUrl = null }) =
            
             marginRight: mm(15),
           }}>
-            {/* Top Header - REDUCED HEIGHT */}
+            {/* Top Header - Centered with light orange background */}
             <View style={{
               position: "absolute",
               top: 0,
               left: 0,
               right: 0,
-              height: mm(16), // Further reduced from mm(22) to mm(18)
-              backgroundColor: "#FF6B35",
+              height: mm(22),
+              // backgroundColor: "#FFE8D9",
               alignItems: "center",
               justifyContent: "center",
-              flexDirection: "column",
+              flexDirection: "row",
+              borderBottomWidth: 2,
+              borderBottomStyle: "solid",
+              borderBottomColor: "#FF6B35",
+              paddingTop: mm(2),
+              paddingBottom: mm(2),
             }}>
-              <View style={{
-                alignItems: "center",
-                flexDirection: "row",
-                // Ensure equal vertical padding for balanced look
-                paddingTop: mm(2),
-                paddingBottom: mm(2),
-              }}>
-                {logoDataUrl ? (
-                  <Image src={logoDataUrl} style={{
-                    width: mm(12), // Slightly reduced from mm(14)
-                    height: mm(12), // Slightly reduced from mm(14)
-                    borderRadius: mm(1),
-                    marginRight: mm(3),
-                  }} />
-                ) : (
-                  <View style={{
-                    width: mm(10), // Reduced from mm(12)
-                    height: mm(10), // Reduced from mm(12)
-                    backgroundColor: "#ffffff",
-                    borderRadius: mm(1),
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginRight: mm(3),
-                    borderWidth: 2,
-                    borderStyle: "solid",
-                    borderColor: "#ffffff",
-                  }}>
-                    <Text style={{
-                      fontSize: 7, // Reduced from 8
-                      fontWeight: 700,
-                      color: "#FF6B35",
-                    }}>JMD</Text>
-                  </View>
-                )}
+              {logoDataUrl ? (
+                <Image src={logoDataUrl} style={{
+                  width: mm(20),
+                  height: mm(20),
+                  borderRadius: mm(2),
+                  marginRight: mm(4),
+                  borderWidth: 1,
+                  borderStyle: "solid",
+                  borderColor: "#FF6B35",
+                }} />
+              ) : (
                 <View style={{
-                  flexDirection: "column",
-                  alignItems: "flex-start",
+                  width: mm(18),
+                  height: mm(18),
+                  backgroundColor: "#FF6B35",
+                  borderRadius: mm(2),
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginRight: mm(4),
+                  borderWidth: 2,
+                  borderStyle: "solid",
+                  borderColor: "#FF6B35",
                 }}>
                   <Text style={{
-                    fontSize: 10, // Reduced from 12
+                    fontSize: 11,
                     fontWeight: 700,
                     color: "#ffffff",
-                    letterSpacing: 0.5,
-                    lineHeight: 1.2,
-                  }}>JMD STITCHING PVT LTD</Text>
+                  }}>JMD</Text>
                 </View>
-              </View>
+              )}
+              <Text style={{
+                fontSize: 13,
+                fontWeight: 700,
+                color: "#000000",
+                letterSpacing: 0.5,
+                lineHeight: 1.2,
+                textAlign: "center",
+              }}>JMD STITCHING PVT LTD</Text>
             </View>
 
             {/* Employee Photo - Balanced Size */}
             <View style={{
               position: "absolute",
-              top: mm(20), // Moved up since header is shorter
+              top: mm(26),
               left: 0,
               right: 0,
               alignItems: "center",
@@ -183,10 +179,10 @@ const EmployeeIdCard = ({ employee, logoDataUrl, profileImageDataUrl = null }) =
               zIndex: 10,
             }}>
               <View style={{
-                width: mm(32), // Balanced size
-                height: mm(32), // Balanced size
+                width: mm(32),
+                height: mm(32),
                 backgroundColor: "#ffffff",
-                borderRadius: mm(10), // Increased from mm(8)
+                borderRadius: mm(10),
                 borderWidth: 2,
                 borderStyle: "solid",
                 borderColor: "#FF6B35",
@@ -199,22 +195,22 @@ const EmployeeIdCard = ({ employee, logoDataUrl, profileImageDataUrl = null }) =
                   <Image 
                     src={getProfileImage()} 
                     style={{
-                      width: mm(28), // Balanced size
-                      height: mm(28), // Balanced size
-                      borderRadius: mm(8), // Increased from mm(6)
+                      width: mm(28),
+                      height: mm(28),
+                      borderRadius: mm(8),
                     }}
                   />
                 ) : (
                   <View style={{
-                    width: mm(28), // Balanced size
-                    height: mm(28), // Balanced size
+                    width: mm(28),
+                    height: mm(28),
                     backgroundColor: "#f5f5f5",
-                    borderRadius: mm(8), // Increased from mm(6)
+                    borderRadius: mm(8),
                     alignItems: "center",
                     justifyContent: "center",
                   }}>
                     <Text style={{
-                      fontSize: 16, // Balanced with image size
+                      fontSize: 16,
                       fontWeight: 700,
                       color: "#FF6B35",
                     }}>
@@ -225,40 +221,59 @@ const EmployeeIdCard = ({ employee, logoDataUrl, profileImageDataUrl = null }) =
               </View>
               
               <View style={{
-                textAlign: "center",
-                marginBottom: mm(2), // reduce gap under name/role
+                alignItems: "center",
+                marginBottom: mm(1.5),
               }}>
                 <Text style={{
-                  fontSize: 14,
+                  fontSize: 12,
                   fontWeight: 700,
                   color: "#000000",
-                  marginBottom: mm(1),
+                  marginBottom: mm(0.5),
                   letterSpacing: -0.2,
+                  textAlign: "center",
                 }}>{emp.name || "Employee Name"}</Text>
                 <Text style={{
-                  fontSize: 10,
+                  fontSize: 8,
                   color: "#ffffff",
                   fontWeight: 700,
                   backgroundColor: "#FF6B35",
-                  paddingTop: mm(1),
-                  paddingBottom: mm(1),
-                  paddingLeft: mm(4),
-                  paddingRight: mm(4),
-                  borderRadius: mm(4),
+                  paddingTop: mm(0.5),
+                  paddingBottom: mm(0.5),
+                  paddingLeft: mm(3),
+                  paddingRight: mm(3),
+                  borderRadius: mm(3),
                   textTransform: "uppercase",
-                  letterSpacing: 0.5,
+                  letterSpacing: 0.3,
                   textAlign: "center",
                   alignSelf: "center",
+                  marginBottom: mm(1),
                 }}>
                   {(emp.role || "Position") + (Array.isArray(emp.secondaryRoles) && emp.secondaryRoles.length > 0 ? ` / ${emp.secondaryRoles.join(", ")}` : "")}
                 </Text>
+                
+                {/* Barcode Section */}
+                {barcodeDataUrl && (
+                  <View style={{
+                    alignItems: "center",
+                    marginTop: mm(0.5),
+                    marginBottom: mm(0.5),
+                  }}>
+                    <Image 
+                      src={barcodeDataUrl} 
+                      style={{
+                        width: mm(50),
+                        height: mm(10),
+                      }}
+                    />
+                  </View>
+                )}
               </View>
             </View>
 
             {/* Information Grid - Adjusted to avoid footer overlap and reduce gap */}
             <View style={{
               position: "absolute",
-              top: mm(82), // Move grid closer to profile block
+              top: mm(87), // Adjusted for smaller name/role/barcode
               left: mm(4),
               right: mm(4),
               zIndex: 10,
@@ -406,13 +421,13 @@ const EmployeeIdCard = ({ employee, logoDataUrl, profileImageDataUrl = null }) =
               bottom: 0,
               left: 0,
               right: 0,
-              height: mm(12),
+              height: mm(8),
               backgroundColor: "#FF6B35",
               alignItems: "center",
               justifyContent: "center",
             }}>
               <Text style={{
-                fontSize: 8,
+                fontSize: 6,
                 fontWeight: 700,
                 color: "#ffffff",
                 textAlign: "center",

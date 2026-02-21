@@ -43,6 +43,7 @@ import EmployeeIdCard from "./EmployeeIdCard";
 import EmployeeIdCardPreview from "./EmployeeIdCardPreview";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import axios from "axios";
+import JsBarcode from "jsbarcode";
 
 const Employee = () => {
   const navigate = useNavigate();
@@ -73,6 +74,7 @@ const Employee = () => {
   const [profileImageDataUrl, setProfileImageDataUrl] = useState(null);
   const [isConvertingImage, setIsConvertingImage] = useState(false);
   const [logoDataUrl, setLogoDataUrl] = useState(null);
+  const [barcodeDataUrl, setBarcodeDataUrl] = useState(null);
 
   const handleViewEmployee = async (employeeId) => {
     setDrawerOpen(true);
@@ -104,6 +106,26 @@ const Employee = () => {
     } else {
       setProfileImageDataUrl(null);
       setIsConvertingImage(false);
+    }
+
+    // Generate barcode for employee profile URL
+    try {
+      const canvas = document.createElement('canvas');
+      const profileUrl = `${window.location.origin}/employee/profile/${employee._id}`;
+      
+      JsBarcode(canvas, profileUrl, {
+        format: "CODE128",
+        width: 2,
+        height: 50,
+        displayValue: false,
+        margin: 5,
+        background: "#ffffff",
+      });
+      
+      setBarcodeDataUrl(canvas.toDataURL('image/png'));
+    } catch (e) {
+      console.error('Error generating barcode:', e);
+      setBarcodeDataUrl(null);
     }
   };
 
@@ -149,7 +171,7 @@ const Employee = () => {
         employee={selectedEmployee} 
         logoDataUrl={logoDataUrl}
         profileImageDataUrl={profileImageDataUrl}
-        // barcodeDataUrl={barcodeDataUrl}
+        barcodeDataUrl={barcodeDataUrl}
       />
     );
   };
