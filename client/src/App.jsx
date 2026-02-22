@@ -41,6 +41,7 @@ import UpdateEmployee from "./components/admin/content/Employee/UpdateEmployee.j
 import Employee from "./components/admin/content/Employee/Employee.jsx";
 import EmployeeAdvance from "./components/admin/content/Employee/EmployeeAdvance.jsx";
 import EmployeeDetail from "./components/admin/content/Employee/EmployeeDetail.jsx";
+import BarcodeScanPage from "./components/admin/content/Employee/BarcodeScanPage.jsx";
 import Branches from "./components/admin/content/Branch/Branches.jsx";
 
 // Employee Components
@@ -339,6 +340,10 @@ const appRouter = createBrowserRouter([
       {
         path: "employees",
         element: <Employee />,
+      },
+      {
+        path: "scan-employee",
+        element: <BarcodeScanPage />,
       },
       {
         path: "employee-advance",

@@ -108,12 +108,12 @@ const Employee = () => {
       setIsConvertingImage(false);
     }
 
-    // Generate barcode for employee profile URL
+    // Generate barcode with employee ID
     try {
       const canvas = document.createElement('canvas');
-      const profileUrl = `${window.location.origin}/employee/profile/${employee._id}`;
+      const employeeId = employee.employeeId || employee._id;
       
-      JsBarcode(canvas, profileUrl, {
+      JsBarcode(canvas, employeeId, {
         format: "CODE128",
         width: 2,
         height: 50,

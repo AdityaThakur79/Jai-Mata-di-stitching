@@ -415,23 +415,23 @@ const EmployeeIdCard = ({ employee, logoDataUrl, profileImageDataUrl = null, bar
               </View>
             </View>
 
-            {/* Bottom Section - reduced height */}
+            {/* Bottom Section - compact */}
             <View style={{
               position: "absolute",
               bottom: 0,
               left: 0,
               right: 0,
-              height: mm(8),
+              height: mm(6),
               backgroundColor: "#FF6B35",
               alignItems: "center",
               justifyContent: "center",
             }}>
               <Text style={{
-                fontSize: 6,
+                fontSize: 5,
                 fontWeight: 700,
                 color: "#ffffff",
                 textAlign: "center",
-                letterSpacing: 0.2,
+                letterSpacing: 0.15,
               }}>YOUR SATISFACTION IS OUR FIRST PRIORITY</Text>
             </View>
           </View>

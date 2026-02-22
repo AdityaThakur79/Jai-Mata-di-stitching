@@ -33,14 +33,14 @@ const EmployeeIdCardPreview = ({ employee, onClose }) => {
       }
     };
 
-    // Generate barcode for employee profile URL
+    // Generate barcode with employee ID
     const generateBarcode = () => {
       try {
         const canvas = document.createElement('canvas');
-        // Create URL that redirects to employee profile page
-        const profileUrl = `${window.location.origin}/employee/profile/${employee._id}`;
+        // Encode employee ID for barcode scanner
+        const employeeId = employee.employeeId || employee._id;
         
-        JsBarcode(canvas, profileUrl, {
+        JsBarcode(canvas, employeeId, {
           format: "CODE128",
           width: 2,
           height: 50,

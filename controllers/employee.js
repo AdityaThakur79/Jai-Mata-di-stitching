@@ -201,10 +201,19 @@ export const getAllEmployees = async (req, res) => {
 export const getEmployeeById = async (req, res) => {
   try {
     const { employeeId } = req.body;
-    const employee = await Employee.findOne({ employeeId }).select("-password");
+    
+    // Try to find by employeeId field first (string ID like "JMD-202509-0001")
+    let employee = await Employee.findOne({ employeeId }).select("-password");
+    
+    // If not found and employeeId looks like a MongoDB ObjectId, try searching by _id
+    if (!employee && employeeId && employeeId.match(/^[0-9a-fA-F]{24}$/)) {
+      employee = await Employee.findById(employeeId).select("-password");
+    }
+    
     if (!employee) {
       return res.status(404).json({ success: false, message: "Employee not found" });
     }
+    
     res.status(200).json({
       success: true,
       message: "Employee fetched successfully",
