@@ -8,6 +8,8 @@ import {
   getInvoiceHTML,
   updatePaymentStatus,
   deleteInvoice,
+  createQuotation,
+  updateQuotationStatus,
 } from "../controllers/invoice.js";
 
 import isAuthenticated from "../middlewares/isAuthenticated.js";
@@ -16,6 +18,7 @@ const router = express.Router();
 
 // Create invoice from pending order
 router.post("/create", isAuthenticated, createInvoice);
+router.post("/quotation/create", isAuthenticated, createQuotation);
 
 // Get all invoices with pagination and search
 router.get("/all", isAuthenticated, getAllInvoices);
@@ -34,6 +37,7 @@ router.get("/:invoiceId/html", isAuthenticated, getInvoiceHTML);
 
 // Update payment status
 router.patch("/:invoiceId/payment", isAuthenticated, updatePaymentStatus);
+router.patch("/:invoiceId/quotation-status", isAuthenticated, updateQuotationStatus);
 
 // Delete invoice
 router.delete("/:invoiceId", isAuthenticated, deleteInvoice);

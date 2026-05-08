@@ -97,7 +97,7 @@ const Sidebar = () => {
             </AccordionItem>
             <AccordionItem value="item-1">
               <Link
-                to="/admin/branches"
+                to="/employee/branches"
                 className="flex items-center gap-2 hover:text-[#EB811F] py-4 px-0"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
@@ -115,7 +115,7 @@ const Sidebar = () => {
               </AccordionTrigger>
               <AccordionContent>
                 <Link
-                  to="/admin/services"
+                  to="/employee/website/services"
                   className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -125,7 +125,7 @@ const Sidebar = () => {
               </AccordionContent>
               <AccordionContent>
                 <Link
-                  to="/admin/enquiries"
+                  to="/employee/website/enquiries"
                   className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -144,7 +144,7 @@ const Sidebar = () => {
               </AccordionTrigger>
               <AccordionContent>
                 <Link
-                  to="/admin/invoices"
+                  to="/employee/invoices"
                   className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -193,7 +193,7 @@ const Sidebar = () => {
               </AccordionTrigger>
               <AccordionContent>
                 <Link
-                  to="/admin/pending-orders"
+                  to="/employee/pending-orders"
                   className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -311,7 +311,7 @@ const Sidebar = () => {
               </AccordionTrigger>
               <AccordionContent>
                 <Link
-                  to="/admin/employees"
+                  to="/employee/employees"
                   className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -321,7 +321,7 @@ const Sidebar = () => {
               </AccordionContent>
               <AccordionContent>
                 <Link
-                  to="/admin/scan-employee"
+                  to="/employee/scan-employee"
                   className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -331,7 +331,7 @@ const Sidebar = () => {
               </AccordionContent>
               <AccordionContent>
                 <Link
-                  to="/admin/employee-advance"
+                  to="/employee/employee-advance"
                   className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -375,7 +375,7 @@ const Sidebar = () => {
 
             <AccordionItem value="item-10">
               <Link
-                to="/admin/create-employee"
+                to="/employee/create-employee"
                 className="flex items-center gap-2 hover:text-[#EB811F] py-4 px-0"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
@@ -386,7 +386,7 @@ const Sidebar = () => {
 
             <AccordionItem value="item-12">
               <Link
-                to="/admin/create-client"
+                to="/employee/create-client"
                 className="flex items-center gap-2 hover:text-[#EB811F] py-4 px-0"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
@@ -404,7 +404,7 @@ const Sidebar = () => {
               </AccordionTrigger>
               <AccordionContent>
                 <Link
-                  to="/admin/customers"
+                  to="/employee/customers"
                   className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -414,7 +414,7 @@ const Sidebar = () => {
               </AccordionContent>
               <AccordionContent>
                 <Link
-                  to="/admin/clients"
+                  to="/employee/clients"
                   className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -424,7 +424,7 @@ const Sidebar = () => {
               </AccordionContent>
              <AccordionContent>
                 <Link
-                  to="/admin/items"
+                  to="/employee/items"
                   className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -434,7 +434,7 @@ const Sidebar = () => {
               </AccordionContent>
                  <AccordionContent>
                 <Link
-                  to="/admin/fabrics"
+                  to="/employee/fabrics"
                   className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -444,7 +444,7 @@ const Sidebar = () => {
               </AccordionContent>
                <AccordionContent>
                 <Link
-                  to="/admin/masters"
+                  to="/employee/masters"
                   className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -454,7 +454,7 @@ const Sidebar = () => {
               </AccordionContent>
                <AccordionContent>
                 <Link
-                  to="/admin/salesmans"
+                  to="/employee/salesmans"
                   className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -464,7 +464,7 @@ const Sidebar = () => {
               </AccordionContent>
                <AccordionContent>
                 <Link
-                  to="/admin/styles"
+                  to="/employee/styles"
                   className="flex items-center gap-2 hover:text-[#EB811F]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -476,7 +476,7 @@ const Sidebar = () => {
 
              <AccordionItem value="item-12">
               <Link
-                to="/admin/create-pending-order"
+                to="/employee/create-pending-order"
                 className="flex items-center gap-2 hover:text-[#EB811F] py-4 px-0"
                 onClick={() => setIsMobileMenuOpen(false)}
               >

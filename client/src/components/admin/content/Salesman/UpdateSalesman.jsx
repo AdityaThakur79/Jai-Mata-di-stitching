@@ -62,7 +62,7 @@ const UpdateSalesman = () => {
   useEffect(() => {
     if (isUpdated) {
       toast.success("Salesman Updated Successfully");
-      setTimeout(() => navigate("/admin/salesmans"), 1500);
+      setTimeout(() => navigate("/employee/salesmans"), 1500);
     } else if (error) {
       toast.error(error?.data?.message || "Failed to update salesman");
     }
@@ -113,7 +113,7 @@ const UpdateSalesman = () => {
         </div>
 
         <div className="flex gap-2 mt-6">
-          <Button variant="outline" onClick={() => navigate("/admin/salesmans")}>
+          <Button variant="outline" onClick={() => navigate("/employee/salesmans")}>
             Back
           </Button>
           <Button onClick={handleUpdate} disabled={isLoading}>

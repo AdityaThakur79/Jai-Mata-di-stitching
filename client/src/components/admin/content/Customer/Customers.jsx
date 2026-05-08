@@ -152,7 +152,7 @@ const Customers = () => {
                 </SelectContent>
               </Select>
 
-              <Button onClick={() => navigate("/admin/create-customer")}>
+              <Button onClick={() => navigate("/employee/create-customer")}>
                 Add Customer
               </Button>
 
@@ -312,7 +312,7 @@ const Customers = () => {
                         <Button
                           className="p-2 bg-orange-100 text-orange-600 hover:bg-orange-200"
                           onClick={() =>
-                            navigate("/admin/update-customer", {
+                            navigate("/employee/update-customer", {
                               state: { customerId: customer._id },
                             })
                           }

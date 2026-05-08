@@ -128,7 +128,7 @@ const Salesmans = () => {
                 </SelectContent>
               </Select>
 
-              <Button onClick={() => navigate("/admin/create-salesman")}>
+              <Button onClick={() => navigate("/employee/create-salesman")}>
                 Add Salesman
               </Button>
               <Button className="p-2" onClick={() => refetch()}>
@@ -211,7 +211,7 @@ const Salesmans = () => {
                       <Button
                         className="p-2 bg-orange-100 text-orange-600 hover:bg-orange-200"
                         onClick={() =>
-                          navigate("/admin/update-salesman", {
+                          navigate("/employee/update-salesman", {
                             state: { salesmanId: salesman._id },
                           })
                         }

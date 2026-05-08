@@ -80,7 +80,7 @@ const CreateCustomer = () => {
   useEffect(() => {
     if (isSuccess) {
       toast.success(data?.message || "Customer created successfully");
-      navigate("/admin/customers");
+      navigate("/employee/customers");
     } else if (isError) {
       toast.error(error?.data?.message || "Failed to create customer");
     }
@@ -224,7 +224,7 @@ const CreateCustomer = () => {
       </div>
 
       <div className="flex gap-2 mt-6">
-        <Button variant="outline" onClick={() => navigate("/admin/customers")}>
+        <Button variant="outline" onClick={() => navigate("/employee/customers")}>
           Cancel
         </Button>
         <Button disabled={isLoading} onClick={handleSubmit}>

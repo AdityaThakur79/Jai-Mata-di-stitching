@@ -8,7 +8,7 @@ const invoiceItemSchema = new mongoose.Schema({
   itemType: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "ItemMaster",
-    required: true,
+    required: false,
   },
   fabric: {
     type: mongoose.Schema.Types.ObjectId,
@@ -72,8 +72,9 @@ const invoiceSchema = new mongoose.Schema({
   pendingOrder: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "PendingOrder",
-    required: true,
-    unique: true, // One invoice per pending order
+    required: false,
+    unique: true, // One invoice per pending order (for invoice documents)
+    sparse: true,
   },
   
   // Customer Details (copied from pending order for reference)
@@ -162,6 +163,36 @@ const invoiceSchema = new mongoose.Schema({
     type: String,
     maxLength: 1000,
   },
+
+  // Invoice/quotation classification
+  documentType: {
+    type: String,
+    enum: ["invoice", "quotation"],
+    default: "invoice",
+    index: true,
+  },
+  invoiceType: {
+    type: String,
+    enum: ["mixed", "fabric", "stitching"],
+    default: "mixed",
+    index: true,
+  },
+  quotationStatus: {
+    type: String,
+    enum: ["draft", "sent", "accepted", "rejected", "expired"],
+    default: "draft",
+  },
+  quotationReference: {
+    type: String,
+    default: "",
+  },
+  sentVia: {
+    type: String,
+    enum: ["whatsapp", "email", "manual", ""],
+    default: "",
+  },
+  sentAt: Date,
+  validUntil: Date,
   
   // Billing Staff
   biller: {
@@ -176,7 +207,7 @@ const invoiceSchema = new mongoose.Schema({
   // Invoice Status
   status: {
     type: String,
-    enum: ["draft", "generated", "sent", "paid", "cancelled"],
+    enum: ["draft", "generated", "sent", "paid", "cancelled", "approved"],
     default: "draft",
   },
   

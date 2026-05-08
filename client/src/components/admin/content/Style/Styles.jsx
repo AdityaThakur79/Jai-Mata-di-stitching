@@ -122,7 +122,7 @@ const Styles = () => {
                 ))}
               </SelectContent>
             </Select>
-            <Button onClick={() => navigate("/admin/create-style")}>
+            <Button onClick={() => navigate("/employee/create-style")}>
               Add Style
             </Button>
             <Button className="p-2" onClick={refetch}>
@@ -256,7 +256,7 @@ const Styles = () => {
                         <Button
                           className="p-2 bg-orange-100 text-orange-600 hover:bg-orange-200"
                           onClick={() =>
-                            navigate("/admin/update-style", {
+                            navigate("/employee/update-style", {
                               state: { styleId: style._id },
                             })
                           }

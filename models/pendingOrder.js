@@ -17,10 +17,7 @@ const pendingOrderItemSchema = new mongoose.Schema({
   },
   fabricMeters: {
   type: Number,
-  min: 2,
-  required: function () {
-    return this.fabric != null;
-  },
+  min: 0,
 },
   style: {
     type: mongoose.Schema.Types.ObjectId,
@@ -40,6 +37,30 @@ const pendingOrderItemSchema = new mongoose.Schema({
   // orderImagePublicId: String,
   designNumber: String,
   description: String,
+  clientOrderNumber: String,
+  alteration: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
+  handwork: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
+  otherCharges: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
+  itemStatus: {
+    type: String,
+    enum: ["pending", "in_progress", "partial_ready", "ready"],
+    default: "pending",
+  },
+  itemStatusUpdatedAt: {
+    type: Date,
+  },
 }, { _id: false });
 
 
@@ -78,7 +99,22 @@ const pendingOrderSchema = new mongoose.Schema({
 
   status: {
     type: String,
-    enum: ["pending", "billed", "expired"],
+    enum: [
+      "pending",
+      "confirmed",
+      "in_progress",
+      "measurement_taken",
+      "cutting",
+      "stitching",
+      "quality_check",
+      "ready_for_delivery",
+      "out_for_delivery",
+      "delivered",
+      "completed",
+      "on_hold",
+      "billed",
+      "expired",
+    ],
     default: "pending",
   },
 
@@ -95,6 +131,109 @@ const pendingOrderSchema = new mongoose.Schema({
 
   expiresAt: {
     type: Date,  
+  },
+  expectedDeliveryDate: {
+    type: Date,
+  },
+  priority: {
+    type: String,
+    enum: ["low", "medium", "high", "urgent"],
+    default: "medium",
+  },
+  subtotal: {
+    type: Number,
+    default: 0,
+  },
+  discountType: {
+    type: String,
+    enum: ["percentage", "fixed"],
+    default: "percentage",
+  },
+  discountValue: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
+  discountAmount: {
+    type: Number,
+    default: 0,
+  },
+  taxableAmount: {
+    type: Number,
+    default: 0,
+  },
+  taxRate: {
+    type: Number,
+    default: 5,
+  },
+  taxAmount: {
+    type: Number,
+    default: 0,
+  },
+  totalAmount: {
+    type: Number,
+    default: 0,
+  },
+  advancePayment: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
+  paymentStatus: {
+    type: String,
+    enum: ["pending", "partial", "paid", "overdue", "refunded"],
+    default: "pending",
+  },
+  paymentMethod: {
+    type: String,
+    enum: ["cash", "card", "upi", "bank_transfer", "cheque", "other"],
+  },
+  paymentNotes: {
+    type: String,
+  },
+  notes: {
+    type: String,
+  },
+  specialInstructions: {
+    type: String,
+  },
+  shippingDetails: {
+    shippingAddress: String,
+    shippingCity: String,
+    shippingState: String,
+    shippingPincode: String,
+    shippingPhone: String,
+    shippingMethod: {
+      type: String,
+      enum: [
+        "pickup",
+        "home_delivery",
+        "courier",
+        "express",
+        "local_transport",
+        "customer_courier",
+        "aggregator",
+        "other",
+      ],
+      default: "home_delivery",
+    },
+    shippingCost: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    extraField1Label: String,
+    extraField1Value: String,
+    extraField2Label: String,
+    extraField2Value: String,
+    deliveryNotes: String,
+    deliveryPerson: String,
+    deliveryPersonContact: String,
+    deliveryStatus: {
+      type: String,
+      enum: ["pending", "shipped", "in_transit", "out_for_delivery", "delivered", "failed"],
+      default: "pending",
+    },
   },
   branchId: {
     type: mongoose.Schema.Types.ObjectId,

@@ -3,8 +3,10 @@ import Client from "../models/client.js";
 import ItemMaster from "../models/item.js";
 import Fabric from "../models/fabric.js";
 import Style from "../models/style.js";
+import TailorSlip from "../models/tailorSlip.js";
 import Branch from "../models/branch.js";
 import Employee from "../models/employee.js";
+import { generateItemToken } from "../utils/common/generateItemToken.js";
 import { v2 as cloudinary } from "cloudinary";
 import fs from 'fs';
 import path from 'path';
@@ -32,6 +34,47 @@ const convertImageToBase64 = (imagePath) => {
     console.error('Error converting image to base64:', error);
     return null;
   }
+};
+
+const createTailorSlipsForClientOrder = async (orderDoc) => {
+  if (!orderDoc || ["completed", "cancelled"].includes(orderDoc.status)) return;
+  if (!Array.isArray(orderDoc.items) || orderDoc.items.length === 0) return;
+
+  const itemTypeIds = orderDoc.items.map((item) => item.itemType).filter(Boolean);
+  const itemTypes = await ItemMaster.find({ _id: { $in: itemTypeIds } }).select("name stitchingCharge");
+  const itemTypeMap = new Map(itemTypes.map((item) => [String(item._id), item]));
+
+  const slips = orderDoc.items.map((item, index) => {
+    const itemType = itemTypeMap.get(String(item.itemType));
+    const quantity = Number(item.quantity || 1);
+    const tailoringRate = Number(itemType?.stitchingCharge || 0);
+    const itemCode = `CO-${generateItemToken()}-${index + 1}`;
+    const slipNumber = `SLIP-${orderDoc.orderNumber}-${String(index + 1).padStart(2, "0")}`;
+
+    return {
+      slipNumber,
+      barcodeValue: slipNumber,
+      order: orderDoc._id,
+      tokenNumber: orderDoc.orderNumber || "",
+      customerName: orderDoc.clientDetails?.name || "",
+      itemCode,
+      itemType: item.itemType,
+      itemTypeName: itemType?.name || "",
+      styleName: item.style?.styleName || "",
+      fabric: item.fabric,
+      quantity,
+      measurement: item.measurement || {},
+      designNumber: item.designNumber || "",
+      description: item.description || "",
+      notes: orderDoc.notes || "",
+      specialInstructions: orderDoc.specialInstructions || item.specialInstructions || "",
+      tailoringRate,
+      earningAmount: tailoringRate * quantity,
+      branchId: orderDoc.branchId,
+    };
+  });
+
+  await TailorSlip.insertMany(slips, { ordered: true });
 };
 
 // Create new order
@@ -339,6 +382,7 @@ export const createOrder = async (req, res) => {
     };
     
     const order = await Order.create(orderData);
+    await createTailorSlipsForClientOrder(order);
 
     // Populate the order with references
     const populatedOrder = await Order.findById(order._id)

@@ -50,7 +50,7 @@ const CreateStyle = () => {
   useEffect(() => {
     if (isSuccess) {
       toast.success(data?.message || "Style created successfully");
-      navigate("/admin/styles");
+      navigate("/employee/styles");
     } else if (isError) {
       toast.error(error?.data?.message || "Failed to create style");
     }
@@ -122,7 +122,7 @@ const CreateStyle = () => {
       </div>
 
       <div className="flex gap-2 mt-6">
-        <Button variant="outline" onClick={() => navigate("/admin/styles")}>
+        <Button variant="outline" onClick={() => navigate("/employee/styles")}>
           Cancel
         </Button>
         <Button disabled={isLoading} onClick={handleSubmit}>

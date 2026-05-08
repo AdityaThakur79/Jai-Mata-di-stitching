@@ -10,6 +10,7 @@ import {
   UserCircle2,
   Loader2,
   EyeIcon,
+  Pencil,
   FileText,
   Trash2,
   Search,
@@ -18,6 +19,8 @@ import {
   Calendar,
   Clock,
   Receipt,
+  Download,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,8 +31,13 @@ import {
   useGetAllPendingOrdersQuery,
   useDeletePendingOrderMutation,
   useGetPendingOrderByIdMutation,
-  useGetRecentPendingOrdersQuery,
+  useUpdatePendingOrderStatusMutation,
 } from "@/features/api/pendingOrderApi";
+import {
+  useCreateInvoiceMutation,
+  useGenerateInvoicePDFMutation,
+  useGetInvoiceByIdQuery,
+} from "@/features/api/invoiceApi";
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -60,6 +68,8 @@ import {
 } from "@/components/ui/select";
 import { Drawer } from "antd";
 import { MdEmail } from "react-icons/md";
+import { PDFViewer } from "@react-pdf/renderer";
+import InvoiceDocument from "@/utils/invoiceTemplate.jsx";
 
 const PendingOrders = () => {
   const navigate = useNavigate();
@@ -69,8 +79,10 @@ const PendingOrders = () => {
   const debouncedSearch = useDebounce(search, 500);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState(null);
+  const [showInvoiceViewer, setShowInvoiceViewer] = useState(false);
 
-  const { data, isLoading, refetch } = useGetRecentPendingOrdersQuery({
+  const { data, isLoading, refetch } = useGetAllPendingOrdersQuery({
     page: currentPage,
     limit,
     search: debouncedSearch,
@@ -79,6 +91,62 @@ const PendingOrders = () => {
   const [deletePendingOrder, { isSuccess, isError }] =
     useDeletePendingOrderMutation();
   const [getPendingOrderById] = useGetPendingOrderByIdMutation();
+  const [updatePendingOrderStatus, { isLoading: isUpdatingStatus }] =
+    useUpdatePendingOrderStatusMutation();
+  const [createInvoice, { isLoading: isCreatingInvoice }] =
+    useCreateInvoiceMutation();
+  const [generateInvoicePDF, { isLoading: isDownloadingInvoice }] =
+    useGenerateInvoicePDFMutation();
+  const { data: invoiceDetails } = useGetInvoiceByIdQuery(selectedInvoiceId, {
+    skip: !selectedInvoiceId,
+  });
+
+  const mapInvoiceToTemplateData = (invoiceObj) => {
+    if (!invoiceObj) return null;
+    return {
+      invoiceNumber: invoiceObj.invoiceNumber,
+      invoiceDate: new Date(invoiceObj.billDate || Date.now()).toLocaleDateString("en-IN"),
+      dueDate: new Date(invoiceObj.dueDate || Date.now()).toLocaleDateString("en-IN"),
+      companyName: "JMD STITCHING PRIVATE LIMITED",
+      companyAddress: invoiceObj.branchId?.address || "",
+      companyPhone: invoiceObj.branchId?.phone || "",
+      companyEmail: invoiceObj.branchId?.email || "",
+      companyGST: invoiceObj.branchId?.gst || "",
+      companyPAN: invoiceObj.branchId?.pan || "",
+      clientName: invoiceObj.customer?.name || "",
+      clientMobile: invoiceObj.customer?.mobile || "",
+      clientEmail: invoiceObj.customer?.email || "",
+      clientAddress: invoiceObj.customer?.address || "",
+      clientCity: invoiceObj.customer?.city || "",
+      clientState: invoiceObj.customer?.state || "",
+      clientPincode: invoiceObj.customer?.pincode || "",
+      subtotal: invoiceObj.subtotal || 0,
+      taxableAmount: invoiceObj.subtotal - (invoiceObj.discountAmount || 0) || 0,
+      taxRate: invoiceObj.gstPercentage || 0,
+      taxAmount: invoiceObj.gstAmount || 0,
+      discountAmount: invoiceObj.discountAmount || 0,
+      totalAmount: invoiceObj.totalAmount || 0,
+      paymentStatus: invoiceObj.paymentStatus || "pending",
+      paidAmount: invoiceObj.paidAmount || 0,
+      pendingAmount: invoiceObj.balanceAmount || 0,
+      branchQrCodeImage: invoiceObj.branchId?.qrCodeImage || "",
+      shippingDetails: invoiceObj.pendingOrder?.shippingDetails || {},
+      items: (invoiceObj.items || []).map((item) => ({
+        name: item?.itemType?.name || "Item",
+        quantity: Number(item?.quantity) || 1,
+        unitPrice:
+          (item?.fabricAmount || 0) +
+          (item?.stitchingAmount || 0) +
+          ((item?.alteration || 0) + (item?.handwork || 0) + (item?.otherCharges || 0)),
+        totalPrice: item?.totalAmount || 0,
+        description: item?.description || "",
+        designNumber: item?.designNumber || "",
+        alteration: Number(item?.alteration) || 0,
+        handwork: Number(item?.handwork) || 0,
+        otherCharges: Number(item?.otherCharges) || 0,
+      })),
+    };
+  };
 
   const handleDelete = async (orderId) => {
     try {
@@ -88,8 +156,50 @@ const PendingOrders = () => {
     }
   };
 
-  const handleGenerateBill = (orderId) => {
-    navigate("/admin/generate-bill", { state: { orderId } });
+  const handleGenerateInvoice = async (orderId) => {
+    try {
+      const dueDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0];
+      const response = await createInvoice({
+        pendingOrderId: orderId,
+        dueDate,
+      });
+
+      if (response?.data?.invoice?._id) {
+        toast.success("Invoice generated successfully");
+        setSelectedInvoiceId(response.data.invoice._id);
+        setShowInvoiceViewer(true);
+        refetch();
+      } else {
+        toast.error(response?.error?.data?.message || "Failed to generate invoice");
+      }
+    } catch (error) {
+      toast.error(error?.data?.message || "Failed to generate invoice");
+    }
+  };
+
+  const handleOpenInvoice = (invoiceId) => {
+    if (!invoiceId) {
+      toast.error("Invoice not found for this order");
+      return;
+    }
+    setSelectedInvoiceId(invoiceId);
+    setShowInvoiceViewer(true);
+  };
+
+  const handleStatusChange = async (id, status) => {
+    try {
+      const response = await updatePendingOrderStatus({ id, status });
+      if (response?.data?.order) {
+        toast.success("Status updated");
+        refetch();
+      } else {
+        toast.error(response?.error?.data?.message || "Failed to update status");
+      }
+    } catch (error) {
+      toast.error(error?.data?.message || "Failed to update status");
+    }
   };
 
   useEffect(() => {
@@ -127,6 +237,17 @@ const PendingOrders = () => {
   const getStatusBadge = (status) => {
     const statusConfig = {
       pending: { variant: "secondary", text: "Pending" },
+      confirmed: { variant: "secondary", text: "Confirmed" },
+      in_progress: { variant: "secondary", text: "In Progress" },
+      measurement_taken: { variant: "secondary", text: "Measurement Taken" },
+      cutting: { variant: "secondary", text: "Cutting" },
+      stitching: { variant: "secondary", text: "Stitching" },
+      quality_check: { variant: "secondary", text: "Quality Check" },
+      ready_for_delivery: { variant: "secondary", text: "Ready for Delivery" },
+      out_for_delivery: { variant: "secondary", text: "Out for Delivery" },
+      delivered: { variant: "secondary", text: "Delivered" },
+      completed: { variant: "secondary", text: "Completed" },
+      on_hold: { variant: "secondary", text: "On Hold" },
       billed: { variant: "default", text: "Billed" },
       expired: { variant: "destructive", text: "Expired" },
     };
@@ -152,14 +273,14 @@ const PendingOrders = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Pending Orders
+              Customer Orders
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Manage and track all pending orders
+              Manage and track all customer orders
             </p>
           </div>
           <Button 
-            onClick={() => navigate("/admin/create-pending-order")}
+            onClick={() => navigate("/employee/create-pending-order")}
             className="flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
@@ -283,7 +404,7 @@ const PendingOrders = () => {
         {/* Orders Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Orders within 24 hours</CardTitle>
+            <CardTitle>All Customer Orders</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
@@ -364,7 +485,31 @@ const PendingOrders = () => {
                           </div>
                         </td>
                         <td className="p-4">
-                          {getStatusBadge(order.status)}
+                          <Select
+                            value={order.status}
+                            onValueChange={(value) => handleStatusChange(order._id, value)}
+                            disabled={isUpdatingStatus}
+                          >
+                            <SelectTrigger className="h-8 w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending">Pending</SelectItem>
+                              <SelectItem value="confirmed">Confirmed</SelectItem>
+                              <SelectItem value="in_progress">In Progress</SelectItem>
+                              <SelectItem value="measurement_taken">Measurement Taken</SelectItem>
+                              <SelectItem value="cutting">Cutting</SelectItem>
+                              <SelectItem value="stitching">Stitching</SelectItem>
+                              <SelectItem value="quality_check">Quality Check</SelectItem>
+                              <SelectItem value="ready_for_delivery">Ready for Delivery</SelectItem>
+                              <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
+                              <SelectItem value="delivered">Delivered</SelectItem>
+                              <SelectItem value="completed">Completed</SelectItem>
+                              <SelectItem value="on_hold">On Hold</SelectItem>
+                              <SelectItem value="billed">Billed</SelectItem>
+                              <SelectItem value="expired">Expired</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </td>
                         <td className="p-4">
                           <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -382,16 +527,42 @@ const PendingOrders = () => {
                             >
                               <EyeIcon className="w-4 h-4" />
                             </Button>
-                            
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleGenerateBill(order._id)}
-                              className="text-green-600 hover:text-green-700"
-                              title="Generate Bill"
+                              onClick={() => navigate(`/employee/edit-pending-order/${order._id}`)}
+                              className="text-amber-600 hover:text-amber-700"
+                              title="Edit Order"
                             >
-                              <Receipt className="w-4 h-4" />
+                              <Pencil className="w-4 h-4" />
                             </Button>
+                            
+                            {order.status !== "billed" ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleGenerateInvoice(order._id)}
+                                disabled={isCreatingInvoice}
+                                className="text-green-600 hover:text-green-700"
+                                title="Generate Invoice"
+                              >
+                                {isCreatingInvoice ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <Receipt className="w-4 h-4" />
+                                )}
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleOpenInvoice(order.invoice?._id)}
+                                className="text-blue-600 hover:text-blue-700"
+                                title="View Invoice"
+                              >
+                                <FileText className="w-4 h-4" />
+                              </Button>
+                            )}
                             
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
@@ -600,6 +771,42 @@ const PendingOrders = () => {
           </div>
         )}
       </Drawer>
+
+      {showInvoiceViewer && invoiceDetails?.invoice && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="font-semibold text-lg">
+                Invoice: {invoiceDetails.invoice.invoiceNumber}
+              </h3>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => generateInvoicePDF(invoiceDetails.invoice._id)}
+                  disabled={isDownloadingInvoice}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download PDF
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setShowInvoiceViewer(false);
+                    setSelectedInvoiceId(null);
+                  }}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <PDFViewer className="w-full h-full">
+                <InvoiceDocument {...mapInvoiceToTemplateData(invoiceDetails.invoice)} />
+              </PDFViewer>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

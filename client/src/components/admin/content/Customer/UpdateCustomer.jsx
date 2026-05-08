@@ -96,7 +96,7 @@ const UpdateCustomer = () => {
   useEffect(() => {
     if (isUpdated) {
       toast.success("Customer Updated Successfully");
-      setTimeout(() => navigate("/admin/customers"), 1500);
+      setTimeout(() => navigate("/employee/customers"), 1500);
     } else if (error) {
       toast.error(error?.data?.message || "Update failed");
     }
@@ -231,7 +231,7 @@ const UpdateCustomer = () => {
         <div className="flex items-center gap-2 mt-6">
           <Button
             variant="outline"
-            onClick={() => navigate("/admin/customers")}
+            onClick={() => navigate("/employee/customers")}
           >
             Back
           </Button>

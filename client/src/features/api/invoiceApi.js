@@ -21,13 +21,36 @@ export const invoiceApi = createApi({
     }),
 
     getAllInvoices: builder.query({
-      query: ({ page = 1, limit = 10, search = "", status = "" }) => ({
+      query: ({
+        page = 1,
+        limit = 10,
+        search = "",
+        status = "",
+        invoiceType = "all",
+        documentType = "invoice",
+      }) => ({
           url: '/all',
           method: "GET",
-          params: { page, limit, search, status },
+          params: { page, limit, search, status, invoiceType, documentType },
         }),
    
       providesTags: ["Invoice"],
+    }),
+    createQuotation: builder.mutation({
+      query: (formData) => ({
+        url: "/quotation/create",
+        method: "POST",
+        body: formData,
+      }),
+      invalidatesTags: ["Invoice"],
+    }),
+    updateQuotationStatus: builder.mutation({
+      query: ({ invoiceId, quotationData }) => ({
+        url: `/${invoiceId}/quotation-status`,
+        method: "PATCH",
+        body: quotationData,
+      }),
+      invalidatesTags: ["Invoice"],
     }),
 
     getInvoiceById: builder.query({
@@ -94,4 +117,6 @@ export const {
   useGenerateInvoicePDFMutation,
   useUpdatePaymentStatusMutation,
   useDeleteInvoiceMutation,
+  useCreateQuotationMutation,
+  useUpdateQuotationStatusMutation,
 } = invoiceApi; 

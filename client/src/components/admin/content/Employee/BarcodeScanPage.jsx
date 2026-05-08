@@ -48,7 +48,7 @@ const BarcodeScanPage = () => {
           
           // Redirect to employee detail page
           setTimeout(() => {
-            navigate("/admin/employee-detail", {
+            navigate("/employee/employee-detail", {
               state: { employeeId: employee.employeeId },
             });
           }, 500);
@@ -144,7 +144,7 @@ const BarcodeScanPage = () => {
                   <div className="text-right">
                     <p className="text-xs text-gray-500">{scan.time}</p>
                     <button
-                      onClick={() => navigate("/admin/employee-detail", {
+                      onClick={() => navigate("/employee/employee-detail", {
                         state: { employeeId: scan.employeeId },
                       })}
                       className="text-xs text-orange-600 hover:text-orange-700 underline"

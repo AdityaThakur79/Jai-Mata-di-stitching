@@ -11,21 +11,26 @@ import {
   SelectItem,
   SelectContent,
 } from "@/components/ui/select";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { PlusCircle, Trash2, Loader2, User, Package, Users, ShoppingCart, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
-import { useUpdatePendingOrderMutation } from "@/features/api/pendingOrderApi";
+import {
+  useUpdatePendingOrderMutation,
+  useGetPendingOrderByIdMutation,
+} from "@/features/api/pendingOrderApi";
 import { useGetAllItemMastersQuery } from "@/features/api/itemApi";
 import { useGetAllMastersQuery } from "@/features/api/masterApi";
 import { useGetAllSalesmenQuery } from "@/features/api/salesmanApi";
 import { useGetAllFabricsQuery } from "@/features/api/fabricApi";
 import { useGetAllStylesQuery } from "@/features/api/styleApi";
 import { useGetAllCustomersQuery } from "@/features/api/customerApi";
+import { useGetAllBranchesQuery } from "@/features/api/branchApi";
 
 const UpdatePendingOrder = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const orderId = location.state?.orderId;
+  const { orderId: orderIdFromParams } = useParams();
+  const orderId = orderIdFromParams || location.state?.orderId;
 
   const [orderType, setOrderType] = useState("");
   const [existingCustomer, setExistingCustomer] = useState(false);
@@ -37,6 +42,35 @@ const UpdatePendingOrder = () => {
   });
   const [master, setMaster] = useState("");
   const [salesman, setSalesman] = useState("");
+  const [branchId, setBranchId] = useState("");
+  const [priority, setPriority] = useState("medium");
+  const [expectedDeliveryDate, setExpectedDeliveryDate] = useState("");
+  const [notes, setNotes] = useState("");
+  const [specialInstructions, setSpecialInstructions] = useState("");
+  const [discountType, setDiscountType] = useState("percentage");
+  const [discountValue, setDiscountValue] = useState("");
+  const [taxRate, setTaxRate] = useState("5");
+  const [advancePayment, setAdvancePayment] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentStatus, setPaymentStatus] = useState("pending");
+  const [paymentNotes, setPaymentNotes] = useState("");
+  const [shippingDetails, setShippingDetails] = useState({
+    shippingAddress: "",
+    shippingCity: "",
+    shippingState: "",
+    shippingPincode: "",
+    shippingPhone: "",
+    shippingMethod: "home_delivery",
+    shippingCost: 0,
+    deliveryNotes: "",
+    deliveryPerson: "",
+    deliveryPersonContact: "",
+    deliveryStatus: "pending",
+    extraField1Label: "",
+    extraField1Value: "",
+    extraField2Label: "",
+    extraField2Value: "",
+  });
   const [items, setItems] = useState([
     {
       itemType: "",
@@ -47,6 +81,10 @@ const UpdatePendingOrder = () => {
       quantity: 1,
       designNumber: "",
       description: "",
+      clientOrderNumber: "",
+      alteration: 0,
+      handwork: 0,
+      otherCharges: 0,
     },
   ]);
 
@@ -62,21 +100,91 @@ const UpdatePendingOrder = () => {
     page: 1,
     limit: 100,
   });
+  const { data: branchesData } = useGetAllBranchesQuery({ page: 1, limit: 100 });
 
   const [updatePendingOrder, { isLoading, isSuccess, isError, error, data }] =
     useUpdatePendingOrderMutation();
+  const [getPendingOrderById] = useGetPendingOrderByIdMutation();
 
   // Load existing order data if orderId is provided
   useEffect(() => {
     if (!orderId) {
       toast.error("No order ID provided");
-      navigate("/admin/pending-orders");
+      navigate("/employee/pending-orders");
       return;
     }
 
-    // Here you would typically fetch the order data
-    // For now, we'll show a placeholder
-    toast.info("Order update functionality coming soon");
+    const loadOrder = async () => {
+      const res = await getPendingOrderById(orderId);
+      if (!res?.data?.order) return;
+      const order = res.data.order;
+      setOrderType(order.orderType || "");
+      setMaster(order.master?._id || "");
+      setSalesman(order.salesman?._id || "");
+      setBranchId(order.branchId?._id || "");
+      setPriority(order.priority || "medium");
+      setExpectedDeliveryDate(
+        order.expectedDeliveryDate ? new Date(order.expectedDeliveryDate).toISOString().split("T")[0] : ""
+      );
+      setNotes(order.notes || "");
+      setSpecialInstructions(order.specialInstructions || "");
+      setDiscountType(order.discountType || "percentage");
+      setDiscountValue(order.discountValue?.toString?.() || "");
+      setTaxRate(order.taxRate?.toString?.() || "5");
+      setAdvancePayment(order.advancePayment?.toString?.() || "");
+      setPaymentMethod(order.paymentMethod || "");
+      setPaymentStatus(order.paymentStatus || "pending");
+      setPaymentNotes(order.paymentNotes || "");
+      setShippingDetails({
+        shippingAddress: order.shippingDetails?.shippingAddress || "",
+        shippingCity: order.shippingDetails?.shippingCity || "",
+        shippingState: order.shippingDetails?.shippingState || "",
+        shippingPincode: order.shippingDetails?.shippingPincode || "",
+        shippingPhone: order.shippingDetails?.shippingPhone || "",
+        shippingMethod: order.shippingDetails?.shippingMethod || "home_delivery",
+        shippingCost: order.shippingDetails?.shippingCost || 0,
+        deliveryNotes: order.shippingDetails?.deliveryNotes || "",
+        deliveryPerson: order.shippingDetails?.deliveryPerson || "",
+        deliveryPersonContact: order.shippingDetails?.deliveryPersonContact || "",
+        deliveryStatus: order.shippingDetails?.deliveryStatus || "pending",
+        extraField1Label: order.shippingDetails?.extraField1Label || "",
+        extraField1Value: order.shippingDetails?.extraField1Value || "",
+        extraField2Label: order.shippingDetails?.extraField2Label || "",
+        extraField2Value: order.shippingDetails?.extraField2Value || "",
+      });
+
+      if (order.customer?._id) {
+        setExistingCustomer(true);
+        setSelectedCustomerId(order.customer._id);
+      } else if (order.customerDetails) {
+        setExistingCustomer(false);
+        setCustomerDetails({
+          name: order.customerDetails.name || "",
+          mobile: order.customerDetails.mobile || "",
+          email: order.customerDetails.email || "",
+        });
+      }
+
+      setItems(
+        (order.items || []).map((item) => ({
+          itemType: item.itemType?._id || item.itemType || "",
+          measurement: item.measurement || {},
+          fabric: item.fabric?._id || item.fabric || "",
+          fabricMeters: item.fabricMeters || "",
+          style: item.style?._id || item.style || "",
+          quantity: item.quantity || 1,
+          designNumber: item.designNumber || "",
+          description: item.description || "",
+          itemCode: item.itemCode,
+          clientOrderNumber: item.clientOrderNumber || "",
+          alteration: item.alteration || 0,
+          handwork: item.handwork || 0,
+          otherCharges: item.otherCharges || 0,
+        }))
+      );
+    };
+
+    loadOrder();
   }, [orderId, navigate]);
 
   const handleItemChange = (index, key, value) => {
@@ -114,6 +222,10 @@ const UpdatePendingOrder = () => {
         quantity: 1,
         designNumber: "",
         description: "",
+        clientOrderNumber: "",
+        alteration: 0,
+        handwork: 0,
+        otherCharges: 0,
       },
     ]);
   };
@@ -138,6 +250,10 @@ const UpdatePendingOrder = () => {
 
     if (!salesman) {
       toast.error("Please select a salesman");
+      return false;
+    }
+    if (!branchId) {
+      toast.error("Please select a branch");
       return false;
     }
 
@@ -167,11 +283,7 @@ const UpdatePendingOrder = () => {
         return false;
       }
 
-      // Check fabric validation
-      if (item.fabric && (!item.fabricMeters || item.fabricMeters < 2)) {
-        toast.error(`Fabric meters must be at least 2 for item ${i + 1}`);
-        return false;
-      }
+      // Fabric meters are optional in pending orders
     }
 
     return true;
@@ -187,10 +299,31 @@ const UpdatePendingOrder = () => {
       customerDetails: existingCustomer ? undefined : customerDetails,
       master,
       salesman,
+      branchId,
+      expectedDeliveryDate: expectedDeliveryDate || null,
+      priority,
+      notes,
+      specialInstructions,
+      discountType,
+      discountValue: discountValue ? parseFloat(discountValue) : 0,
+      taxRate: taxRate ? parseFloat(taxRate) : 5,
+      advancePayment: advancePayment ? parseFloat(advancePayment) : 0,
+      paymentMethod: paymentMethod || undefined,
+      paymentStatus,
+      paymentNotes,
+      shippingDetails: {
+        ...shippingDetails,
+        shippingCost: parseFloat(shippingDetails.shippingCost) || 0,
+      },
       items: items.map(item => ({
         ...item,
+        fabric: item.fabric || undefined,
+        style: item.style || undefined,
         fabricMeters: item.fabric ? parseFloat(item.fabricMeters) : undefined,
-        quantity: parseInt(item.quantity)
+        quantity: parseInt(item.quantity),
+        alteration: parseFloat(item.alteration) || 0,
+        handwork: parseFloat(item.handwork) || 0,
+        otherCharges: parseFloat(item.otherCharges) || 0,
       })),
     };
 
@@ -200,7 +333,7 @@ const UpdatePendingOrder = () => {
   useEffect(() => {
     if (isSuccess) {
       toast.success(data?.message || "Pending Order updated successfully");
-      navigate("/admin/pending-orders");
+      navigate("/employee/pending-orders");
     } else if (isError) {
       toast.error(error?.data?.message || "Something went wrong");
     }
@@ -215,7 +348,7 @@ const UpdatePendingOrder = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate("/admin/pending-orders")}
+              onClick={() => navigate("/employee/pending-orders")}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -256,6 +389,46 @@ const UpdatePendingOrder = () => {
                       <SelectItem value="stitching">Stitching Only</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium">Branch *</Label>
+                    <Select value={branchId} onValueChange={setBranchId}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select branch" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {branchesData?.branches?.map((b) => (
+                          <SelectItem key={b._id} value={b._id}>
+                            {b.branchName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Priority</Label>
+                    <Select value={priority} onValueChange={setPriority}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select priority" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="urgent">Urgent</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Expected Delivery Date</Label>
+                    <Input
+                      type="date"
+                      className="mt-1"
+                      value={expectedDeliveryDate}
+                      onChange={(e) => setExpectedDeliveryDate(e.target.value)}
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -380,6 +553,17 @@ const UpdatePendingOrder = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                       <div>
+                        <Label className="text-sm font-medium">Customer Order Number</Label>
+                        <Input
+                          placeholder="Customer reference"
+                          value={item.clientOrderNumber || ""}
+                          onChange={(e) =>
+                            handleItemChange(index, "clientOrderNumber", e.target.value)
+                          }
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
                         <Label className="text-sm font-medium">Item Type *</Label>
                         <Select
                           value={item.itemType}
@@ -451,12 +635,10 @@ const UpdatePendingOrder = () => {
                       </div>
 
                       <div>
-                        <Label className="text-sm font-medium">
-                          Fabric Meters {item.fabric && "*"}
-                        </Label>
+                        <Label className="text-sm font-medium">Fabric Meters</Label>
                         <Input
                           type="number"
-                          min={2}
+                          min={0}
                           step={0.1}
                           placeholder="Enter meters"
                           value={item.fabricMeters || ""}
@@ -466,11 +648,6 @@ const UpdatePendingOrder = () => {
                           className="mt-1"
                           disabled={!item.fabric}
                         />
-                        {item.fabric && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            Minimum 2 meters required
-                          </p>
-                        )}
                       </div>
 
                       <div>
@@ -483,6 +660,20 @@ const UpdatePendingOrder = () => {
                           }
                           className="mt-1"
                         />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                      <div>
+                        <Label className="text-sm font-medium">Alteration (₹)</Label>
+                        <Input type="number" min="0" step="0.01" className="mt-1" value={item.alteration || 0} onChange={(e) => handleItemChange(index, "alteration", e.target.value)} />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium">Handwork (₹)</Label>
+                        <Input type="number" min="0" step="0.01" className="mt-1" value={item.handwork || 0} onChange={(e) => handleItemChange(index, "handwork", e.target.value)} />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium">Other Charges (₹)</Label>
+                        <Input type="number" min="0" step="0.01" className="mt-1" value={item.otherCharges || 0} onChange={(e) => handleItemChange(index, "otherCharges", e.target.value)} />
                       </div>
                     </div>
 
@@ -535,10 +726,44 @@ const UpdatePendingOrder = () => {
                 </Button>
               </CardContent>
             </Card>
+            <Card>
+              <CardHeader><CardTitle>Additional Information</CardTitle></CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><Label className="text-sm font-medium">Notes</Label><Input className="mt-1" value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
+                <div><Label className="text-sm font-medium">Special Instructions</Label><Input className="mt-1" value={specialInstructions} onChange={(e) => setSpecialInstructions(e.target.value)} /></div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardTitle>Shipping Details</CardTitle></CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Input placeholder="Shipping address" value={shippingDetails.shippingAddress} onChange={(e) => setShippingDetails({ ...shippingDetails, shippingAddress: e.target.value })} />
+                <Input placeholder="City" value={shippingDetails.shippingCity} onChange={(e) => setShippingDetails({ ...shippingDetails, shippingCity: e.target.value })} />
+                <Input placeholder="State" value={shippingDetails.shippingState} onChange={(e) => setShippingDetails({ ...shippingDetails, shippingState: e.target.value })} />
+                <Input placeholder="Pincode" value={shippingDetails.shippingPincode} onChange={(e) => setShippingDetails({ ...shippingDetails, shippingPincode: e.target.value })} />
+                <Input placeholder="Phone" value={shippingDetails.shippingPhone} onChange={(e) => setShippingDetails({ ...shippingDetails, shippingPhone: e.target.value })} />
+                <Select value={shippingDetails.shippingMethod} onValueChange={(v) => setShippingDetails({ ...shippingDetails, shippingMethod: v })}>
+                  <SelectTrigger><SelectValue placeholder="Shipping method" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pickup">Pickup</SelectItem>
+                    <SelectItem value="home_delivery">Home Delivery</SelectItem>
+                    <SelectItem value="courier">Courier</SelectItem>
+                    <SelectItem value="express">Express</SelectItem>
+                    <SelectItem value="local_transport">Local Transport</SelectItem>
+                    <SelectItem value="customer_courier">Customer Courier</SelectItem>
+                    <SelectItem value="aggregator">Aggregator</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input type="number" min="0" step="0.01" placeholder="Shipping Cost" value={shippingDetails.shippingCost} onChange={(e) => setShippingDetails({ ...shippingDetails, shippingCost: e.target.value })} />
+                <Input placeholder="Delivery person" value={shippingDetails.deliveryPerson} onChange={(e) => setShippingDetails({ ...shippingDetails, deliveryPerson: e.target.value })} />
+                <Input placeholder="Delivery person contact" value={shippingDetails.deliveryPersonContact} onChange={(e) => setShippingDetails({ ...shippingDetails, deliveryPersonContact: e.target.value })} />
+                <Input placeholder="Delivery notes" value={shippingDetails.deliveryNotes} onChange={(e) => setShippingDetails({ ...shippingDetails, deliveryNotes: e.target.value })} />
+              </CardContent>
+            </Card>
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-6 lg:sticky lg:top-24 self-start">
             {/* Staff Assignment Card */}
             <Card>
               <CardHeader>
@@ -608,6 +833,40 @@ const UpdatePendingOrder = () => {
                   </span>
                 </div>
                 <Separator />
+                <div className="grid grid-cols-1 gap-3">
+                  <Select value={discountType} onValueChange={setDiscountType}>
+                    <SelectTrigger><SelectValue placeholder="Discount type" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percentage">Percentage</SelectItem>
+                      <SelectItem value="fixed">Fixed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input type="number" min="0" step="0.01" placeholder="Discount value" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} />
+                  <Input type="number" min="0" step="0.01" placeholder="Tax rate (%)" value={taxRate} onChange={(e) => setTaxRate(e.target.value)} />
+                  <Input type="number" min="0" step="0.01" placeholder="Advance payment" value={advancePayment} onChange={(e) => setAdvancePayment(e.target.value)} />
+                  <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                    <SelectTrigger><SelectValue placeholder="Payment method" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cash">Cash</SelectItem>
+                      <SelectItem value="card">Card</SelectItem>
+                      <SelectItem value="upi">UPI</SelectItem>
+                      <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                      <SelectItem value="cheque">Cheque</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={paymentStatus} onValueChange={setPaymentStatus}>
+                    <SelectTrigger><SelectValue placeholder="Payment status" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="partial">Partial</SelectItem>
+                      <SelectItem value="paid">Paid</SelectItem>
+                      <SelectItem value="overdue">Overdue</SelectItem>
+                      <SelectItem value="refunded">Refunded</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input placeholder="Payment notes" value={paymentNotes} onChange={(e) => setPaymentNotes(e.target.value)} />
+                </div>
                 <div className="pt-2">
                   <Button
                     onClick={handleSubmit}

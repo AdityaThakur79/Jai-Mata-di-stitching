@@ -1,16 +1,26 @@
 import Invoice from "../models/Invoice.js";
 import PendingOrder from "../models/pendingOrder.js";
 import Customer from "../models/customer.js"; 
+import Client from "../models/client.js";
 import path from "path";
 import fs from "fs";
+
+const getInvoiceTypeFromItems = (items = []) => {
+  const hasFabric = items.some((item) => (item.fabricAmount || 0) > 0);
+  const hasStitching = items.some((item) => (item.stitchingAmount || 0) > 0);
+  if (hasFabric && hasStitching) return "mixed";
+  if (hasFabric) return "fabric";
+  if (hasStitching) return "stitching";
+  return "mixed";
+};
 
 // Create invoice from pending order
 export const createInvoice = async (req, res) => {
   try {
     const {
       pendingOrderId,
-      gstPercentage = 18,
-      discountPercentage = 0,
+      gstPercentage,
+      discountPercentage,
       dueDate,
       remarks,
       termsAndConditions,
@@ -51,7 +61,9 @@ export const createInvoice = async (req, res) => {
       const stitchingRate = item.itemType?.stitchingCharge || 0;
       const fabricAmount = (item.fabricMeters || 0) * fabricRate;
       const stitchingAmount = item.quantity * stitchingRate;
-      const totalAmount = fabricAmount + stitchingAmount;
+      const additionalAmount =
+        (item.alteration || 0) + (item.handwork || 0) + (item.otherCharges || 0);
+      const totalAmount = fabricAmount + stitchingAmount + additionalAmount;
 
       return {
         itemCode: item.itemCode,
@@ -73,13 +85,35 @@ export const createInvoice = async (req, res) => {
 
     // Calculate subtotal
     const subtotal = invoiceItems.reduce((sum, item) => sum + item.totalAmount, 0);
-    
-    // Calculate GST and discount amounts
-    const gstAmount = (subtotal * gstPercentage) / 100;
-    const discountAmount = (subtotal * discountPercentage) / 100;
+
+    // Use pending-order pricing logic by default (same flow as client orders)
+    const parsedGst = Number(gstPercentage);
+    const resolvedGstPercentage =
+      Number.isFinite(parsedGst) && parsedGst >= 0
+        ? parsedGst
+        : Number(pendingOrder.taxRate || 5);
+
+    let resolvedDiscountPercentage = 0;
+    let discountAmount = 0;
+    const parsedDiscountPercentage = Number(discountPercentage);
+    if (Number.isFinite(parsedDiscountPercentage) && parsedDiscountPercentage >= 0) {
+      resolvedDiscountPercentage = parsedDiscountPercentage;
+      discountAmount = (subtotal * resolvedDiscountPercentage) / 100;
+    } else if (pendingOrder.discountType === "fixed") {
+      discountAmount = Number(pendingOrder.discountValue || 0);
+      resolvedDiscountPercentage = subtotal > 0 ? (discountAmount / subtotal) * 100 : 0;
+    } else {
+      resolvedDiscountPercentage = Number(pendingOrder.discountValue || 0);
+      discountAmount = (subtotal * resolvedDiscountPercentage) / 100;
+    }
+
+    const gstAmount = (subtotal * resolvedGstPercentage) / 100;
     const totalAmount = subtotal + gstAmount - discountAmount;
 
     // Create invoice
+    const billerId = req.user?.userId || req.employee?.userId || req.employee?.employeeId;
+    const branchId = pendingOrder.branchId || req.user?.branchId || req.employee?.branchId;
+
     const invoice = new Invoice({
       invoiceNumber,
       pendingOrder: pendingOrderId,
@@ -87,16 +121,19 @@ export const createInvoice = async (req, res) => {
       billDate: new Date(),
       dueDate: new Date(dueDate),
       subtotal,
-      gstPercentage,
+      gstPercentage: resolvedGstPercentage,
       gstAmount,
-      discountPercentage,
+      discountPercentage: resolvedDiscountPercentage,
       discountAmount,
       totalAmount,
       remarks,
       termsAndConditions,
-      biller: req.user.userId,
+      biller: billerId,
+      branchId: branchId,
       items: invoiceItems,
       status: "draft",
+      documentType: "invoice",
+      invoiceType: getInvoiceTypeFromItems(invoiceItems),
     });
 
     await invoice.save();
@@ -132,9 +169,10 @@ export const getInvoiceById = async (req, res) => {
     const { invoiceId } = req.params;
 
     const invoice = await Invoice.findById(invoiceId)
-      .populate("pendingOrder", "tokenNumber orderType")
-      .populate("customer", "name mobile email address")
+      .populate("pendingOrder", "tokenNumber orderType shippingDetails")
+      .populate("customer", "name mobile email address city state pincode")
       .populate("biller", "name")
+      .populate("branchId", "branchName address phone email gst pan cin bankDetails qrCodeImage")
       .populate("items.itemType", "name stitchingCharge")
       .populate("items.fabric", "name pricePerMeter")
       .populate("items.style", "name");
@@ -153,7 +191,14 @@ export const getInvoiceById = async (req, res) => {
 // Get all invoices with pagination and search
 export const getAllInvoices = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = "", status = "" } = req.query;
+    const {
+      page = 1,
+      limit = 10,
+      search = "",
+      status = "",
+      invoiceType = "all",
+      documentType = "invoice",
+    } = req.query;
     const user = req.employee;
     const query = {};
     // Branch-based filtering
@@ -167,6 +212,12 @@ export const getAllInvoices = async (req, res) => {
     }
     if (status && status !== "all") {
       query.status = status;
+    }
+    if (documentType && documentType !== "all") {
+      query.documentType = documentType;
+    }
+    if (invoiceType && invoiceType !== "all") {
+      query.invoiceType = invoiceType;
     }
     const total = await Invoice.countDocuments(query);
     const invoices = await Invoice.find(query)
@@ -186,6 +237,169 @@ export const getAllInvoices = async (req, res) => {
   } catch (error) {
     console.error("Error fetching invoices:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const createQuotation = async (req, res) => {
+  try {
+    const {
+      customerId,
+      dueDate,
+      validUntil,
+      gstPercentage = 18,
+      discountPercentage = 0,
+      remarks = "",
+      termsAndConditions = "",
+      items = [],
+      sentVia = "",
+    } = req.body;
+
+    if (!customerId || !dueDate || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ message: "Customer, due date and at least one item are required." });
+    }
+
+    let customer = await Customer.findById(customerId);
+    if (!customer) {
+      // Fallback: selected id might be from Client module; create/reuse equivalent Customer
+      const client = await Client.findById(customerId);
+      if (!client) {
+        return res.status(404).json({ message: "Customer/Client not found." });
+      }
+
+      customer = await Customer.findOne({ mobile: client.mobile });
+      if (!customer) {
+        customer = await Customer.create({
+          name: client.name,
+          mobile: client.mobile,
+          email: client.email || "",
+          address: client.address || "",
+          city: client.city || "",
+          state: client.state || "",
+          pincode: client.pincode || "",
+          branchId: client.branchId,
+        });
+      }
+    }
+
+    const normalizedItems = items.map((item, idx) => {
+      const quantity = Number(item.quantity) || 1;
+      const fabricMeters = Number(item.fabricMeters) || 0;
+      const fabricRate = Number(item.fabricRate) || 0;
+      const stitchingRate = Number(item.stitchingRate) || 0;
+      const fabricAmount = fabricMeters * fabricRate;
+      const stitchingAmount = quantity * stitchingRate;
+      const totalAmount = fabricAmount + stitchingAmount;
+
+      return {
+        itemCode: item.itemCode || `QT-ITEM-${idx + 1}`,
+        itemType: item.itemType,
+        fabric: item.fabric || undefined,
+        fabricMeters,
+        fabricRate,
+        fabricAmount,
+        style: item.style || undefined,
+        quantity,
+        stitchingRate,
+        stitchingAmount,
+        measurement: item.measurement || {},
+        designNumber: item.designNumber || "",
+        description: item.description || "",
+        totalAmount,
+      };
+    });
+
+    const subtotal = normalizedItems.reduce((sum, item) => sum + item.totalAmount, 0);
+    const gstAmount = (subtotal * Number(gstPercentage || 0)) / 100;
+    const discountAmount = (subtotal * Number(discountPercentage || 0)) / 100;
+    const totalAmount = subtotal + gstAmount - discountAmount;
+
+    const invoiceNumber = await Invoice.generateInvoiceNumber();
+    const quotationReference = `QT-${invoiceNumber.replace("INV-", "")}`;
+
+    const billerId = req.user?.userId || req.employee?.userId || req.employee?.employeeId;
+    const branchId = req.user?.branchId || req.employee?.branchId || customer.branchId;
+    if (!billerId || !branchId) {
+      return res.status(400).json({ message: "Unable to identify biller or branch for quotation." });
+    }
+
+    const quotation = new Invoice({
+      invoiceNumber,
+      customer: customer._id,
+      billDate: new Date(),
+      dueDate: new Date(dueDate),
+      validUntil: validUntil ? new Date(validUntil) : undefined,
+      subtotal,
+      gstPercentage: Number(gstPercentage || 0),
+      gstAmount,
+      discountPercentage: Number(discountPercentage || 0),
+      discountAmount,
+      totalAmount,
+      paidAmount: 0,
+      balanceAmount: totalAmount,
+      remarks,
+      termsAndConditions,
+      biller: billerId,
+      branchId: branchId,
+      items: normalizedItems,
+      documentType: "quotation",
+      invoiceType: getInvoiceTypeFromItems(normalizedItems),
+      quotationStatus: "draft",
+      quotationReference,
+      sentVia,
+      sentAt: sentVia ? new Date() : null,
+      status: "draft",
+    });
+
+    await quotation.save();
+    await quotation.populate([
+      { path: "customer", select: "name mobile email" },
+      { path: "biller", select: "name" },
+      { path: "items.itemType", select: "name stitchingCharge" },
+      { path: "items.fabric", select: "name pricePerMeter" },
+      { path: "items.style", select: "name" },
+    ]);
+
+    return res.status(201).json({
+      message: "Quotation created successfully",
+      quotation,
+    });
+  } catch (error) {
+    console.error("Error creating quotation:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const updateQuotationStatus = async (req, res) => {
+  try {
+    const { invoiceId } = req.params;
+    const { quotationStatus, sentVia = "", validUntil } = req.body;
+
+    const allowedStatuses = ["draft", "sent", "accepted", "rejected", "expired"];
+    if (!allowedStatuses.includes(quotationStatus)) {
+      return res.status(400).json({ message: "Invalid quotation status." });
+    }
+
+    const quotation = await Invoice.findById(invoiceId);
+    if (!quotation || quotation.documentType !== "quotation") {
+      return res.status(404).json({ message: "Quotation not found." });
+    }
+
+    quotation.quotationStatus = quotationStatus;
+    if (quotationStatus === "accepted") quotation.status = "approved";
+    if (quotationStatus === "rejected") quotation.status = "cancelled";
+    if (quotationStatus === "sent") quotation.status = "sent";
+    if (sentVia) quotation.sentVia = sentVia;
+    if (quotationStatus === "sent") quotation.sentAt = new Date();
+    if (validUntil) quotation.validUntil = new Date(validUntil);
+    await quotation.save();
+
+    return res.status(200).json({
+      message: "Quotation status updated successfully",
+      quotation,
+    });
+  } catch (error) {
+    console.error("Error updating quotation status:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 

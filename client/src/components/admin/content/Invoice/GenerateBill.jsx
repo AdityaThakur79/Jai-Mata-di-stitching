@@ -49,7 +49,7 @@ const GenerateBill = () => {
   useEffect(() => {
     if (!orderId) {
       toast.error("No order ID provided");
-      navigate("/admin/pending-orders");
+      navigate("/employee/pending-orders");
       return;
     }
 
@@ -70,7 +70,7 @@ const GenerateBill = () => {
       }
     } catch (err) {
       toast.error("Failed to load order details");
-      navigate("/admin/pending-orders");
+      navigate("/employee/pending-orders");
     } finally {
       setIsLoadingOrder(false);
     }
@@ -130,7 +130,7 @@ const GenerateBill = () => {
     try {
       await createInvoice(invoiceData).unwrap();
       toast.success("Invoice created successfully!");
-      navigate("/admin/pending-orders");
+      navigate("/employee/pending-orders");
     } catch (error) {
       toast.error(error?.data?.message || "Failed to create invoice");
     }
@@ -154,7 +154,7 @@ const GenerateBill = () => {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <p>Order not found</p>
-          <Button onClick={() => navigate("/admin/pending-orders")} className="mt-4">
+          <Button onClick={() => navigate("/employee/pending-orders")} className="mt-4">
             Back to Orders
           </Button>
         </div>
@@ -171,7 +171,7 @@ const GenerateBill = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate("/admin/pending-orders")}
+              onClick={() => navigate("/employee/pending-orders")}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -410,7 +410,7 @@ const GenerateBill = () => {
               <CardContent className="space-y-3">
                 <Button
                   variant="outline"
-                  onClick={() => navigate("/admin/pending-orders")}
+                  onClick={() => navigate("/employee/pending-orders")}
                   className="w-full"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />

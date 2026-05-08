@@ -129,7 +129,7 @@ const Masters = () => {
                 </SelectContent>
               </Select>
 
-              <Button onClick={() => navigate("/admin/create-master")}>
+              <Button onClick={() => navigate("/employee/create-master")}>
                 Add Master
               </Button>
               <Button className="p-2" onClick={() => refetch()}>
@@ -214,7 +214,7 @@ const Masters = () => {
                       <Button
                         className="p-2 bg-orange-100 text-orange-600 hover:bg-orange-200"
                         onClick={() =>
-                          navigate("/admin/update-master", {
+                          navigate("/employee/update-master", {
                             state: { masterId: master._id },
                           })
                         }

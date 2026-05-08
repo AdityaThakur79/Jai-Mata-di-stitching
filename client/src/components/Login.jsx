@@ -81,7 +81,7 @@ function Login() {
       toast.success(loginData?.message || "Login successful.");
       localStorage.setItem("token", loginData.token);
 
-      navigate("/admin/dashboard");
+      navigate("/employee/dashboard");
     }
     if (loginError) {
       // toast.error(loginError.data.details[0].message || "login Failed");

@@ -32,10 +32,17 @@ import UpdateStyle from "./components/admin/content/Style/UpdateStyle.jsx";
 import Styles from "./components/admin/content/Style/Styles.jsx";
 import CreatePendingOrder from "./components/admin/content/PendingOrder/CreatePendingOrder.jsx";
 import UpdatePendingOrder from "./components/admin/content/PendingOrder/UpdatePendingOrder.jsx";
+import EditPendingOrder from "./components/admin/content/PendingOrder/EditPendingOrder.jsx";
 import RecentPendingOrders from "./components/admin/content/PendingOrder/RecentPendingOrders.jsx";
 import PendingOrders from "./components/admin/content/PendingOrder/PendingOrders.jsx";
+import PendingSlipPage from "./components/admin/content/PendingOrder/PendingSlipPage.jsx";
+import PrintedSlipPage from "./components/admin/content/PendingOrder/PrintedSlipPage.jsx";
+import ScanTailorSlipPage from "./components/admin/content/PendingOrder/ScanTailorSlipPage.jsx";
 import GenerateBill from "./components/admin/content/Invoice/GenerateBill.jsx";
 import Invoices from "./components/admin/content/Invoice/Invoices.jsx";
+import FabricInvoices from "./components/admin/content/Invoice/FabricInvoices.jsx";
+import StitchingInvoices from "./components/admin/content/Invoice/StitchingInvoices.jsx";
+import Quotations from "./components/admin/content/Invoice/Quotations.jsx";
 import CreateEmployee from "./components/admin/content/Employee/CreateEmployee.jsx";
 import UpdateEmployee from "./components/admin/content/Employee/UpdateEmployee.jsx";
 import Employee from "./components/admin/content/Employee/Employee.jsx";
@@ -50,6 +57,9 @@ import EmployeeSidebar from "./components/employee/EmployeeSidebar";
 import EmployeeDashboard from "@/components/employee/EmployeeDashboard";
 import EmployeeProfile from "@/components/employee/EmployeeProfile";
 import EmployeeSalary from "@/components/employee/EmployeeSalary";
+import EmployeeOrderWorkbench from "@/components/employee/EmployeeOrderWorkbench";
+import EmployeePartialReady from "@/components/employee/EmployeePartialReady";
+import EmployeeFullReady from "@/components/employee/EmployeeFullReady";
 import HeroSection from "@/components/user/herosection";
 import AuthLayout from "@/layout/AuthLayout";
 import AdminNavbar from "@/components/admin/content/Navbar";
@@ -210,8 +220,20 @@ const appRouter = createBrowserRouter([
         element: <EmployeeSalary />,
       },
       {
+        path: "order-details",
+        element: <EmployeeOrderWorkbench />,
+      },
+      {
+        path: "partial-ready",
+        element: <EmployeePartialReady />,
+      },
+      {
+        path: "full-ready",
+        element: <EmployeeFullReady />,
+      },
+      {
         path: "dashboard",
-        element: <Dashboard />,
+        element: <EmployeeDashboard />,
       },
       {
         path: "edit-profile",
@@ -312,12 +334,36 @@ const appRouter = createBrowserRouter([
         element: <UpdatePendingOrder />,
       },
       {
+        path: "update-pending-order/:orderId",
+        element: <UpdatePendingOrder />,
+      },
+      {
+        path: "edit-pending-order/:orderId",
+        element: <EditPendingOrder />,
+      },
+      {
         path: "recent-pending-order",
         element: <RecentPendingOrders />,
       },
       {
         path: "pending-orders",
         element: <PendingOrders />,
+      },
+      {
+        path: "pending-slip",
+        element: <PendingSlipPage />,
+      },
+      {
+        path: "printed-slip",
+        element: <PrintedSlipPage />,
+      },
+      {
+        path: "scan-slip",
+        element: <ScanTailorSlipPage />,
+      },
+      {
+        path: "scanned-slips",
+        element: <ScanTailorSlipPage />,
       },
       //Invoices
       {
@@ -327,6 +373,18 @@ const appRouter = createBrowserRouter([
       {
         path: "invoices",
         element: <Invoices />,
+      },
+      {
+        path: "fabric-invoices",
+        element: <FabricInvoices />,
+      },
+      {
+        path: "stitching-invoices",
+        element: <StitchingInvoices />,
+      },
+      {
+        path: "quotations",
+        element: <Quotations />,
       },
       //Employee
       {

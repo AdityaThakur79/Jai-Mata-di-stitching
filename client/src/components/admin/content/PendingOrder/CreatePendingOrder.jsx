@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,12 +15,19 @@ import { useNavigate } from "react-router-dom";
 import { PlusCircle, Trash2, Loader2, User, Package, Users, ShoppingCart } from "lucide-react";
 import toast from "react-hot-toast";
 import { useCreatePendingOrderMutation } from "@/features/api/pendingOrderApi";
+import {
+  useCreateInvoiceMutation,
+  useGenerateInvoicePDFMutation,
+} from "@/features/api/invoiceApi";
 import { useGetAllItemMastersQuery } from "@/features/api/itemApi";
 import { useGetAllMastersQuery } from "@/features/api/masterApi";
 import { useGetAllSalesmenQuery } from "@/features/api/salesmanApi";
 import { useGetAllFabricsQuery } from "@/features/api/fabricApi";
 import { useGetAllStylesQuery } from "@/features/api/styleApi";
 import { useGetAllCustomersQuery } from "@/features/api/customerApi";
+import { useGetAllBranchesQuery } from "@/features/api/branchApi";
+import { PDFViewer } from "@react-pdf/renderer";
+import InvoiceDocument from "@/utils/invoiceTemplate.jsx";
 
 const CreatePendingOrder = () => {
   const navigate = useNavigate();
@@ -35,6 +42,39 @@ const CreatePendingOrder = () => {
   });
   const [master, setMaster] = useState("");
   const [salesman, setSalesman] = useState("");
+  const [branchId, setBranchId] = useState("");
+  const [priority, setPriority] = useState("medium");
+  const [expectedDeliveryDate, setExpectedDeliveryDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 7);
+    return d.toISOString().split("T")[0];
+  });
+  const [notes, setNotes] = useState("");
+  const [specialInstructions, setSpecialInstructions] = useState("");
+  const [discountType, setDiscountType] = useState("percentage");
+  const [discountValue, setDiscountValue] = useState("");
+  const [taxRate, setTaxRate] = useState("5");
+  const [advancePayment, setAdvancePayment] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentStatus, setPaymentStatus] = useState("pending");
+  const [paymentNotes, setPaymentNotes] = useState("");
+  const [shippingDetails, setShippingDetails] = useState({
+    shippingAddress: "",
+    shippingCity: "",
+    shippingState: "",
+    shippingPincode: "",
+    shippingPhone: "",
+    shippingMethod: "home_delivery",
+    shippingCost: 0,
+    deliveryNotes: "",
+    deliveryPerson: "",
+    deliveryPersonContact: "",
+    deliveryStatus: "pending",
+    extraField1Label: "",
+    extraField1Value: "",
+    extraField2Label: "",
+    extraField2Value: "",
+  });
   const [items, setItems] = useState([
     {
       itemType: "",
@@ -45,6 +85,10 @@ const CreatePendingOrder = () => {
       quantity: 1,
       designNumber: "",
       description: "",
+      clientOrderNumber: "",
+      alteration: 0,
+      handwork: 0,
+      otherCharges: 0,
     },
   ]);
 
@@ -60,9 +104,74 @@ const CreatePendingOrder = () => {
     page: 1,
     limit: 100,
   });
+  const { data: branchesData } = useGetAllBranchesQuery({ page: 1, limit: 100 });
 
-  const [createPendingOrder, { isLoading, isSuccess, isError, error, data }] =
-    useCreatePendingOrderMutation();
+  const [createPendingOrder, { isLoading }] = useCreatePendingOrderMutation();
+  const [createInvoice, { isLoading: isCreatingInvoice }] = useCreateInvoiceMutation();
+  const [generateInvoicePDF, { isLoading: isDownloadingInvoice }] =
+    useGenerateInvoicePDFMutation();
+  const [showInvoiceViewer, setShowInvoiceViewer] = useState(false);
+  const [invoiceData, setInvoiceData] = useState(null);
+  const [showPDFModal, setShowPDFModal] = useState(false);
+  const [createdInvoiceId, setCreatedInvoiceId] = useState("");
+
+  const mapInvoiceToTemplateData = (invoice) => {
+    const selectedBranch = branchesData?.branches?.find((b) => b._id === branchId) || {};
+    return {
+      invoiceNumber: invoice?.invoiceNumber,
+      invoiceDate: new Date(invoice?.billDate || Date.now()).toLocaleDateString("en-IN"),
+      dueDate: new Date(invoice?.dueDate || Date.now()).toLocaleDateString("en-IN"),
+      companyName: "JMD STITCHING PRIVATE LIMITED",
+      companyAddress: selectedBranch?.address || "",
+      companyPhone: selectedBranch?.phone || "",
+      companyEmail: selectedBranch?.email || "",
+      companyGST: selectedBranch?.gst || "",
+      companyPAN: selectedBranch?.pan || "",
+      clientName: invoice?.customer?.name || customerDetails?.name || "",
+      clientMobile: invoice?.customer?.mobile || customerDetails?.mobile || "",
+      clientEmail: invoice?.customer?.email || customerDetails?.email || "",
+      clientAddress: invoice?.customer?.address || "",
+      clientCity: invoice?.customer?.city || "",
+      clientState: invoice?.customer?.state || "",
+      clientPincode: invoice?.customer?.pincode || "",
+      gstin: "",
+      subtotal: invoice?.subtotal || 0,
+      taxableAmount: invoice?.subtotal - (invoice?.discountAmount || 0) || 0,
+      taxRate: invoice?.gstPercentage || 0,
+      taxAmount: invoice?.gstAmount || 0,
+      discountAmount: invoice?.discountAmount || 0,
+      totalAmount: invoice?.totalAmount || 0,
+      paymentStatus: invoice?.paymentStatus || "pending",
+      paidAmount: invoice?.paidAmount || 0,
+      pendingAmount: invoice?.balanceAmount || 0,
+      branchQrCodeImage: selectedBranch?.qrCodeImage || "",
+      shippingDetails: {
+        shippingAddress: shippingDetails.shippingAddress || "",
+        shippingCity: shippingDetails.shippingCity || "",
+        shippingState: shippingDetails.shippingState || "",
+        shippingPincode: shippingDetails.shippingPincode || "",
+        shippingPhone: shippingDetails.shippingPhone || "",
+        shippingMethod: shippingDetails.shippingMethod || "",
+        deliveryStatus: shippingDetails.deliveryStatus || "",
+        deliveryPerson: shippingDetails.deliveryPerson || "",
+        deliveryNotes: shippingDetails.deliveryNotes || "",
+      },
+      items: (invoice?.items || []).map((item) => ({
+        name: item?.itemType?.name || "Item",
+        quantity: Number(item?.quantity) || 1,
+        unitPrice:
+          (item?.fabricAmount || 0) +
+          (item?.stitchingAmount || 0) +
+          ((item?.alteration || 0) + (item?.handwork || 0) + (item?.otherCharges || 0)),
+        totalPrice: item?.totalAmount || 0,
+        description: item?.description || "",
+        designNumber: item?.designNumber || "",
+        alteration: Number(item?.alteration) || 0,
+        handwork: Number(item?.handwork) || 0,
+        otherCharges: Number(item?.otherCharges) || 0,
+      })),
+    };
+  };
 
   const handleItemChange = (index, key, value) => {
     const updated = [...items];
@@ -99,6 +208,10 @@ const CreatePendingOrder = () => {
         quantity: 1,
         designNumber: "",
         description: "",
+        clientOrderNumber: "",
+        alteration: 0,
+        handwork: 0,
+        otherCharges: 0,
       },
     ]);
   };
@@ -123,6 +236,10 @@ const CreatePendingOrder = () => {
 
     if (!salesman) {
       toast.error("Please select a salesman");
+      return false;
+    }
+    if (!branchId) {
+      toast.error("Please select a branch");
       return false;
     }
 
@@ -152,11 +269,7 @@ const CreatePendingOrder = () => {
         return false;
       }
 
-      // Check fabric validation
-      if (item.fabric && (!item.fabricMeters || item.fabricMeters < 2)) {
-        toast.error(`Fabric meters must be at least 2 for item ${i + 1}`);
-        return false;
-      }
+      // Fabric meters are optional in pending orders
     }
 
     return true;
@@ -171,28 +284,65 @@ const CreatePendingOrder = () => {
       customerDetails: existingCustomer ? undefined : customerDetails,
       master,
       salesman,
+      branchId,
+      expectedDeliveryDate: expectedDeliveryDate || null,
+      priority,
+      notes,
+      specialInstructions,
+      discountType,
+      discountValue: discountValue ? parseFloat(discountValue) : 0,
+      taxRate: taxRate ? parseFloat(taxRate) : 5,
+      advancePayment: advancePayment ? parseFloat(advancePayment) : 0,
+      paymentMethod: paymentMethod || undefined,
+      paymentStatus,
+      paymentNotes,
+      shippingDetails: {
+        ...shippingDetails,
+        shippingCost: parseFloat(shippingDetails.shippingCost) || 0,
+      },
       items: items.map(item => ({
         ...item,
+        fabric: item.fabric || undefined,
+        style: item.style || undefined,
         fabricMeters: item.fabric ? parseFloat(item.fabricMeters) : undefined,
-        quantity: parseInt(item.quantity)
+        quantity: parseInt(item.quantity),
+        alteration: parseFloat(item.alteration) || 0,
+        handwork: parseFloat(item.handwork) || 0,
+        otherCharges: parseFloat(item.otherCharges) || 0,
       })),
     };
 
-    await createPendingOrder(body);
+    try {
+      const createRes = await createPendingOrder(body);
+      const pendingOrderId = createRes?.data?.orderId;
+      if (!pendingOrderId) {
+        toast.error(createRes?.error?.data?.message || "Failed to create order");
+        return;
+      }
+
+      const dueDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+      const invoiceRes = await createInvoice({
+        pendingOrderId,
+        dueDate,
+      });
+
+      if (invoiceRes?.data?.invoice) {
+        toast.success("Order and invoice created successfully");
+        setCreatedInvoiceId(invoiceRes.data.invoice._id);
+        setInvoiceData(mapInvoiceToTemplateData(invoiceRes.data.invoice));
+        setShowInvoiceViewer(true);
+      } else {
+        toast.error(invoiceRes?.error?.data?.message || "Order created but invoice generation failed");
+        navigate("/employee/pending-orders");
+      }
+    } catch (err) {
+      toast.error(err?.data?.message || "Something went wrong");
+    }
   };
 
-  useEffect(() => {
-    if (isSuccess) {
-      toast.success(data?.message || "Pending Order created successfully");
-      navigate("/admin/pending-orders");
-    } else if (isError) {
-      toast.error(error?.data?.message || "Something went wrong");
-    }
-  }, [isSuccess, isError]);
-
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen py-4 px-2 sm:px-4">
+      <div className="container mx-auto space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -205,17 +355,17 @@ const CreatePendingOrder = () => {
           </div>
           <Button
             variant="outline"
-            onClick={() => navigate("/admin/pending-orders")}
+            onClick={() => navigate("/employee/pending-orders")}
           >
             Back to Orders
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="space-y-4">
           {/* Main Form */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-4">
             {/* Order Type Card */}
-            <Card>
+            <Card className="bg-white rounded-lg shadow-sm border border-gray-200">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <ShoppingCart className="w-5 h-5" />
@@ -236,11 +386,51 @@ const CreatePendingOrder = () => {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium">Branch *</Label>
+                    <Select value={branchId} onValueChange={setBranchId}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select branch" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {branchesData?.branches?.map((b) => (
+                          <SelectItem key={b._id} value={b._id}>
+                            {b.branchName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Priority</Label>
+                    <Select value={priority} onValueChange={setPriority}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select priority" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="urgent">Urgent</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Expected Delivery Date</Label>
+                    <Input
+                      type="date"
+                      className="mt-1"
+                      value={expectedDeliveryDate}
+                      onChange={(e) => setExpectedDeliveryDate(e.target.value)}
+                    />
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
             {/* Customer Information Card */}
-            <Card>
+            <Card className="bg-white rounded-lg shadow-sm border border-gray-200">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="w-5 h-5" />
@@ -331,7 +521,7 @@ const CreatePendingOrder = () => {
             </Card>
 
             {/* Items Section */}
-            <Card>
+            <Card className="bg-white rounded-lg shadow-sm border border-gray-200">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Package className="w-5 h-5" />
@@ -340,7 +530,7 @@ const CreatePendingOrder = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 {items.map((item, index) => (
-                  <div key={index} className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-800">
+                  <div key={index} className="border rounded-lg p-4 bg-gray-50">
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="font-medium text-gray-900 dark:text-white">
                         Item {index + 1}
@@ -358,6 +548,17 @@ const CreatePendingOrder = () => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                      <div>
+                        <Label className="text-sm font-medium">Customer Order Number</Label>
+                        <Input
+                          placeholder="Customer reference"
+                          value={item.clientOrderNumber || ""}
+                          onChange={(e) =>
+                            handleItemChange(index, "clientOrderNumber", e.target.value)
+                          }
+                          className="mt-1"
+                        />
+                      </div>
                       <div>
                         <Label className="text-sm font-medium">Item Type *</Label>
                         <Select
@@ -430,12 +631,10 @@ const CreatePendingOrder = () => {
                       </div>
 
                       <div>
-                        <Label className="text-sm font-medium">
-                          Fabric Meters {item.fabric && "*"}
-                        </Label>
+                        <Label className="text-sm font-medium">Fabric Meters</Label>
                         <Input
                           type="number"
-                          min={2}
+                          min={0}
                           step={0.1}
                           placeholder="Enter meters"
                           value={item.fabricMeters || ""}
@@ -445,11 +644,6 @@ const CreatePendingOrder = () => {
                           className="mt-1"
                           disabled={!item.fabric}
                         />
-                        {item.fabric && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            Minimum 2 meters required
-                          </p>
-                        )}
                       </div>
 
                       <div>
@@ -461,6 +655,41 @@ const CreatePendingOrder = () => {
                             handleItemChange(index, "designNumber", e.target.value)
                           }
                           className="mt-1"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                      <div>
+                        <Label className="text-sm font-medium">Alteration (₹)</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          className="mt-1"
+                          value={item.alteration || 0}
+                          onChange={(e) => handleItemChange(index, "alteration", e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium">Handwork (₹)</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          className="mt-1"
+                          value={item.handwork || 0}
+                          onChange={(e) => handleItemChange(index, "handwork", e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium">Other Charges (₹)</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          className="mt-1"
+                          value={item.otherCharges || 0}
+                          onChange={(e) => handleItemChange(index, "otherCharges", e.target.value)}
                         />
                       </div>
                     </div>
@@ -514,12 +743,56 @@ const CreatePendingOrder = () => {
                 </Button>
               </CardContent>
             </Card>
+            <Card className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <CardHeader>
+                <CardTitle>Additional Information</CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Notes</Label>
+                  <Input className="mt-1" value={notes} onChange={(e) => setNotes(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Special Instructions</Label>
+                  <Input className="mt-1" value={specialInstructions} onChange={(e) => setSpecialInstructions(e.target.value)} />
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <CardHeader>
+                <CardTitle>Shipping Details</CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Input placeholder="Shipping address" value={shippingDetails.shippingAddress} onChange={(e) => setShippingDetails({ ...shippingDetails, shippingAddress: e.target.value })} />
+                <Input placeholder="City" value={shippingDetails.shippingCity} onChange={(e) => setShippingDetails({ ...shippingDetails, shippingCity: e.target.value })} />
+                <Input placeholder="State" value={shippingDetails.shippingState} onChange={(e) => setShippingDetails({ ...shippingDetails, shippingState: e.target.value })} />
+                <Input placeholder="Pincode" value={shippingDetails.shippingPincode} onChange={(e) => setShippingDetails({ ...shippingDetails, shippingPincode: e.target.value })} />
+                <Input placeholder="Phone" value={shippingDetails.shippingPhone} onChange={(e) => setShippingDetails({ ...shippingDetails, shippingPhone: e.target.value })} />
+                <Select value={shippingDetails.shippingMethod} onValueChange={(v) => setShippingDetails({ ...shippingDetails, shippingMethod: v })}>
+                  <SelectTrigger><SelectValue placeholder="Shipping method" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pickup">Pickup</SelectItem>
+                    <SelectItem value="home_delivery">Home Delivery</SelectItem>
+                    <SelectItem value="courier">Courier</SelectItem>
+                    <SelectItem value="express">Express</SelectItem>
+                    <SelectItem value="local_transport">Local Transport</SelectItem>
+                    <SelectItem value="customer_courier">Customer Courier</SelectItem>
+                    <SelectItem value="aggregator">Aggregator</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input type="number" min="0" step="0.01" placeholder="Shipping Cost" value={shippingDetails.shippingCost} onChange={(e) => setShippingDetails({ ...shippingDetails, shippingCost: e.target.value })} />
+                <Input placeholder="Delivery person" value={shippingDetails.deliveryPerson} onChange={(e) => setShippingDetails({ ...shippingDetails, deliveryPerson: e.target.value })} />
+                <Input placeholder="Delivery person contact" value={shippingDetails.deliveryPersonContact} onChange={(e) => setShippingDetails({ ...shippingDetails, deliveryPersonContact: e.target.value })} />
+                <Input placeholder="Delivery notes" value={shippingDetails.deliveryNotes} onChange={(e) => setShippingDetails({ ...shippingDetails, deliveryNotes: e.target.value })} />
+              </CardContent>
+            </Card>
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Staff Assignment Card */}
-            <Card>
+            <Card className="bg-white rounded-lg shadow-sm border border-gray-200">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="w-5 h-5" />
@@ -562,7 +835,7 @@ const CreatePendingOrder = () => {
             </Card>
 
             {/* Order Summary Card */}
-            <Card>
+            <Card className="bg-white rounded-lg shadow-sm border border-gray-200">
               <CardHeader>
                 <CardTitle>Order Summary</CardTitle>
               </CardHeader>
@@ -587,17 +860,51 @@ const CreatePendingOrder = () => {
                   </span>
                 </div>
                 <Separator />
+                <div className="grid grid-cols-1 gap-3">
+                  <Select value={discountType} onValueChange={setDiscountType}>
+                    <SelectTrigger><SelectValue placeholder="Discount type" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percentage">Percentage</SelectItem>
+                      <SelectItem value="fixed">Fixed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input type="number" min="0" step="0.01" placeholder="Discount value" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} />
+                  <Input type="number" min="0" step="0.01" placeholder="Tax rate (%)" value={taxRate} onChange={(e) => setTaxRate(e.target.value)} />
+                  <Input type="number" min="0" step="0.01" placeholder="Advance payment" value={advancePayment} onChange={(e) => setAdvancePayment(e.target.value)} />
+                  <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                    <SelectTrigger><SelectValue placeholder="Payment method" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cash">Cash</SelectItem>
+                      <SelectItem value="card">Card</SelectItem>
+                      <SelectItem value="upi">UPI</SelectItem>
+                      <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                      <SelectItem value="cheque">Cheque</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={paymentStatus} onValueChange={setPaymentStatus}>
+                    <SelectTrigger><SelectValue placeholder="Payment status" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="partial">Partial</SelectItem>
+                      <SelectItem value="paid">Paid</SelectItem>
+                      <SelectItem value="overdue">Overdue</SelectItem>
+                      <SelectItem value="refunded">Refunded</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input placeholder="Payment notes" value={paymentNotes} onChange={(e) => setPaymentNotes(e.target.value)} />
+                </div>
                 <div className="pt-2">
                   <Button
                     onClick={handleSubmit}
-                    disabled={isLoading}
+                    disabled={isLoading || isCreatingInvoice}
                     className="w-full"
                     size="lg"
                   >
-                    {isLoading ? (
+                    {isLoading || isCreatingInvoice ? (
                       <>
                         <Loader2 className="animate-spin w-4 h-4 mr-2" />
-                        Creating Order...
+                        Creating...
                       </>
                     ) : (
                       "Create Pending Order"
@@ -609,6 +916,66 @@ const CreatePendingOrder = () => {
           </div>
         </div>
       </div>
+
+      {showInvoiceViewer && invoiceData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-6xl h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-semibold">Invoice Preview</h3>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => createdInvoiceId && generateInvoicePDF(createdInvoiceId)}
+                  variant="outline"
+                  disabled={!createdInvoiceId || isDownloadingInvoice}
+                  className="border-green-600 text-green-600 hover:bg-green-50"
+                >
+                  Download PDF
+                </Button>
+                <Button
+                  onClick={() => setShowPDFModal(true)}
+                  variant="outline"
+                  className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                >
+                  View PDF
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowInvoiceViewer(false);
+                    setInvoiceData(null);
+                    navigate("/employee/pending-orders");
+                  }}
+                  variant="outline"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <PDFViewer className="w-full h-full">
+                <InvoiceDocument {...invoiceData} />
+              </PDFViewer>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPDFModal && invoiceData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-6xl h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-semibold">PDF Viewer</h3>
+              <Button onClick={() => setShowPDFModal(false)} variant="outline">
+                Close
+              </Button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <PDFViewer className="w-full h-full">
+                <InvoiceDocument {...invoiceData} />
+              </PDFViewer>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

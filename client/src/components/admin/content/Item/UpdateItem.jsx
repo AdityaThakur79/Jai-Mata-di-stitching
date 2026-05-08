@@ -66,7 +66,7 @@ const UpdateItem = () => {
           setStyles(Array.isArray(item.styles) ? item.styles : []);
         } else {
           toast.error("Failed to load item data");
-          navigate("/admin/items");
+          navigate("/employee/items");
         }
       });
     }

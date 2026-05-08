@@ -81,6 +81,67 @@ export const pendingOrderApi = createApi({
       }),
       providesTags: ["PendingOrder"],
     }),
+    getTailorSlips: builder.query({
+      query: ({ page = 1, limit = 10, search = "", status = "all", scannedOnly = false }) => ({
+        url: "/slips",
+        method: "GET",
+        params: { page, limit, search, status, scannedOnly },
+      }),
+      providesTags: ["PendingOrder"],
+    }),
+    getTailorSlipStats: builder.query({
+      query: () => ({
+        url: "/slips/stats",
+        method: "GET",
+      }),
+      providesTags: ["PendingOrder"],
+    }),
+    printTailorSlip: builder.mutation({
+      query: (slipId) => ({
+        url: `/slips/${slipId}/print`,
+        method: "POST",
+      }),
+      invalidatesTags: ["PendingOrder"],
+    }),
+    scanTailorSlip: builder.mutation({
+      query: (barcodeValue) => ({
+        url: "/slips/scan",
+        method: "POST",
+        body: { barcodeValue },
+      }),
+      invalidatesTags: ["PendingOrder"],
+    }),
+    getSlipWorkDetails: builder.mutation({
+      query: (barcodeValue) => ({
+        url: "/slips/work-details",
+        method: "POST",
+        body: { barcodeValue },
+      }),
+      invalidatesTags: ["PendingOrder"],
+    }),
+    updatePendingOrderItemWork: builder.mutation({
+      query: ({ orderId, itemCode, payload }) => ({
+        url: `/orders/${orderId}/items/${itemCode}`,
+        method: "PUT",
+        body: payload,
+      }),
+      invalidatesTags: ["PendingOrder"],
+    }),
+    updateTailorSlipStatus: builder.mutation({
+      query: ({ slipId, status }) => ({
+        url: `/slips/${slipId}/status`,
+        method: "PATCH",
+        body: { status },
+      }),
+      invalidatesTags: ["PendingOrder"],
+    }),
+    getPendingOrderStockBuckets: builder.query({
+      query: () => ({
+        url: "/stocks/buckets",
+        method: "GET",
+      }),
+      providesTags: ["PendingOrder"],
+    }),
   }),
 });
 
@@ -93,4 +154,12 @@ export const {
   useDeletePendingOrderMutation,
   useUpdatePendingOrderStatusMutation,
   useGetPrintSlipByItemCodeQuery,
+  useGetTailorSlipsQuery,
+  useGetTailorSlipStatsQuery,
+  usePrintTailorSlipMutation,
+  useScanTailorSlipMutation,
+  useGetSlipWorkDetailsMutation,
+  useUpdatePendingOrderItemWorkMutation,
+  useUpdateTailorSlipStatusMutation,
+  useGetPendingOrderStockBucketsQuery,
 } = pendingOrderApi;

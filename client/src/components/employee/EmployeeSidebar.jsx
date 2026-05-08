@@ -65,6 +65,10 @@ const EmployeeSidebar = () => {
   const dispatch = useDispatch();
   const location = useLocation();
 
+  /** Wider main area + less gutter for dense order/stock tables */
+  const denseMainPadding =
+    /\/employee\/(?:full-ready|partial-ready|scanned-slips)/i.test(location.pathname);
+
   const handleLogout = () => {
     dispatch(employeeLoggedOut());
     localStorage.removeItem("employeeToken");
@@ -146,6 +150,20 @@ const EmployeeSidebar = () => {
       'create-order',
       'profile',
       'salary'
+    ],
+    'superadmin': ['*'],
+    'master': [
+      'dashboard',
+      'masters',
+      'employee-dashboard',
+      'profile',
+      'salary'
+    ],
+    'salesman': [
+      'dashboard',
+      'employee-dashboard',
+      'profile',
+      'salary'
     ]
   };
 
@@ -160,9 +178,9 @@ const EmployeeSidebar = () => {
     },
     'measurement': {
       'director': ['*'],
-      'manager': ['Slip for Billing', 'Pending Slip', 'Printed Slip'],
-      'biller': ['Slip for Billing', 'Pending Slip', 'Printed Slip'],
-      'tailor': ['Pending Slip', 'Printed Slip'],
+      'manager': ['Slip for Billing', 'Pending Slip', 'Printed Slip', 'Scanned Slips'],
+      'biller': ['Slip for Billing', 'Pending Slip', 'Printed Slip', 'Scanned Slips'],
+      'tailor': ['Pending Slip', 'Printed Slip', 'Scanned Slips'],
       'admin': ['*']
     },
     'stocks': {
@@ -181,17 +199,26 @@ const EmployeeSidebar = () => {
     },
     'employees': {
       'director': ['*'],
-      'admin': ['*']
+      'admin': ['*'],
+      'superadmin': ['*'],
+      'master': ['*']
     },
     'masters': {
       'director': ['*'],
-      'admin': ['*']
+      'admin': ['*'],
+      'superadmin': ['*'],
+      'master': ['*']
     },
     'website-management': {
       'director': ['*'],
-      'admin': ['*']
+      'admin': ['*'],
+      'superadmin': ['*'],
+      'master': ['*']
     }
   };
+
+  // Normalize role values from API/store (e.g., "superAdmin" -> "superadmin")
+  const normalizedRole = (employee?.role || "").toString().trim().toLowerCase();
 
   // Check if a role has permission to access an item
   const hasPermission = (itemId, userRole) => {
@@ -208,6 +235,9 @@ const EmployeeSidebar = () => {
 
   // Check if a role has permission to access a sub-item
   const hasSubItemPermission = (parentId, subItemTitle, userRole) => {
+    // Roles with global access should always see all sub-items
+    if (rolePermissions[userRole]?.includes('*')) return true;
+
     if (!userRole || !subItemPermissions[parentId]) return true; // Default allow if no specific config
     
     const permissions = subItemPermissions[parentId][userRole];
@@ -222,29 +252,29 @@ const EmployeeSidebar = () => {
 
   // Filter menu items based on employee role
   const filterMenuByRole = (menuItems) => {
-    if (!employee?.role) return [];
+    if (!normalizedRole) return [];
     
-    return menuItems.filter(item => {
+    return menuItems.map(item => {
       // Check if user has permission for this main item
-      if (!hasPermission(item.id, employee.role)) {
-        return false;
+      if (!hasPermission(item.id, normalizedRole)) {
+        return null;
       }
       
       // For subItems, filter them based on permissions
       if (item.subItems) {
         const filteredSubItems = item.subItems.filter(subItem => 
-          hasSubItemPermission(item.id, subItem.title, employee.role)
+          hasSubItemPermission(item.id, subItem.title, normalizedRole)
         );
         
-        // Update the subItems with filtered ones
-        item.subItems = filteredSubItems;
-        
         // If no sub-items left, hide the parent item
-        return filteredSubItems.length > 0;
+        if (filteredSubItems.length === 0) return null;
+
+        // Return a cloned item to avoid mutating the original menu config
+        return { ...item, subItems: filteredSubItems };
       }
       
-      return true;
-    });
+      return item;
+    }).filter(Boolean);
   };
 
   // Grouped menu items for accordions
@@ -295,6 +325,7 @@ const EmployeeSidebar = () => {
         { title: "Slip for Billing", icon: Receipt, path: "/employee/pending-orders" },
         { title: "Pending Slip", icon: BadgeAlert, path: "/employee/pending-slip" },
         { title: "Printed Slip", icon: BadgeCheck, path: "/employee/printed-slip" },
+        { title: "Scanned Slips", icon: ReceiptText, path: "/employee/scanned-slips" },
       ],
     },
     {
@@ -552,7 +583,10 @@ const EmployeeSidebar = () => {
       
       {/* Main Content */}
       <div className="flex-1 min-h-screen min-w-0 bg-gradient-to-br from-orange-50 to-white lg:ml-[250px] pt-16 lg:pt-20">
-        <div className="w-full px-4 lg:px-8 md:pt-20 pt-8">
+        <div
+          className={`w-full md:pt-20 pt-8 ${
+            denseMainPadding ? "px-2 lg:px-4" : "px-4 lg:px-8"
+          }`}>
           <Outlet />
         </div>
       </div>

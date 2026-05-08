@@ -34,7 +34,7 @@ const CreateMaster = () => {
   useEffect(() => {
     if (isSuccess) {
       toast.success(data?.message || "Master created successfully");
-      navigate("/admin/masters");
+      navigate("/employee/masters");
     } else if (isError) {
       toast.error(error?.data?.message || "Failed to create master");
     }
@@ -100,7 +100,7 @@ const CreateMaster = () => {
       </div>
 
       <div className="flex gap-2 mt-6">
-        <Button variant="outline" onClick={() => navigate("/admin/masters")}>
+        <Button variant="outline" onClick={() => navigate("/employee/masters")}>
           Cancel
         </Button>
         <Button disabled={isLoading} onClick={handleSubmit}>

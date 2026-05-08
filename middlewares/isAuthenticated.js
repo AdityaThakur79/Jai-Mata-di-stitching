@@ -60,7 +60,7 @@ const isEmployeeAuthenticated = async (req, res, next) => {
     }
 
     const decode = jwt.verify(token, process.env.SECRETKEY);
-    req.employeeId = decode.employeeId;
+    req.employeeId = decode.employeeId || decode.userId;
     req.employee = decode;
     next();
   } catch (error) {

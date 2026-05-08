@@ -126,7 +126,7 @@ const CreateEmployee = () => {
       setAadhaarImage(null);
       setPreviewAadhaarImage("");
       // Optionally navigate to employee list:
-      // navigate("/admin/employees");
+      // navigate("/employee/employees");
     } else if (isError) {
       toast.error(error?.data?.message || "Failed to create employee");
     }

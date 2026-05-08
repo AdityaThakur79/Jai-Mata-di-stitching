@@ -240,21 +240,21 @@ const Dashboard = () => {
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-4 mb-8">
           <a
-            href="/admin/create-customer"
+            href="/employee/create-customer"
             className="flex items-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
           >
             <FaPlus className="mr-2" />
             Add Customer
           </a>
-          <a href="/admin/create-item" className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+          <a href="/employee/create-item" className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
             <FaShoppingBag className="mr-2" />
             Add New item
           </a>
-            <a href="/admin/create-master" className="flex items-center px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">
+            <a href="/employee/create-master" className="flex items-center px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">
             <FaShoppingBag className="mr-2" />
             Add Master
           </a>
-             <a href="/admin/create-item" className="flex items-center px-4 py-2 bg-orange-700 text-white rounded-lg hover:bg-orange-800 transition-colors">
+             <a href="/employee/create-item" className="flex items-center px-4 py-2 bg-orange-700 text-white rounded-lg hover:bg-orange-800 transition-colors">
             <FaShoppingBag className="mr-2" />
             Add Salesman
           </a>
