@@ -220,8 +220,7 @@ const Quotations = () => {
   };
 
   return (
-    <div className="min-h-screen py-4 px-2 sm:px-4">
-      <div className="container mx-auto">
+    <>
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Quotations</h1>
@@ -432,8 +431,7 @@ const Quotations = () => {
             </Table>
           )}
         </div>
-      </div>
-    </div>
+    </>
   );
 };
 

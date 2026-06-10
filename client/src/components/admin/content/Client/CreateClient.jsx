@@ -213,7 +213,7 @@ const CreateClient = () => {
 
   if (employeeLoading || branchesLoading) {
     return (
-      <div className="min-h-screen py-4 px-2 sm:px-4 flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-[50vh]">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin text-orange-600 mx-auto mb-4" />
           <p className="text-gray-600">Loading...</p>
@@ -223,8 +223,7 @@ const CreateClient = () => {
   }
 
   return (
-    <div className="min-h-screen py-4 px-2 sm:px-4">
-      <div className="container mx-auto">
+    <>
         {/* Header */}
         <div className="mb-4">
           <div className="inline-flex items-center justify-center w-12 h-12 bg-orange-600 rounded-full shadow-lg mb-3">
@@ -420,8 +419,7 @@ const CreateClient = () => {
             )}
           </Button>
         </div>
-      </div>
-    </div>
+    </>
   );
 };
 

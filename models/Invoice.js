@@ -53,6 +53,9 @@ const invoiceItemSchema = new mongoose.Schema({
   },
   designNumber: String,
   description: String,
+  alteration: { type: Number, default: 0, min: 0 },
+  handwork: { type: Number, default: 0, min: 0 },
+  otherCharges: { type: Number, default: 0, min: 0 },
   totalAmount: {
     type: Number,
     required: true,
@@ -68,20 +71,49 @@ const invoiceSchema = new mongoose.Schema({
     required: true,
   },
   
-  // Reference to Pending Order
+  // Reference to Pending Order (customer / slip for billing)
   pendingOrder: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "PendingOrder",
     required: false,
-    unique: true, // One invoice per pending order (for invoice documents)
-    sparse: true,
+  },
+
+  // Reference to Client Order
+  clientOrder: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Order",
+    required: false,
+  },
+
+  // Differentiates client orders vs customer (slip for billing) orders
+  orderSource: {
+    type: String,
+    enum: ["client", "customer"],
+    required: true,
+    default: "customer",
+    index: true,
+  },
+
+  // Order type from source order
+  orderType: {
+    type: String,
+    enum: ["fabric", "fabric_stitching", "stitching", "readymade", "mixed"],
+    index: true,
+  },
+
+  // Client reference (for client orders)
+  client: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Client",
   },
   
-  // Customer Details (copied from pending order for reference)
+  // Customer Details (for customer / slip orders)
   customer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Customer",
-    required: true,
+    required: function () {
+      return this.orderSource === "customer";
+    },
   },
   
   // Billing Details
@@ -304,5 +336,34 @@ invoiceSchema.methods.calculateItemTotals = function() {
   return this;
 };
 
+// Partial unique indexes — only index when the ref is actually set (avoids null duplicate errors)
+invoiceSchema.index(
+  { pendingOrder: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { pendingOrder: { $type: "objectId" } },
+  }
+);
+invoiceSchema.index(
+  { clientOrder: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { clientOrder: { $type: "objectId" } },
+  }
+);
+
 const Invoice = mongoose.model("Invoice", invoiceSchema);
+
+export const fixInvoiceIndexes = async () => {
+  const collection = mongoose.connection.collection("invoices");
+  for (const indexName of ["pendingOrder_1", "clientOrder_1"]) {
+    try {
+      await collection.dropIndex(indexName);
+    } catch {
+      // Index may not exist
+    }
+  }
+  await Invoice.syncIndexes();
+};
+
 export default Invoice;

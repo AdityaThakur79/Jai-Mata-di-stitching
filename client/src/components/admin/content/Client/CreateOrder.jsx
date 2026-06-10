@@ -777,8 +777,7 @@ const CreateOrder = () => {
   };
 
   return (
-    <div className="min-h-screen py-4 px-2 sm:px-4">
-      <div className="container mx-auto">
+    <>
         {/* Header */}
         <div className="mb-6">
           <div className="inline-flex items-center justify-center w-12 h-12 bg-orange-600 rounded-full shadow-lg mb-3">
@@ -1749,7 +1748,6 @@ const CreateOrder = () => {
             </Button>
           </div>
         </div>
-      </div>
     
     {/* Invoice PDF Viewer Modal */}
     {showInvoiceViewer && invoiceData && (
@@ -1766,7 +1764,7 @@ const CreateOrder = () => {
                       window.open(invoiceData.pdfUrl, '_blank');
                     }}
                     variant="default"
-                    className="bg-blue-600 hover:bg-blue-700"
+                    className="bg-orange-600 hover:bg-orange-700 text-white"
                   >
                     Download PDF
                   </Button>
@@ -1829,7 +1827,7 @@ const CreateOrder = () => {
         </div>
       </div>
     )}
-    </div>
+    </>
   );
 };
 

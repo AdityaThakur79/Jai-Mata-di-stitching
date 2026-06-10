@@ -26,15 +26,25 @@ export const invoiceApi = createApi({
         limit = 10,
         search = "",
         status = "",
+        paymentStatus = "",
         invoiceType = "all",
+        orderType = "all",
+        orderSource = "all",
         documentType = "invoice",
       }) => ({
           url: '/all',
           method: "GET",
-          params: { page, limit, search, status, invoiceType, documentType },
+          params: { page, limit, search, status, paymentStatus, invoiceType, orderType, orderSource, documentType },
         }),
    
       providesTags: ["Invoice"],
+    }),
+
+    getInvoicePreviewData: builder.query({
+      query: (invoiceId) => ({
+        url: `/preview/${invoiceId}`,
+        method: "GET",
+      }),
     }),
     createQuotation: builder.mutation({
       query: (formData) => ({
@@ -113,6 +123,8 @@ export const {
   useCreateInvoiceMutation,
   useGetAllInvoicesQuery,
   useGetInvoiceByIdQuery,
+  useGetInvoicePreviewDataQuery,
+  useLazyGetInvoicePreviewDataQuery,
   useUpdateInvoiceMutation,
   useGenerateInvoicePDFMutation,
   useUpdatePaymentStatusMutation,

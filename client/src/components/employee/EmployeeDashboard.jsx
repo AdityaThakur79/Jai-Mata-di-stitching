@@ -1,7 +1,6 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import { useGetEmployeeSalarySlipsQuery } from "@/features/api/employeeApi";
-import { useGetPendingOrderStockBucketsQuery, useGetTailorSlipStatsQuery } from "@/features/api/pendingOrderApi";
 import {
   Card,
   CardContent,
@@ -16,112 +15,21 @@ import {
   TrendingUp,
   FileText,
   Download,
-  ScanLine,
-  PackageCheck,
-  ListChecks,
-  ClipboardList,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
 const EmployeeDashboard = () => {
-  const { employee, isEmployeeAuthenticated } = useSelector((state) => state.auth);
-  const normalizedRole = String(employee?.role || "").toLowerCase();
-  const isPrivileged = normalizedRole === "director" || normalizedRole === "superadmin";
-  const { data: salaryData, isLoading, error } = useGetEmployeeSalarySlipsQuery(undefined, {
-    skip: !isPrivileged,
-  });
-  const { data: slipStatsData } = useGetTailorSlipStatsQuery(undefined, { skip: isPrivileged });
-  const { data: stockBucketsData } = useGetPendingOrderStockBucketsQuery(undefined, { skip: isPrivileged });
+  const { employee } = useSelector((state) => state.auth);
+  const { data: salaryData, isLoading, error } = useGetEmployeeSalarySlipsQuery();
   const navigate = useNavigate();
-
-  if (!isPrivileged) {
-    const partialReadyCount = stockBucketsData?.partialReady?.length || 0;
-    const fullReadyCount = stockBucketsData?.fullReady?.length || 0;
-    const assignedSlips = slipStatsData?.stats?.assigned || 0;
-
-    return (
-      <div className="space-y-5 max-w-5xl mx-auto">
-        <Card className="border-orange-200 bg-gradient-to-r from-orange-100 to-orange-50">
-          <CardHeader>
-            <CardTitle className="text-2xl text-orange-700 flex items-center gap-2">
-              <ScanLine className="w-6 h-6" />
-              Tailor Work Dashboard
-            </CardTitle>
-            <CardDescription className="text-orange-900">
-              Use the scanner machine to open order item details, update measurements/notes, and mark item status.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              className="w-full h-16 text-lg bg-orange-600 hover:bg-orange-700"
-              onClick={() => navigate("/employee/order-details")}
-            >
-              Start Scan & Update Item
-            </Button>
-          </CardContent>
-        </Card>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="border-orange-200">
-            <CardContent className="p-4">
-              <p className="text-xs text-gray-500">Assigned Slips</p>
-              <p className="text-2xl font-bold text-orange-700">{assignedSlips}</p>
-            </CardContent>
-          </Card>
-          <Card className="border-orange-200">
-            <CardContent className="p-4">
-              <p className="text-xs text-gray-500">Partial Ready Orders</p>
-              <p className="text-2xl font-bold text-orange-700">{partialReadyCount}</p>
-            </CardContent>
-          </Card>
-          <Card className="border-orange-200">
-            <CardContent className="p-4">
-              <p className="text-xs text-gray-500">Full Ready Orders</p>
-              <p className="text-2xl font-bold text-orange-700">{fullReadyCount}</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card className="border-orange-200">
-          <CardHeader>
-            <CardTitle className="text-orange-700">Quick Actions</CardTitle>
-            <CardDescription>Open commonly used work screens directly.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <Button variant="outline" className="justify-start h-12" onClick={() => navigate("/employee/order-details")}>
-                <ScanLine className="w-4 h-4 mr-2" /> Scan & Update Item
-              </Button>
-              <Button variant="outline" className="justify-start h-12" onClick={() => navigate("/employee/partial-ready")}>
-                <ListChecks className="w-4 h-4 mr-2" /> View Partial Ready
-              </Button>
-              <Button variant="outline" className="justify-start h-12" onClick={() => navigate("/employee/full-ready")}>
-                <PackageCheck className="w-4 h-4 mr-2" /> View Full Ready
-              </Button>
-              <Button variant="outline" className="justify-start h-12" onClick={() => navigate("/employee/pending-slip")}>
-                <ClipboardList className="w-4 h-4 mr-2" /> Pending Slips
-              </Button>
-              <Button variant="outline" className="justify-start h-12" onClick={() => navigate("/employee/printed-slip")}>
-                <FileText className="w-4 h-4 mr-2" /> Printed Slips
-              </Button>
-              <Button variant="outline" className="justify-start h-12" onClick={() => navigate("/employee/scanned-slips")}>
-                <ScanLine className="w-4 h-4 mr-2" /> Slip Scan Log
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   const currentDate = new Date();
   const currentMonth = currentDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
   
-  // Show error state if API fails
   if (error) {
     return (
-      <div className="p-6">
+      <div className="w-full">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <h3 className="text-red-800 font-medium">Error Loading Data</h3>
           <p className="text-red-600 mt-1">
@@ -135,7 +43,6 @@ const EmployeeDashboard = () => {
     );
   }
   
-  // Calculate current month salary info
   const currentMonthSlip = salaryData?.salarySlips?.find(slip => 
     slip.month === currentMonth
   );
@@ -181,8 +88,7 @@ const EmployeeDashboard = () => {
   ];
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Welcome Header */}
+    <div className="space-y-6 w-full">
       <div className="bg-gradient-to-r from-[#f77f2f] to-[#fca16a] rounded-2xl p-6 text-white shadow-lg">
         <div className="flex items-center justify-between">
           <div>
@@ -203,7 +109,6 @@ const EmployeeDashboard = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
           <Card key={index} className="hover:shadow-lg transition-shadow">
@@ -220,7 +125,6 @@ const EmployeeDashboard = () => {
         ))}
       </div>
 
-      {/* Current Month Status */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
@@ -311,7 +215,6 @@ const EmployeeDashboard = () => {
         </Card>
       </div>
 
-      {/* Quick Actions */}
       <Card>
         <CardHeader>
           <CardTitle>Quick Actions</CardTitle>
@@ -362,4 +265,4 @@ const EmployeeDashboard = () => {
   );
 };
 
-export default EmployeeDashboard; 
+export default EmployeeDashboard;

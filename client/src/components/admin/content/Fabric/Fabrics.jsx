@@ -104,7 +104,7 @@ const Fabrics = () => {
 
   return (
     <section className=" dark:bg-gray-900 min-h-screen rounded-md">
-      <div className="md:p-6 p-2">
+      <div className="w-full">
         {/* Header - Responsive */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <div>

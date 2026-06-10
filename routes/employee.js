@@ -16,6 +16,7 @@ import {
   getEmployeeSalarySlips,
   downloadEmployeeSalarySlip,
   getFilteredEmployeeDetails,
+  resignEmployee,
 } from "../controllers/employee.js";
 import { isAuthenticated, isEmployeeAuthenticated } from "../middlewares/isAuthenticated.js";
 import upload from "../utils/common/Uploads.js";
@@ -32,6 +33,7 @@ router.post("/download-salary-slip", isAuthenticated, downloadEmployeeSalarySlip
 
 // Admin routes (require admin authentication)
 router.post("/create",isAuthenticated,upload, createEmployee);
+router.post("/resign", isAuthenticated, resignEmployee);
 
 // Get all Employees
 router.get("/all",isAuthenticated, getAllEmployees);

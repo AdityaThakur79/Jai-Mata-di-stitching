@@ -78,8 +78,7 @@ const ManageCategories = () => {
   }, [filterDropdownOpen]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white dark:from-gray-900 dark:to-gray-800">
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+    <div className="w-full">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <div>
@@ -228,7 +227,6 @@ const ManageCategories = () => {
             ))}
           </div>
         )}
-      </div>
       {/* Category Details Drawer */}
       <Drawer
         title={null}

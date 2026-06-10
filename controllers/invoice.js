@@ -2,17 +2,11 @@ import Invoice from "../models/Invoice.js";
 import PendingOrder from "../models/pendingOrder.js";
 import Customer from "../models/customer.js"; 
 import Client from "../models/client.js";
+import Order from "../models/order.js";
 import path from "path";
 import fs from "fs";
-
-const getInvoiceTypeFromItems = (items = []) => {
-  const hasFabric = items.some((item) => (item.fabricAmount || 0) > 0);
-  const hasStitching = items.some((item) => (item.stitchingAmount || 0) > 0);
-  if (hasFabric && hasStitching) return "mixed";
-  if (hasFabric) return "fabric";
-  if (hasStitching) return "stitching";
-  return "mixed";
-};
+import { getInvoiceTypeFromItems, mapInvoiceToPreviewData } from "../utils/invoiceMapper.js";
+import { syncMissingClientInvoices } from "../services/invoiceSyncService.js";
 
 // Create invoice from pending order
 export const createInvoice = async (req, res) => {
@@ -118,6 +112,8 @@ export const createInvoice = async (req, res) => {
       invoiceNumber,
       pendingOrder: pendingOrderId,
       customer: pendingOrder.customer._id,
+      orderSource: "customer",
+      orderType: pendingOrder.orderType,
       billDate: new Date(),
       dueDate: new Date(dueDate),
       subtotal,
@@ -137,6 +133,9 @@ export const createInvoice = async (req, res) => {
     });
 
     await invoice.save();
+
+    // Avoid storing null clientOrder on customer invoices
+    await Invoice.updateOne({ _id: invoice._id }, { $unset: { clientOrder: "" } });
 
     // Update pending order status
     pendingOrder.status = "billed";
@@ -170,6 +169,8 @@ export const getInvoiceById = async (req, res) => {
 
     const invoice = await Invoice.findById(invoiceId)
       .populate("pendingOrder", "tokenNumber orderType shippingDetails")
+      .populate("clientOrder", "orderNumber orderType clientDetails shippingDetails clientOrderNumber")
+      .populate("client", "name mobile email address city state pincode gstin")
       .populate("customer", "name mobile email address city state pincode")
       .populate("biller", "name")
       .populate("branchId", "branchName address phone email gst pan cin bankDetails qrCodeImage")
@@ -191,52 +192,154 @@ export const getInvoiceById = async (req, res) => {
 // Get all invoices with pagination and search
 export const getAllInvoices = async (req, res) => {
   try {
+    try {
+      await syncMissingClientInvoices(100);
+    } catch (syncError) {
+      console.error("Client invoice sync warning:", syncError.message);
+    }
+
     const {
       page = 1,
       limit = 10,
       search = "",
       status = "",
+      paymentStatus = "",
       invoiceType = "all",
+      orderType = "all",
+      orderSource = "all",
       documentType = "invoice",
     } = req.query;
     const user = req.employee;
-    const query = {};
-    // Branch-based filtering
+    const conditions = [];
+
+    // Invoices only (include legacy records without documentType)
+    conditions.push({
+      $or: [
+        { documentType: "invoice" },
+        { documentType: { $exists: false } },
+      ],
+    });
+
     if (user && !["director", "superAdmin"].includes(user.role)) {
-      query.branchId = user.branchId;
+      conditions.push({ branchId: user.branchId });
     }
-    if (search) {
-      query.$or = [
-        { invoiceNumber: { $regex: search, $options: "i" } },
-      ];
+
+    if (orderSource === "customer") {
+      conditions.push({
+        $or: [
+          { orderSource: "customer" },
+          { orderSource: { $exists: false }, pendingOrder: { $exists: true, $ne: null } },
+        ],
+      });
+    } else if (orderSource === "client") {
+      conditions.push({
+        $or: [
+          { orderSource: "client" },
+          { orderSource: { $exists: false }, clientOrder: { $exists: true, $ne: null } },
+        ],
+      });
     }
+
+    if (orderType && orderType !== "all") {
+      conditions.push({ orderType });
+    } else if (invoiceType && invoiceType !== "all") {
+      conditions.push({
+        $or: [
+          { orderType: invoiceType === "mixed" ? "fabric_stitching" : invoiceType },
+          { invoiceType },
+        ],
+      });
+    }
+
     if (status && status !== "all") {
-      query.status = status;
+      conditions.push({ status });
     }
-    if (documentType && documentType !== "all") {
-      query.documentType = documentType;
+
+    if (paymentStatus && paymentStatus !== "all") {
+      conditions.push({ paymentStatus });
     }
-    if (invoiceType && invoiceType !== "all") {
-      query.invoiceType = invoiceType;
+
+    if (search) {
+      const searchRegex = { $regex: search, $options: "i" };
+      const [customers, clients, pendingOrders, clientOrders] = await Promise.all([
+        Customer.find({ $or: [{ name: searchRegex }, { mobile: searchRegex }] }).distinct("_id"),
+        Client.find({ $or: [{ name: searchRegex }, { mobile: searchRegex }] }).distinct("_id"),
+        PendingOrder.find({ tokenNumber: searchRegex }).distinct("_id"),
+        Order.find({ orderNumber: searchRegex }).distinct("_id"),
+      ]);
+
+      conditions.push({
+        $or: [
+          { invoiceNumber: searchRegex },
+          { customer: { $in: customers } },
+          { client: { $in: clients } },
+          { pendingOrder: { $in: pendingOrders } },
+          { clientOrder: { $in: clientOrders } },
+        ],
+      });
     }
+
+    const query = conditions.length > 0 ? { $and: conditions } : {};
+
     const total = await Invoice.countDocuments(query);
     const invoices = await Invoice.find(query)
       .populate("customer", "name mobile")
-      .populate("pendingOrder", "tokenNumber")
+      .populate("client", "name mobile")
+      .populate("pendingOrder", "tokenNumber orderType")
+      .populate("clientOrder", "orderNumber orderType clientDetails")
       .populate("biller", "name")
-      .sort({ createdAt: -1 })
+      .sort({ billDate: -1, createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
-    const response = {
+
+    const allForStats = await Invoice.find(query).select("totalAmount paymentStatus");
+
+    const stats = {
+      totalInvoices: total,
+      totalRevenue: allForStats.reduce((sum, inv) => sum + (inv.totalAmount || 0), 0),
+      paidCount: allForStats.filter((inv) => inv.paymentStatus === "paid").length,
+      pendingCount: allForStats.filter((inv) => inv.paymentStatus === "pending").length,
+    };
+
+    res.status(200).json({
       total,
+      totalPage: Math.ceil(total / limit) || 1,
       page: Number(page),
       limit: Number(limit),
       invoices,
-    };
-    res.status(200).json(response);
+      stats,
+    });
   } catch (error) {
     console.error("Error fetching invoices:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const getInvoicePreviewData = async (req, res) => {
+  try {
+    const { invoiceId } = req.params;
+
+    const invoice = await Invoice.findById(invoiceId)
+      .populate("pendingOrder", "tokenNumber orderType shippingDetails")
+      .populate("clientOrder", "orderNumber orderType clientDetails shippingDetails clientOrderNumber")
+      .populate("client", "name mobile email address city state pincode gstin")
+      .populate("customer", "name mobile email address city state pincode")
+      .populate("branchId", "branchName address phone email gst pan cin bankDetails qrCodeImage")
+      .populate("items.itemType", "name stitchingCharge")
+      .populate("items.fabric", "name pricePerMeter")
+      .populate("items.style", "name");
+
+    if (!invoice) {
+      return res.status(404).json({ success: false, message: "Invoice not found." });
+    }
+
+    res.status(200).json({
+      success: true,
+      invoiceData: mapInvoiceToPreviewData(invoice),
+    });
+  } catch (error) {
+    console.error("Error fetching invoice preview:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 

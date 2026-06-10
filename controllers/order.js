@@ -88,13 +88,21 @@ export const createOrder = async (req, res) => {
       });
     }
 
-    // Get the actual employee _id if we have employeeId
-    let createdById = user._id;
-    if (user.employeeId && !user._id) {
-      const employee = await Employee.findOne({ employeeId: user.employeeId });
-      if (employee) {
-        createdById = employee._id;
+    // Resolve createdBy from JWT payload (employeeId holds Mongo _id for employees)
+    let createdById = user._id || user.userId || user.employeeId;
+    if (createdById) {
+      const employeeRecord = await Employee.findOne({
+        $or: [{ _id: createdById }, { employeeId: createdById }],
+      }).select("_id");
+      if (employeeRecord) {
+        createdById = employeeRecord._id;
       }
+    }
+    if (!createdById) {
+      return res.status(400).json({
+        success: false,
+        message: "Unable to identify the employee creating this order.",
+      });
     }
 
     const {

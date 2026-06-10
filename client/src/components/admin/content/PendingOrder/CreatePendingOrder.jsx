@@ -341,8 +341,7 @@ const CreatePendingOrder = () => {
   };
 
   return (
-    <div className="min-h-screen py-4 px-2 sm:px-4">
-      <div className="container mx-auto space-y-4">
+    <>
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -915,7 +914,6 @@ const CreatePendingOrder = () => {
             </Card>
           </div>
         </div>
-      </div>
 
       {showInvoiceViewer && invoiceData && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -925,9 +923,9 @@ const CreatePendingOrder = () => {
               <div className="flex gap-2">
                 <Button
                   onClick={() => createdInvoiceId && generateInvoicePDF(createdInvoiceId)}
-                  variant="outline"
+                  variant="default"
                   disabled={!createdInvoiceId || isDownloadingInvoice}
-                  className="border-green-600 text-green-600 hover:bg-green-50"
+                  className="bg-orange-600 hover:bg-orange-700 text-white"
                 >
                   Download PDF
                 </Button>
@@ -976,7 +974,7 @@ const CreatePendingOrder = () => {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

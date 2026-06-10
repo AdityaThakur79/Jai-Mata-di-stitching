@@ -110,8 +110,7 @@ const CreateService = () => {
   }, [isSuccess, isError]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white dark:from-gray-900 dark:to-gray-800">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="max-w-4xl mx-auto w-full">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
@@ -474,7 +473,6 @@ const CreateService = () => {
             </Button>
           </div>
         </div>
-      </div>
     </div>
   );
 };

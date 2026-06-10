@@ -3,6 +3,7 @@ import {
   createInvoice,
   getInvoiceById,
   getAllInvoices,
+  getInvoicePreviewData,
   updateInvoice,
   generateInvoicePDF,
   getInvoiceHTML,
@@ -22,6 +23,9 @@ router.post("/quotation/create", isAuthenticated, createQuotation);
 
 // Get all invoices with pagination and search
 router.get("/all", isAuthenticated, getAllInvoices);
+
+// Get invoice preview data for PDF viewer
+router.get("/preview/:invoiceId", isAuthenticated, getInvoicePreviewData);
 
 // Get invoice by ID
 router.get("/:invoiceId", isAuthenticated, getInvoiceById);

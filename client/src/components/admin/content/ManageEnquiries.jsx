@@ -166,7 +166,7 @@ const ManageEnquiries = () => {
   const activeFilterCount = Object.values(filters).filter(value => value !== 'all').length + (search ? 1 : 0);
 
   return (
-    <div className="p-6   dark:bg-gray-900 min-h-screen">
+    <>
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
@@ -775,7 +775,7 @@ const ManageEnquiries = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   );
 };
 

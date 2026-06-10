@@ -41,6 +41,7 @@ import {
   useGenerateSalarySlipMutation,
   useSendSalarySlipEmailMutation,
   useDownloadEmployeeSalarySlipMutation,
+  useResignEmployeeMutation,
 } from "@/features/api/employeeApi";
 import {
   Dialog,
@@ -146,6 +147,7 @@ const EmployeeDetail = () => {
     useSendSalarySlipEmailMutation();
   const [downloadSalarySlip, { isLoading: isDownloadingSlip }] =
     useDownloadEmployeeSalarySlipMutation();
+  const [resignEmployee, { isLoading: isResigning }] = useResignEmployeeMutation();
 
   // Create debounced search query for smooth filtering
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
@@ -244,11 +246,10 @@ const EmployeeDetail = () => {
 
           setEmployeeData(result.employee);
 
-          // Set the selected year to the joining year if it's available
-          const joiningYear = new Date(
-            result.employee.joiningDate
-          ).getFullYear();
-          setSelectedYear(joiningYear);
+          // Set the selected year to current year (not joining year)
+          // This ensures users see the most recent data when landing on the page
+          const currentYear = new Date().getFullYear();
+          setSelectedYear(currentYear);
 
           processMonthlyData(result.employee);
         } catch (error) {
@@ -275,6 +276,21 @@ const EmployeeDetail = () => {
       refetchFiltered();
     }
   }, [selectedYear, employeeId, refetchFiltered]);
+
+  // Effect to process filteredData from backend into monthlyData state
+  useEffect(() => {
+    if (filteredData?.monthlyData && Array.isArray(filteredData.monthlyData)) {
+      // Convert array to object keyed by monthKey for easy lookup
+      const monthlyDataObject = {};
+      filteredData.monthlyData.forEach(monthData => {
+        if (monthData.monthKey) {
+          monthlyDataObject[monthData.monthKey] = monthData;
+        }
+      });
+      console.log("Processed filtered data into monthlyData:", monthlyDataObject);
+      setMonthlyData(monthlyDataObject);
+    }
+  }, [filteredData]);
 
   // Process monthly data for the selected year (used for initial load and fallback)
   const processMonthlyData = (employee) => {
@@ -354,15 +370,16 @@ const EmployeeDetail = () => {
       employee.salarySlips.forEach((slip) => {
         let slipYear, slipMonth;
         
-        // Try different ways to determine the month
-        if (slip.generatedAt) {
-          // Use generatedAt if available
-          const slipDate = new Date(slip.generatedAt);
-          slipYear = slipDate.getFullYear();
-          slipMonth = slipDate.getMonth();
-        } else if (slip.year && slip.month) {
-          // Use year and month fields if available
-          slipYear = slip.year;
+        // Priority 1: Use monthKey if available (most reliable - e.g., "2026-05" for May 2026)
+        if (slip.monthKey) {
+          const [year, month] = slip.monthKey.split('-');
+          slipYear = parseInt(year);
+          slipMonth = parseInt(month) - 1; // Convert from 1-12 to 0-11
+        }
+        // Priority 2: Use year and month fields if monthKey is not available
+        else if (slip.year !== undefined && slip.month !== undefined) {
+          slipYear = typeof slip.year === 'number' ? slip.year : parseInt(slip.year);
+          
           if (typeof slip.month === 'string') {
             // If month is a month name like "August", convert to month index
             const monthNames = [
@@ -370,17 +387,28 @@ const EmployeeDetail = () => {
               'July', 'August', 'September', 'October', 'November', 'December'
             ];
             slipMonth = monthNames.indexOf(slip.month);
-          } else {
-            // If month is a number, use it directly
-            slipMonth = typeof slip.month === 'number' ? slip.month : parseInt(slip.month) - 1;
+            
+            // If not found in month names, try to parse as number
+            if (slipMonth === -1) {
+              const parsed = parseInt(slip.month);
+              // If it's 1-12, convert to 0-11
+              if (!isNaN(parsed) && parsed >= 1 && parsed <= 12) {
+                slipMonth = parsed - 1;
+              }
+            }
+          } else if (typeof slip.month === 'number') {
+            // If month is stored as 0-11, use directly; if 1-12, convert
+            slipMonth = slip.month >= 1 && slip.month <= 12 && slip.monthKey === undefined ? slip.month - 1 : slip.month;
           }
-        } else if (slip.monthKey) {
-          // Use monthKey if available (e.g., "2025-08")
-          const [year, month] = slip.monthKey.split('-');
-          slipYear = parseInt(year);
-          slipMonth = parseInt(month) - 1;
+        }
+        // Priority 3: Fall back to generatedAt if available
+        else if (slip.generatedAt) {
+          const slipDate = new Date(slip.generatedAt);
+          slipYear = slipDate.getFullYear();
+          slipMonth = slipDate.getMonth();
         }
         
+        // Only add if we successfully determined the month and it's valid
         if (slipYear && slipMonth !== undefined && slipMonth >= 0 && slipMonth <= 11) {
           if (slipYear === selectedYear) {
             const monthKey = `${slipYear}-${String(slipMonth + 1).padStart(2, "0")}`;
@@ -506,8 +534,28 @@ const EmployeeDetail = () => {
     try {
       // Extract month index and year from monthKey
       const monthData = monthlyData[monthKey];
-      const monthIndex = monthData?.monthIndex; // 0-11
-      const year = monthData?.year; // 2025, 2026, etc.
+      
+      // Validate that we have the necessary data
+      if (!monthData) {
+        toast.error("Unable to find month data. Please refresh and try again.");
+        return;
+      }
+      
+      const monthIndex = monthData.monthIndex; // 0-11
+      const year = monthData.year; // 2025, 2026, etc.
+
+      // Additional validation
+      if (monthIndex === undefined || year === undefined) {
+        toast.error("Invalid month or year data. Please refresh and try again.");
+        return;
+      }
+
+      if (!employeeId) {
+        toast.error("Employee ID is missing");
+        return;
+      }
+
+      console.log("Generating salary slip with:", { employeeId, month: monthIndex, year });
 
       const result = await generateSalarySlip({
         employeeId,
@@ -521,6 +569,7 @@ const EmployeeDetail = () => {
       setEmployeeData(updatedResult.employee);
       processMonthlyData(updatedResult.employee);
     } catch (error) {
+      console.error("Error generating salary slip:", error);
       toast.error(error?.data?.message || "Failed to generate salary slip");
     } finally {
       setGeneratingSlipMonthKey(null);
@@ -604,6 +653,22 @@ const EmployeeDetail = () => {
     } catch (error) {
       console.error("Error downloading salary slip:", error);
       toast.error("Failed to download salary slip");
+    }
+  };
+
+  // Handle employee resignation
+  const handleResignation = async () => {
+    try {
+      const result = await resignEmployee(employeeId).unwrap();
+      toast.success(result.message || "Employee marked as resigned successfully!");
+      
+      // Refresh employee data
+      const updatedResult = await getEmployeeById(employeeId).unwrap();
+      setEmployeeData(updatedResult.employee);
+      processMonthlyData(updatedResult.employee);
+    } catch (error) {
+      console.error("Error marking resignation:", error);
+      toast.error(error?.data?.message || "Failed to mark employee as resigned.");
     }
   };
 
@@ -695,7 +760,7 @@ const EmployeeDetail = () => {
 
   return (
     <div className=" dark:bg-gray-900 min-h-screen">
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="w-full">
         {/* Header */}
         <div className="mb-8 rounded-3xl shadow-2xl bg-gradient-to-br from-orange-100 via-white to-blue-100 dark:from-orange-900/40 dark:via-gray-900 dark:to-blue-900/40 px-8 py-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6 relative overflow-hidden border border-orange-200/50 dark:border-orange-800/30">
           {/* Decorative Elements */}
@@ -720,17 +785,65 @@ const EmployeeDetail = () => {
               </p>
             </div>
           </div>
-          <Button
-            onClick={() => {
-              setAdvanceForm((prev) => ({ ...prev, employeeId }));
-              setShowAddDialog(true);
-            }}
-            className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold shadow-xl rounded-2xl px-8 py-4 hover:from-orange-600 hover:to-orange-700 hover:scale-105 transition-all duration-300 border-0"
-            size="lg"
-          >
-            <Plus className="w-6 h-6" />
-            Add Advance
-          </Button>
+          <div className="flex flex-wrap gap-4 z-10">
+            {safeEmployeeData.status === "active" && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold shadow-xl rounded-2xl px-8 py-4 hover:from-red-600 hover:to-red-700 hover:scale-105 transition-all duration-300 border-0"
+                    size="lg"
+                    disabled={isResigning}
+                  >
+                    {isResigning ? (
+                      <Loader2 className="w-6 h-6 animate-spin" />
+                    ) : (
+                      <XCircle className="w-6 h-6" />
+                    )}
+                    Resigned
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-red-600 flex items-center gap-2 text-xl font-bold">
+                      <AlertCircle className="w-6 h-6" /> Confirm Resignation
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="text-base text-gray-600 dark:text-gray-400 mt-2">
+                      Are you sure you want to mark <strong>{safeEmployeeData.name}</strong> as Resigned? 
+                      <div className="mt-3 bg-red-50 dark:bg-red-950/20 p-4 rounded-xl border border-red-100 dark:border-red-900/30 text-gray-700 dark:text-gray-300">
+                        This action will:
+                        <ul className="list-disc list-inside mt-2 space-y-1.5 font-medium">
+                          <li>Deactivate their employee account instantly</li>
+                          <li>Render their ID card and Barcode permanently invalid</li>
+                          <li>Send a resignation confirmation letter to their email: <strong>{safeEmployeeData.email}</strong></li>
+                        </ul>
+                      </div>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter className="mt-4">
+                    <AlertDialogCancel className="rounded-xl border border-gray-300 font-medium hover:bg-gray-50">Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl"
+                      onClick={handleResignation}
+                    >
+                      Confirm Resignation
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+
+            <Button
+              onClick={() => {
+                setAdvanceForm((prev) => ({ ...prev, employeeId }));
+                setShowAddDialog(true);
+              }}
+              className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold shadow-xl rounded-2xl px-8 py-4 hover:from-orange-600 hover:to-orange-700 hover:scale-105 transition-all duration-300 border-0"
+              size="lg"
+            >
+              <Plus className="w-6 h-6" />
+              Add Advance
+            </Button>
+          </div>
         </div>
 
         {/* Profile Header Card */}

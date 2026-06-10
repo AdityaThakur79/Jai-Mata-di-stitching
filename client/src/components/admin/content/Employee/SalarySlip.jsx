@@ -309,9 +309,39 @@ const SalarySlip = ({ employee, salarySlip, logoDataUrl }) => {
 
   console.log('SalarySlip received month:', salarySlip?.month, 'Type:', typeof salarySlip?.month);
   console.log('SalarySlip received year:', salarySlip?.year, 'Type:', typeof salarySlip?.year);
+  console.log('SalarySlip received monthKey:', salarySlip?.monthKey);
   
-  const monthName = getMonthName(salarySlip?.month);
-  const year = salarySlip.year;
+  // Extract month name and year from salarySlip
+  let monthName = 'Unknown';
+  let year = salarySlip.year || new Date().getFullYear();
+  
+  // Priority 1: Use monthKey if available (e.g., "2026-05" for May 2026)
+  if (salarySlip.monthKey) {
+    const [yearStr, monthStr] = salarySlip.monthKey.split('-');
+    year = parseInt(yearStr);
+    const monthIndex = parseInt(monthStr) - 1; // Convert from 1-12 to 0-11
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    monthName = months[monthIndex] || 'Unknown';
+  }
+  // Priority 2: Check if month field contains the full month name with year (e.g., "May 2026")
+  else if (salarySlip.month && typeof salarySlip.month === 'string' && salarySlip.month.includes(' ')) {
+    // Month is in format "May 2026"
+    const parts = salarySlip.month.split(' ');
+    monthName = parts[0];
+    if (parts[1]) {
+      year = parseInt(parts[1]);
+    }
+  }
+  // Priority 3: Try to parse month field
+  else if (salarySlip.month) {
+    monthName = getMonthName(salarySlip.month);
+  }
+  
+  console.log('Calculated Pay Period:', monthName, year);
+  
   const grossEarnings = employee.baseSalary || 0;
   const totalDeductions = salarySlip.advancesDeducted || 0;
   const netSalary = grossEarnings - totalDeductions;
@@ -332,7 +362,7 @@ const SalarySlip = ({ employee, salarySlip, logoDataUrl }) => {
             </View>
           </View>
           <Text style={styles.payPeriod}>
-            Pay Period:  {salarySlip.generatedAt ? new Date(salarySlip.generatedAt).toLocaleDateString('en-IN') : new Date().toLocaleDateString('en-IN')}
+            Pay Period: {monthName} {year}
           </Text>
         </View>
 

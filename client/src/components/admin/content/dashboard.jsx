@@ -23,7 +23,8 @@ import { useSelector } from "react-redux";
 const Dashboard = () => {
  
 
-    const { user } = useSelector((store) => store.auth);
+    const { user, employee } = useSelector((store) => store.auth);
+    const profile = user || employee;
 
   // Statistics data for tailor management
   const statsData = [
@@ -192,16 +193,14 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen">
-      {/* Main Content */}
-      <main className="container mx-auto md:px-4 ">
+    <>
         {/* Welcome Section */}
         <div className="mb-8">
           <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl shadow-lg overflow-hidden">
             <div className="p-6 text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div>
                 <h2 className="text-2xl md:text-3xl font-bold">
-                  Welcome back, {user?.name || "User"}!
+                  Welcome back, {profile?.name || "User"}!
                 </h2>
                 <p className="text-orange-100 mt-1 text-sm md:text-base">
                   Ready to create beautiful garments today?
@@ -220,11 +219,11 @@ const Dashboard = () => {
                 <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center text-3xl font-bold mb-2">
                 
                    <img
-           src={user?.photoUrl} alt={user?.name} 
+           src={profile?.photoUrl || profile?.profileImage} alt={profile?.name} 
               className="w-20 h-20   object-cover rounded-full"
             />
                 </div>
-                <p className="text-sm text-orange-100">{user?.role}</p>
+                <p className="text-sm text-orange-100">{profile?.role}</p>
               </div>
             </div>
           </div>
@@ -407,8 +406,7 @@ const Dashboard = () => {
             </table>
           </div>
         </div>
-      </main>
-    </div>
+    </>
   );
 };
 

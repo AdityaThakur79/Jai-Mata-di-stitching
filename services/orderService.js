@@ -1,9 +1,11 @@
 import Order, { Bill } from "../models/order.js";
+import Invoice from "../models/Invoice.js";
 import Client from "../models/client.js";
 import ItemMaster from "../models/item.js";
 import Fabric from "../models/fabric.js";
 import Branch from "../models/branch.js";
 import pdfService from "./pdfService.js";
+import { createInvoiceFromClientOrder } from "./invoiceSyncService.js";
 import { sendInvoiceEmail, sendOrderConfirmationEmail } from "../utils/common/sendMail.js";
 import { sendInvoiceWhatsapp, sendOrderConfirmationWhatsapp } from "../utils/common/sendWhatsapp.js";
 import { getLogoBase64 } from "../utils/imageUtils.js";
@@ -295,6 +297,25 @@ class OrderService {
       order.pdfPublicId = pdfResult.pdfPublicId;
       order.pdfDeliveryFormat = pdfResult.delivery_format || 'image';
       await order.save();
+
+      // Create unified invoice record for client order
+      let unifiedInvoice = await Invoice.findOne({ clientOrder: order._id });
+      if (!unifiedInvoice) {
+        unifiedInvoice = await createInvoiceFromClientOrder(
+          order,
+          bill,
+          order.createdBy?._id || order.createdBy
+        );
+      }
+
+      if (unifiedInvoice) {
+        unifiedInvoice.pdfUrl = pdfResult.pdfUrl;
+        unifiedInvoice.pdfOriginalUrl = pdfResult.original_url;
+        unifiedInvoice.pdfPublicId = pdfResult.pdfPublicId;
+        unifiedInvoice.pdfDeliveryFormat = pdfResult.delivery_format || "image";
+        unifiedInvoice.pdfGeneratedAt = new Date();
+        await unifiedInvoice.save();
+      }
 
       // Add PDF buffer to invoice data for notifications
       invoiceData.pdfBuffer = pdfResult.pdfBuffer;

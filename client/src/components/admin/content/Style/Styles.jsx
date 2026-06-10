@@ -91,7 +91,7 @@ const Styles = () => {
 
   return (
     <section className="bg-gray-50 dark:bg-gray-900 min-h-screen rounded-md">
-      <div className="md:p-6 p-2">
+      <div className="w-full">
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
           <h2 className="md:text-xl font-semibold text-gray-700 dark:text-white">
             All Styles

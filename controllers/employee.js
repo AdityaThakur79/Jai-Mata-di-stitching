@@ -5,8 +5,9 @@ import path from "path";
 import fs from "fs";
 import bcrypt from "bcryptjs";
 import { v2 as cloudinary } from "cloudinary";
-import { sendSalarySlipEmail } from "../utils/common/sendMail.js";
+import { sendSalarySlipEmail, sendJoiningLetterEmail, sendResignationEmail } from "../utils/common/sendMail.js";
 import jwt from "jsonwebtoken";
+
 
 
 cloudinary.config({
@@ -135,6 +136,23 @@ export const createEmployee = async (req, res) => {
       emergencyContact: emergencyContact ? JSON.parse(emergencyContact) : undefined,
       branchId,
     });
+
+    if (newEmployee.email) {
+      try {
+        await sendJoiningLetterEmail({
+          name: newEmployee.name,
+          email: newEmployee.email,
+          employeeId: newEmployee.employeeId,
+          role: newEmployee.role,
+          baseSalary: newEmployee.baseSalary,
+          joiningDate: newEmployee.joiningDate,
+        });
+        console.log(`✉️ Joining letter email sent successfully to ${newEmployee.email}`);
+      } catch (mailErr) {
+        console.error("❌ Failed to send joining letter email:", mailErr);
+      }
+    }
+
     res.status(201).json({
       success: true,
       message: "Employee created successfully",
@@ -689,10 +707,15 @@ export const deleteEmployeeAdvance = async (req, res) => {
 export const generateSalarySlip = async (req, res) => {
   try {
     const { employeeId, month, year } = req.body;
-    if (!employeeId || !month || !year) {
+    
+    // Log what we received for debugging
+    console.log("Generate salary slip request:", { employeeId, month, year, bodyKeys: Object.keys(req.body) });
+    
+    if (employeeId === undefined || month === undefined || year === undefined) {
       return res.status(400).json({
         success: false,
         message: "Employee ID, month, and year are required",
+        received: { employeeId, month, year },
       });
     }
 
@@ -704,16 +727,38 @@ export const generateSalarySlip = async (req, res) => {
       });
     }
 
+    // Ensure month and year are numbers
+    const monthIndex = typeof month === 'number' ? month : parseInt(month);
+    const yearNum = typeof year === 'number' ? year : parseInt(year);
+    
+    // Validate month range (0-11)
+    if (isNaN(monthIndex) || monthIndex < 0 || monthIndex > 11) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid month. Month should be between 0 and 11",
+        received: { month, monthIndex },
+      });
+    }
+    
+    // Validate year
+    if (isNaN(yearNum)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid year",
+        received: { year, yearNum },
+      });
+    }
+
     // Calculate salary based on base salary and any deductions
     const baseSalary = employee.baseSalary || 0;
-    const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+    const monthKey = `${yearNum}-${String(monthIndex + 1).padStart(2, '0')}`;
     
     // Check if salary slip already exists for this month
-    const monthName = new Date(year, month).toLocaleDateString('en-US', { month: 'long' });
+    const monthName = new Date(yearNum, monthIndex).toLocaleDateString('en-US', { month: 'long' });
     const existingSlip = employee.salarySlips.find(slip => 
       slip.monthKey === monthKey || 
-      slip.month === `${monthName} ${year}` ||
-      (slip.month === monthName && slip.year === parseInt(year))
+      slip.month === `${monthName} ${yearNum}` ||
+      (slip.month === monthName && slip.year === yearNum)
     );
     if (existingSlip) {
       return res.status(400).json({
@@ -722,10 +767,10 @@ export const generateSalarySlip = async (req, res) => {
       });
     }
 
-    // Get advances for this month
+    // Get advances for this month - FIXED: Compare directly with monthIndex (0-11)
     const monthAdvances = employee.advancePayments.filter(advance => {
       const advanceDate = new Date(advance.date);
-      return advanceDate.getMonth() === parseInt(month) - 1 && advanceDate.getFullYear() === parseInt(year);
+      return advanceDate.getMonth() === monthIndex && advanceDate.getFullYear() === yearNum;
     });
 
     const totalAdvances = monthAdvances.reduce((sum, advance) => sum + advance.amount, 0);
@@ -734,8 +779,8 @@ export const generateSalarySlip = async (req, res) => {
     // Create salary slip
     const salarySlip = {
       monthKey,
-      month: `${monthName} ${year}`, // Store month name with year
-      year,
+      month: `${monthName} ${yearNum}`, // Store month name with year
+      year: yearNum,
       basicSalary: baseSalary,        // Required field by Employee model
       finalPayable: netPay,           // Required field by Employee model
       baseSalary,                     // Keep for backward compatibility
@@ -743,7 +788,7 @@ export const generateSalarySlip = async (req, res) => {
       totalAdvances,
       netPay,                         // Keep for backward compatibility
       advancesDeducted: totalAdvances, // Required by email template
-      notes: `Salary slip generated for ${new Date(year, month).toLocaleDateString('en-US', { month: 'long' })} ${year}. Total advances: ₹${totalAdvances.toLocaleString('en-IN')}.`, // Required by email template
+      notes: `Salary slip generated for ${monthName} ${yearNum}. Total advances: ₹${totalAdvances.toLocaleString('en-IN')}.`, // Required by email template
       generatedAt: new Date(),
     };
 
@@ -1447,16 +1492,23 @@ export const downloadEmployeeSalarySlip = async (req, res) => {
     console.log("Salary slip found:", { monthKey: salarySlip.monthKey, month: salarySlip.month, year: salarySlip.year });
     
     // Get advances for this month
+    // extractedMonth is in format "05" (1-12), need to convert to 0-11 for getMonth()
     const monthAdvances = employee.advancePayments?.filter(advance => {
       const advanceDate = new Date(advance.date);
       const advanceMonthKey = `${advanceDate.getFullYear()}-${String(advanceDate.getMonth() + 1).padStart(2, '0')}`;
       
-      // Try to match by monthKey first
+      // Try to match by monthKey first (most reliable)
       if (advanceMonthKey === month) return true;
       
-      // If monthKey doesn't match, try by year and month
-      return advanceDate.getFullYear() === parseInt(extractedYear) && 
-             advanceDate.getMonth() === parseInt(extractedMonth) - 1;
+      // Fallback: If month parameter was split, compare year and month separately
+      // extractedMonth is "05" (1-12 format), so convert to 0-11 for comparison
+      if (extractedMonth && extractedYear) {
+        const monthIndex = parseInt(extractedMonth) - 1; // Convert from 1-12 to 0-11
+        return advanceDate.getFullYear() === parseInt(extractedYear) && 
+               advanceDate.getMonth() === monthIndex;
+      }
+      
+      return false;
     }) || [];
 
     console.log("Advances found for month:", monthAdvances.length);
@@ -1754,10 +1806,22 @@ export const getFilteredEmployeeDetails = async (req, res) => {
       const monthTotalAdvance = monthAdvances.reduce((sum, advance) => sum + advance.amount, 0);
       const monthRemaining = employee.baseSalary - monthTotalAdvance;
       
-      // Find salary slip for this month
+      // Find salary slip for this month - use monthKey for accurate matching
       const salarySlip = employee.salarySlips?.find(slip => {
-        const slipDate = new Date(slip.generatedAt);
-        return slipDate.getMonth() === i && slipDate.getFullYear() === year;
+        // Priority 1: Match by monthKey (most reliable)
+        if (slip.monthKey === monthKey) return true;
+        
+        // Priority 2: Match by year and month fields
+        if (slip.year === year && slip.month) {
+          const monthNames = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+          ];
+          const slipMonthName = typeof slip.month === 'string' ? slip.month.split(' ')[0] : '';
+          return slipMonthName === monthName;
+        }
+        
+        return false;
       });
       
       monthlyData.push({
@@ -1842,6 +1906,68 @@ export const getFilteredEmployeeDetails = async (req, res) => {
     });
   }
 };
+
+export const resignEmployee = async (req, res) => {
+  try {
+    const { employeeId } = req.body;
+
+    if (!employeeId) {
+      return res.status(400).json({
+        success: false,
+        message: "Employee ID is required.",
+      });
+    }
+
+    // Find employee by employeeId field first (string ID like "JMD-202509-0001")
+    let employee = await Employee.findOne({ employeeId });
+    
+    // If not found and employeeId looks like a MongoDB ObjectId, try searching by _id
+    if (!employee && employeeId.match(/^[0-9a-fA-F]{24}$/)) {
+      employee = await Employee.findById(employeeId);
+    }
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found.",
+      });
+    }
+
+    // Set status to inactive - deactivates account and barcode
+    employee.status = "inactive";
+    await employee.save();
+
+    // Send resignation confirmation email if email is provided
+    if (employee.email) {
+      try {
+        await sendResignationEmail({
+          name: employee.name,
+          email: employee.email,
+          employeeId: employee.employeeId,
+          role: employee.role,
+          resignationDate: new Date(),
+        });
+        console.log(`✉️ Resignation email sent successfully to ${employee.email}`);
+      } catch (mailErr) {
+        console.error("❌ Failed to send resignation email:", mailErr);
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Employee marked as resigned and account/barcode deactivated successfully.",
+      employee,
+    });
+  } catch (err) {
+    console.error("Error marking employee as resigned:", err);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
 
 
 

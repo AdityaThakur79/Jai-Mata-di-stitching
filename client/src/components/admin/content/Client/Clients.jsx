@@ -119,8 +119,7 @@ const Clients = () => {
   }, [isSuccess, isError]);
 
   return (
-    <div className="min-h-screen py-4 px-2 sm:px-4">
-      <div className="container mx-auto">
+    <>
         {/* Header */}
         <div className="mb-6">
           <div className="inline-flex items-center justify-center w-12 h-12 bg-orange-600 rounded-full shadow-lg mb-3">
@@ -639,8 +638,7 @@ const Clients = () => {
             </div>
           </SheetContent>
         </Sheet>
-      </div>
-    </div>
+    </>
   );
 };
 

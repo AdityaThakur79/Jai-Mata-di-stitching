@@ -20,7 +20,6 @@ import {
   Clock,
   Receipt,
   Download,
-  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -97,9 +96,11 @@ const PendingOrders = () => {
     useCreateInvoiceMutation();
   const [generateInvoicePDF, { isLoading: isDownloadingInvoice }] =
     useGenerateInvoicePDFMutation();
-  const { data: invoiceDetails } = useGetInvoiceByIdQuery(selectedInvoiceId, {
+  const { data: invoiceDetails, isLoading: isLoadingInvoiceDetails, isFetching: isFetchingInvoiceDetails } = useGetInvoiceByIdQuery(selectedInvoiceId, {
     skip: !selectedInvoiceId,
   });
+
+  const getOrderInvoiceId = (order) => order?.invoice?._id || order?.invoice || null;
 
   const mapInvoiceToTemplateData = (invoiceObj) => {
     if (!invoiceObj) return null;
@@ -188,6 +189,11 @@ const PendingOrders = () => {
     setShowInvoiceViewer(true);
   };
 
+  const closeInvoiceViewer = () => {
+    setShowInvoiceViewer(false);
+    setSelectedInvoiceId(null);
+  };
+
   const handleStatusChange = async (id, status) => {
     try {
       const response = await updatePendingOrderStatus({ id, status });
@@ -267,8 +273,7 @@ const PendingOrders = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:p-6 p-2">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -537,7 +542,18 @@ const PendingOrders = () => {
                               <Pencil className="w-4 h-4" />
                             </Button>
                             
-                            {order.status !== "billed" ? (
+                            {getOrderInvoiceId(order) ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleOpenInvoice(getOrderInvoiceId(order))}
+                                className="h-8 px-3 text-blue-700 border-blue-200 hover:bg-blue-50"
+                                title="View Bill"
+                              >
+                                <Receipt className="w-4 h-4 mr-2" />
+                                View Bill
+                              </Button>
+                            ) : (
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -551,16 +567,6 @@ const PendingOrders = () => {
                                 ) : (
                                   <Receipt className="w-4 h-4" />
                                 )}
-                              </Button>
-                            ) : (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleOpenInvoice(order.invoice?._id)}
-                                className="text-blue-600 hover:text-blue-700"
-                                title="View Invoice"
-                              >
-                                <FileText className="w-4 h-4" />
                               </Button>
                             )}
                             
@@ -649,7 +655,6 @@ const PendingOrders = () => {
             </CardContent>
           </Card>
         )}
-      </div>
 
       {/* Order Details Drawer */}
       <Drawer
@@ -772,37 +777,53 @@ const PendingOrders = () => {
         )}
       </Drawer>
 
-      {showInvoiceViewer && invoiceDetails?.invoice && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl h-[90vh] flex flex-col">
+      {showInvoiceViewer && (
+        <div
+          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+          onClick={closeInvoiceViewer}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl w-full max-w-6xl h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between p-4 border-b">
               <h3 className="font-semibold text-lg">
-                Invoice: {invoiceDetails.invoice.invoiceNumber}
+                {invoiceDetails?.invoice
+                  ? `Invoice Preview — ${invoiceDetails.invoice.invoiceNumber}`
+                  : "Invoice Preview"}
               </h3>
               <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => generateInvoicePDF(invoiceDetails.invoice._id)}
-                  disabled={isDownloadingInvoice}
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Download PDF
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    setShowInvoiceViewer(false);
-                    setSelectedInvoiceId(null);
-                  }}
-                >
-                  <X className="w-4 h-4" />
+                {invoiceDetails?.invoice && (
+                  <Button
+                    variant="default"
+                    onClick={() => generateInvoicePDF(invoiceDetails.invoice._id)}
+                    disabled={isDownloadingInvoice}
+                    className="bg-orange-600 hover:bg-orange-700 text-white"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download PDF
+                  </Button>
+                )}
+                <Button variant="outline" onClick={closeInvoiceViewer}>
+                  Close
                 </Button>
               </div>
             </div>
             <div className="flex-1 overflow-hidden">
-              <PDFViewer className="w-full h-full">
-                <InvoiceDocument {...mapInvoiceToTemplateData(invoiceDetails.invoice)} />
-              </PDFViewer>
+              {isLoadingInvoiceDetails || isFetchingInvoiceDetails ? (
+                <div className="flex items-center justify-center h-full">
+                  <Loader2 className="w-6 h-6 animate-spin text-orange-600 mr-2" />
+                  <span>Loading invoice...</span>
+                </div>
+              ) : invoiceDetails?.invoice ? (
+                <PDFViewer className="w-full h-full">
+                  <InvoiceDocument {...mapInvoiceToTemplateData(invoiceDetails.invoice)} />
+                </PDFViewer>
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  Failed to load invoice. Please try again.
+                </div>
+              )}
             </div>
           </div>
         </div>

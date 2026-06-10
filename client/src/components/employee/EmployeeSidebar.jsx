@@ -57,7 +57,7 @@ const JMD_COLORS = {
 };
 
 const SIDEBAR_WIDTH = 250;
-const NAVBAR_HEIGHT = 80;
+import PageContent from "@/components/layout/PageContent.jsx";
 
 const EmployeeSidebar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -581,14 +581,11 @@ const EmployeeSidebar = () => {
         </div>
       </div>
       
-      {/* Main Content */}
+      {/* Main Content — consistent padding across all sidebar tabs */}
       <div className="flex-1 min-h-screen min-w-0 bg-gradient-to-br from-orange-50 to-white lg:ml-[250px] pt-16 lg:pt-20">
-        <div
-          className={`w-full md:pt-20 pt-8 ${
-            denseMainPadding ? "px-2 lg:px-4" : "px-4 lg:px-8"
-          }`}>
+        <PageContent fullWidth={denseMainPadding}>
           <Outlet />
-        </div>
+        </PageContent>
       </div>
     </div>
   );

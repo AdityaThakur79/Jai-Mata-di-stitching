@@ -445,8 +445,7 @@ const PendingOrders = () => {
   };
 
   return (
-    <div className="min-h-screen py-4 px-2 sm:px-4">
-      <div className="container mx-auto">
+    <>
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center justify-between">
@@ -1263,7 +1262,7 @@ const PendingOrders = () => {
                           window.open(invoiceData.pdfUrl, '_blank');
                         }}
                         variant="default"
-                        className="bg-blue-600 hover:bg-blue-700"
+                        className="bg-orange-600 hover:bg-orange-700 text-white"
                       >
                         Download PDF
                       </Button>
@@ -1340,8 +1339,7 @@ const PendingOrders = () => {
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </>
   );
 };
 

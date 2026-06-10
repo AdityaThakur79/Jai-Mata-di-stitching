@@ -70,8 +70,7 @@ const CreateCategory = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white dark:from-gray-900 dark:to-gray-800">
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
+    <div className="max-w-2xl mx-auto w-full">
         {/* Header */}
         <div className="mb-8 flex items-center space-x-4">
           <Button variant="ghost" onClick={() => navigate('/employee/website/categories')} className="p-2">
@@ -252,7 +251,6 @@ const CreateCategory = () => {
             </Button>
           </div>
         </div>
-      </div>
     </div>
   );
 };

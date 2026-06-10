@@ -119,7 +119,7 @@ const Customers = () => {
 
   return (
     <section className="bg-gray-50 dark:bg-gray-900 min-h-[100vh] rounded-md">
-      <div className="md:p-6 p-2">
+      <div className="w-full">
         <div className="mb-6 flex flex-col md:flex-row md:justify-between md:items-center space-y-2 md:space-y-0">
           <h2 className="md:text-xl font-semibold text-gray-700 text-center dark:text-white">
             All Customers

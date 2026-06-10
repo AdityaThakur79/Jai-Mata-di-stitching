@@ -97,7 +97,7 @@ const Masters = () => {
 
   return (
     <section className="bg-gray-50 dark:bg-gray-900 min-h-[100vh] rounded-md">
-      <div className="md:p-6 p-2">
+      <div className="w-full">
         <div className="mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <h2 className="text-xl font-semibold text-gray-700 dark:text-white">
             All Masters

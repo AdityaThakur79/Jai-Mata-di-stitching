@@ -10,7 +10,6 @@ import RoleProtectedRoute from "@/utils/RoleProtectedRoute";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/admin/content/sidebar";
 import Footer from "@/components/Footer";
-import Dashboard from "@/components/admin/content/dashboard";
 import Profile from "@/components/admin/content/Profile";
 import CreateCustomer from "@/components/admin/content/Customer/CreateCustomer";
 import UpdateCustomer from "@/components/admin/content/Customer/UpdateCustomer";
@@ -55,6 +54,7 @@ import Branches from "./components/admin/content/Branch/Branches.jsx";
 import EmployeeLogin from "./components/EmployeeLogin.jsx";
 import EmployeeSidebar from "./components/employee/EmployeeSidebar";
 import EmployeeDashboard from "@/components/employee/EmployeeDashboard";
+import EmployeeMainDashboard from "@/components/employee/EmployeeMainDashboard";
 import EmployeeProfile from "@/components/employee/EmployeeProfile";
 import EmployeeSalary from "@/components/employee/EmployeeSalary";
 import EmployeeOrderWorkbench from "@/components/employee/EmployeeOrderWorkbench";
@@ -233,7 +233,7 @@ const appRouter = createBrowserRouter([
       },
       {
         path: "dashboard",
-        element: <EmployeeDashboard />,
+        element: <EmployeeMainDashboard />,
       },
       {
         path: "edit-profile",

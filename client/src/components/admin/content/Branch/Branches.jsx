@@ -123,8 +123,7 @@ const Branches = () => {
   };
 
   return (
-    <section className="min-h-screen bg-gradient-to-br from-orange-50 to-white dark:from-gray-900 dark:to-gray-800">
-      <div className="container mx-auto px-4 ">
+    <>
         {/* Header Section */}
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-6 lg:space-y-0">
@@ -423,7 +422,6 @@ const Branches = () => {
             </div>
           )}
         </div>
-      </div>
 
       {/* Enhanced Drawer */}
       <Drawer
@@ -551,7 +549,7 @@ const Branches = () => {
           </div>
         )}
       </Drawer>
-    </section>
+    </>
   );
 };
 

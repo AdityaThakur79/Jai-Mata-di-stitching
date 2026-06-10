@@ -32,6 +32,16 @@ const BarcodeScanPage = () => {
         if (data?.success && data?.employee) {
           const employee = data.employee;
           
+          if (employee.status === "inactive") {
+            toast.error(`Access Denied: ${employee.name} (${employee.employeeId}) account and barcode have been deactivated.`);
+            setScannedCode("");
+            if (inputRef.current) {
+              inputRef.current.focus();
+            }
+            setIsProcessing(false);
+            return;
+          }
+          
           // Add to recent scans
           setRecentScans(prev => [
             {

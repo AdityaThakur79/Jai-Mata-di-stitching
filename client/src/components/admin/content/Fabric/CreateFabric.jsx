@@ -65,8 +65,7 @@ const CreateFabric = () => {
   }, [isSuccess, isError]);
 
   return (
-    <div className="min-h-screen  dark:from-gray-900 dark:to-gray-800">
-      <div className="container mx-auto px-4 py-8 max-w-3xl">
+    <div className="max-w-3xl mx-auto w-full">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center space-x-4">
@@ -279,7 +278,6 @@ const CreateFabric = () => {
             </Button>
           </div>
         </div>
-      </div>
     </div>
   );
 };

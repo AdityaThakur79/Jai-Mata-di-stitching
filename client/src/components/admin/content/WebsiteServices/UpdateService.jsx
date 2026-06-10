@@ -258,22 +258,17 @@ const UpdateService = () => {
 
   if (fetchLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white dark:from-gray-900 dark:to-gray-800">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex justify-center items-center h-64">
-            <div className="flex flex-col items-center space-y-4">
-              <Loader2 className="w-8 h-8 animate-spin text-[#EB811F]" />
-              <p className="text-gray-500">Loading service details...</p>
-            </div>
-          </div>
+      <div className="flex justify-center items-center h-64">
+        <div className="flex flex-col items-center space-y-4">
+          <Loader2 className="w-8 h-8 animate-spin text-[#EB811F]" />
+          <p className="text-gray-500">Loading service details...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white dark:from-gray-900 dark:to-gray-800">
-      <div className="container mx-auto px-4 py-8">
+    <div className="w-full">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
@@ -704,7 +699,6 @@ const UpdateService = () => {
             </Button>
           </div>
         </div>
-      </div>
     </div>
   );
 };

@@ -151,6 +151,15 @@ export const employeeApi = createApi({
             invalidatesTags: ["Employee"],
         }),
 
+        resignEmployee: builder.mutation({
+            query: (employeeId) => ({
+                url: "/resign",
+                method: "POST",
+                body: { employeeId },
+            }),
+            invalidatesTags: ["Employee"],
+        }),
+
         downloadEmployeeIdCard: builder.mutation({
             query: (employeeId) => ({
                 url: "/idcard-pdf",
@@ -234,4 +243,5 @@ export const {
     useDeleteEmployeeAdvanceMutation,
     useGenerateSalarySlipMutation,
     useSendSalarySlipEmailMutation,
+    useResignEmployeeMutation,
 } = employeeApi;

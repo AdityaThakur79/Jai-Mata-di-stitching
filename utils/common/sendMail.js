@@ -378,3 +378,190 @@ export const sendOrderConfirmationEmail = async ({ clientName, clientEmail, bill
     throw error;
   }
 };
+
+// Send joining letter email
+export const sendJoiningLetterEmail = async ({ name, email, employeeId, role, baseSalary, joiningDate }) => {
+  try {
+    const apiInstance = getBrevoClient();
+    const sender = getSender();
+    const logoUrl = 'https://jmdstitching.com/images/jmd_logo.jpeg';
+    
+    const formattedSalary = Number(baseSalary || 15000).toLocaleString('en-IN');
+    const formattedDate = new Date(joiningDate || Date.now()).toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    const htmlContent = `
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: 0 auto; background-color: #fcfcfc; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%); padding: 40px 30px; text-align: center; color: white;">
+          <img src="${logoUrl}" alt="JMD Stitching Logo" width="120" height="90" style="max-width: 120px; height: auto; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: inline-block; margin-bottom: 20px;" />
+          <h1 style="margin: 0; font-size: 26px; font-weight: 800; letter-spacing: 0.5px;">Welcome to JMD Stitching!</h1>
+          <p style="margin: 5px 0 0 0; font-size: 15px; color: #fff5f0; font-weight: 500;">OFFICIAL LETTER OF APPOINTMENT</p>
+        </div>
+
+        <!-- Body -->
+        <div style="padding: 35px 30px; color: #2d3748; line-height: 1.6;">
+          <p style="font-size: 17px; margin-top: 0; margin-bottom: 20px;">Dear <strong>${name}</strong>,</p>
+          <p style="font-size: 15px; color: #4a5568; margin-bottom: 25px;">
+            Congratulations! We are absolutely thrilled to welcome you to the <strong>JMD Stitching Private Limited</strong> family. We are impressed by your credentials and look forward to a mutually successful association.
+          </p>
+
+          <!-- Employment Summary Box -->
+          <div style="background: #f8fafc; border-left: 4px solid #ff6b35; border-radius: 6px; padding: 20px; margin-bottom: 30px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);">
+            <h3 style="margin-top: 0; margin-bottom: 15px; color: #ff6b35; font-size: 15px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">💼 Employment Details</h3>
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+              <tr>
+                <td style="padding: 6px 0; color: #718096; width: 40%;">Employee ID:</td>
+                <td style="padding: 6px 0; font-weight: bold; color: #1a202c;">${employeeId}</td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 0; color: #718096;">Assigned Role:</td>
+                <td style="padding: 6px 0; font-weight: bold; color: #1a202c; text-transform: capitalize;">${role}</td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 0; color: #718096;">Base Salary:</td>
+                <td style="padding: 6px 0; font-weight: bold; color: #2f855a; font-size: 16px;">₹${formattedSalary} / month</td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 0; color: #718096;">Joining Date:</td>
+                <td style="padding: 6px 0; font-weight: bold; color: #1a202c;">${formattedDate}</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Terms and Conditions -->
+          <div style="margin-bottom: 30px;">
+            <h3 style="margin-top: 0; margin-bottom: 15px; color: #ff6b35; font-size: 16px; font-weight: 700; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">📋 Basic Terms &amp; Conditions</h3>
+            <ul style="padding-left: 20px; margin: 0; font-size: 14px; color: #4a5568;">
+              <li style="margin-bottom: 8px;"><strong>Working Hours:</strong> Standard working hours are from 9:30 AM to 6:30 PM, Monday through Saturday.</li>
+              <li style="margin-bottom: 8px;"><strong>Probationary Period:</strong> You will be on probation for the first three (3) months. Upon successful performance review, your employment status will be formalized.</li>
+              <li style="margin-bottom: 8px;"><strong>Attendance &amp; Barcode:</strong> You will be issued a digital ID card containing a barcode. It is mandatory to scan this barcode daily for clocking in/out. Do not share or allow others to use your barcode.</li>
+              <li style="margin-bottom: 8px;"><strong>Notice Period:</strong> Should you wish to resign, a one (1) month written notice is required, or basic pay in lieu thereof.</li>
+              <li style="margin-bottom: 8px;"><strong>Confidentiality:</strong> You must protect and maintain absolute secrecy regarding the Company’s proprietary designs, client data, fabric patterns, pricing, and system data.</li>
+              <li style="margin-bottom: 8px;"><strong>Punctuality &amp; Discipline:</strong> Promptness is expected. Unexcused absences, non-compliance, or misconduct will invite disciplinary action, up to immediate termination.</li>
+            </ul>
+          </div>
+
+          <!-- Access credentials info -->
+          <div style="background-color: #fffaf0; border: 1px dashed #feebc8; border-radius: 8px; padding: 15px; margin-bottom: 30px; font-size: 13.5px; color: #dd6b20; text-align: center;">
+            <strong>Pro Tip:</strong> Log in to the employee dashboard at <a href="https://jmdstitching.com/login" style="color: #dd6b20; text-decoration: underline; font-weight: bold;">https://jmdstitching.com/login</a> to view your profile and salary slips.
+          </div>
+
+          <p style="font-size: 15px; margin-bottom: 0;">
+            Please accept our heartiest congratulations. We are excited about what we can accomplish together!
+          </p>
+          
+          <p style="margin-top: 25px; margin-bottom: 0; font-size: 15px; color: #4a5568;">
+            Best regards,<br />
+            <strong>HR Operations</strong><br />
+            JMD Stitching Private Limited
+          </p>
+        </div>
+
+        <!-- Footer -->
+        <div style="background-color: #f7fafc; padding: 20px 30px; text-align: center; border-top: 1px solid #edf2f7; font-size: 12px; color: #a0aec0;">
+          This is a system-generated appointment letter. Reply to this mail if you have any questions or require support.
+          <br /><br />
+          &copy; ${new Date().getFullYear()} JMD Stitching Private Limited. All Rights Reserved.
+        </div>
+      </div>
+    `;
+
+    const sendSmtpEmail = new SendSmtpEmail();
+    sendSmtpEmail.subject = `Appointment Letter & Joining Welcome - ${name} (${employeeId})`;
+    sendSmtpEmail.htmlContent = htmlContent;
+    sendSmtpEmail.sender = { email: sender.email, name: sender.name };
+    sendSmtpEmail.to = [{ email: email }];
+
+    const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log('✅ Joining letter welcome email sent successfully');
+    return result;
+  } catch (error) {
+    console.error("❌ Error sending joining letter email:", error);
+    throw error;
+  }
+};
+
+// Send resignation letter email
+export const sendResignationEmail = async ({ name, email, employeeId, role, resignationDate }) => {
+  try {
+    const apiInstance = getBrevoClient();
+    const sender = getSender();
+    const logoUrl = 'https://jmdstitching.com/images/jmd_logo.jpeg';
+    
+    const formattedDate = new Date(resignationDate || Date.now()).toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    const htmlContent = `
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: 0 auto; background-color: #fcfcfc; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%); padding: 40px 30px; text-align: center; color: white;">
+          <img src="${logoUrl}" alt="JMD Stitching Logo" width="120" height="90" style="max-width: 120px; height: auto; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: inline-block; margin-bottom: 20px;" />
+          <h1 style="margin: 0; font-size: 26px; font-weight: 800; letter-spacing: 0.5px;">Resignation Processed</h1>
+          <p style="margin: 5px 0 0 0; font-size: 15px; color: #fff5f0; font-weight: 500;">ACCOUNT DEACTIVATION &amp; EXIT CONFIRMATION</p>
+        </div>
+
+        <!-- Body -->
+        <div style="padding: 35px 30px; color: #2d3748; line-height: 1.6;">
+          <p style="font-size: 17px; margin-top: 0; margin-bottom: 20px;">Dear <strong>${name}</strong>,</p>
+          <p style="font-size: 15px; color: #4a5568; margin-bottom: 25px;">
+            This email confirms that your resignation from your position as <strong>${role}</strong> at JMD Stitching Private Limited has been processed and accepted, effective on <strong>${formattedDate}</strong>.
+          </p>
+
+          <!-- Deactivation Alert Summary Box -->
+          <div style="background: #fff5f5; border-left: 4px solid #e53e3e; border-radius: 6px; padding: 20px; margin-bottom: 30px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);">
+            <h3 style="margin-top: 0; margin-bottom: 15px; color: #c53030; font-size: 15px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">⚠️ Deactivation Summary</h3>
+            <ul style="padding-left: 20px; margin: 0; font-size: 14px; color: #2d3748;">
+              <li style="margin-bottom: 8px;"><strong>Account Status:</strong> Deactivated instantly. You can no longer log in to the employee dashboard or workbenches.</li>
+              <li style="margin-bottom: 8px;"><strong>ID Card:</strong> Rendered invalid. It cannot be used for company premises access or representation.</li>
+              <li style="margin-bottom: 8px;"><strong>Barcode:</strong> Permanently deactivated in the scanning system. Any attempts to scan this barcode for attendance or order slip work will fail automatically.</li>
+            </ul>
+          </div>
+
+          <p style="font-size: 15px; color: #4a5568; margin-bottom: 20px;">
+            Please ensure you have returned all company property, inventory, design sheets, or tools in your possession to your branch manager. Your final settlement (full and final) including pending dues will be cleared in due course as per company policy.
+          </p>
+
+          <p style="font-size: 15px; margin-bottom: 0;">
+            We thank you for your contributions and dedicated service during your tenure with us, and we wish you all the very best in your future career endeavors.
+          </p>
+          
+          <p style="margin-top: 25px; margin-bottom: 0; font-size: 15px; color: #4a5568;">
+            Best regards,<br />
+            <strong>Exit Clearance Team</strong><br />
+            JMD Stitching Private Limited
+          </p>
+        </div>
+
+        <!-- Footer -->
+        <div style="background-color: #f7fafc; padding: 20px 30px; text-align: center; border-top: 1px solid #edf2f7; font-size: 12px; color: #a0aec0;">
+          This is an automated exit and deactivation confirmation email. If you believe this resignation was marked in error, please immediately contact JMD Stitching HR Support.
+          <br /><br />
+          &copy; ${new Date().getFullYear()} JMD Stitching Private Limited. All Rights Reserved.
+        </div>
+      </div>
+    `;
+
+    const sendSmtpEmail = new SendSmtpEmail();
+    sendSmtpEmail.subject = `Exit & Resignation Confirmation - ${name} (${employeeId})`;
+    sendSmtpEmail.htmlContent = htmlContent;
+    sendSmtpEmail.sender = { email: sender.email, name: sender.name };
+    sendSmtpEmail.to = [{ email: email }];
+
+    const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log('✅ Resignation letter confirmation email sent successfully');
+    return result;
+  } catch (error) {
+    console.error("❌ Error sending resignation confirmation email:", error);
+    throw error;
+  }
+};
+

@@ -45,8 +45,7 @@ const UpdateCatalogue = () => {
   };
 
   return (
-    <div className="min-h-screen py-4 px-2 sm:px-4">
-      <div className="container mx-auto">
+    <>
         {/* Page Header */}
         <div className="mb-6">
           <div className="inline-flex items-center justify-center w-12 h-12 bg-orange-600 rounded-full shadow-lg mb-3">
@@ -109,8 +108,7 @@ const UpdateCatalogue = () => {
           <Button type="button" variant="outline" onClick={()=>navigate(-1)} className="h-8 text-sm">Cancel</Button>
         </div>
         </form>
-      </div>
-    </div>
+    </>
   );
 };
 

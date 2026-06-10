@@ -61,8 +61,7 @@ const OrderDetail = () => {
   }
 
   return (
-    <div className="min-h-screen py-4 px-2 sm:px-4">
-      <div className="container mx-auto">
+    <>
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <div>
@@ -248,8 +247,7 @@ const OrderDetail = () => {
             )}
           </div>
         )}
-      </div>
-    </div>
+    </>
   );
 };
 
