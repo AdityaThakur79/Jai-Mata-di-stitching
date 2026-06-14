@@ -52,6 +52,7 @@ import galleryRoutes from "./routes/gallery.js"
 import categoryRoutes from "./routes/category.js"
 import clientRoutes from "./routes/client.js"
 import orderRoutes from "./routes/order.js"
+import attendanceRoutes from "./routes/attendance.js"
 
 app.use("/api/customer", customerRoutes)
 app.use("/api/item", itemRoutes)
@@ -69,6 +70,7 @@ app.use("/api/gallery", galleryRoutes)
 app.use("/api/categories", categoryRoutes)
 app.use("/api/client", clientRoutes)
 app.use("/api/order", orderRoutes)
+app.use("/api/attendance", attendanceRoutes)
 
 // Serve static files from uploads directory
 

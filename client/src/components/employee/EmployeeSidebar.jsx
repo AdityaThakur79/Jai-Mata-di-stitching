@@ -35,6 +35,9 @@ import {
   Tags,
   Layers,
   MessageSquare,
+  UserCheck,
+  CalendarCheck,
+  ClipboardList,
 } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { employeeLoggedOut } from "@/features/authSlice";
@@ -97,6 +100,7 @@ const EmployeeSidebar = () => {
       'employee-dashboard',
       'create-order',
       'client-management',
+      'attendance',
       'profile',
       'salary'
     ],
@@ -109,6 +113,7 @@ const EmployeeSidebar = () => {
       'order-details',
       'employee-dashboard',
       'create-order',
+      'attendance',
       'profile',
       'salary'
     ],
@@ -148,6 +153,7 @@ const EmployeeSidebar = () => {
       'website-management',
       'enquiries',
       'create-order',
+      'attendance',
       'profile',
       'salary'
     ],
@@ -285,6 +291,16 @@ const EmployeeSidebar = () => {
       title: "Dashboard",
       icon: LayoutDashboard,
       path: "/employee/dashboard",
+    },
+    //Attendance Management
+    {
+      id: "attendance",
+      title: "Attendance",
+      icon: UserCheck,
+      subItems: [
+        { title: "Mark Attendance", icon: CalendarCheck, path: "/employee/attendance/mark" },
+        { title: "Attendance Records", icon: ClipboardList, path: "/employee/attendance" },
+      ],
     },
     //Branch management
     {

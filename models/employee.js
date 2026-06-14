@@ -13,6 +13,20 @@ const advanceSchema = new mongoose.Schema({
   },
 });
 
+// Schema for daily wages (for per-day payment employees)
+const dailyWageSchema = new mongoose.Schema({
+  date: {
+    type: Date,
+    required: true,
+  },
+  amount: {
+    type: Number,
+    required: true,
+  },
+  hours: Number,
+  notes: String,
+});
+
 // Schema for monthly salary slips
 const salarySlipSchema = new mongoose.Schema({
   monthKey: {
@@ -27,13 +41,115 @@ const salarySlipSchema = new mongoose.Schema({
     type: Number, // e.g., 2025
     required: true,
   },
+  // Earnings
   basicSalary: {
     type: Number,
     required: true,
   },
+  hra: { // House Rent Allowance
+    type: Number,
+    default: 0,
+  },
+  da: { // Dearness Allowance
+    type: Number,
+    default: 0,
+  },
+  conveyanceAllowance: {
+    type: Number,
+    default: 0,
+  },
+  medicalAllowance: {
+    type: Number,
+    default: 0,
+  },
+  specialAllowance: {
+    type: Number,
+    default: 0,
+  },
+  otherEarnings: {
+    type: Number,
+    default: 0,
+  },
+  bonus: {
+    type: Number,
+    default: 0,
+  },
+  incentive: {
+    type: Number,
+    default: 0,
+  },
+  
+  // Deductions
   advancesDeducted: {
     type: Number,
     default: 0,
+  },
+  pf: { // Provident Fund
+    type: Number,
+    default: 0,
+  },
+  esi: { // Employee State Insurance
+    type: Number,
+    default: 0,
+  },
+  tds: { // Tax Deducted at Source
+    type: Number,
+    default: 0,
+  },
+  professionalTax: {
+    type: Number,
+    default: 0,
+  },
+  loanDeduction: {
+    type: Number,
+    default: 0,
+  },
+  otherDeductions: {
+    type: Number,
+    default: 0,
+  },
+  
+  // Attendance-based
+  totalDays: {
+    type: Number,
+    default: 0,
+  },
+  presentDays: {
+    type: Number,
+    default: 0,
+  },
+  absentDays: {
+    type: Number,
+    default: 0,
+  },
+  leaveDays: {
+    type: Number,
+    default: 0,
+  },
+  halfDays: {
+    type: Number,
+    default: 0,
+  },
+  paidDays: { // Calculated: present + leaves + (halfDays * 0.5)
+    type: Number,
+    default: 0,
+  },
+  
+  // For per-day payment employees
+  dailyWages: [dailyWageSchema],
+  perDayRate: {
+    type: Number,
+    default: 0,
+  },
+  
+  // Totals
+  totalEarnings: {
+    type: Number,
+    required: true,
+  },
+  totalDeductions: {
+    type: Number,
+    required: true,
   },
   finalPayable: {
     type: Number,
@@ -183,6 +299,16 @@ const employeeSchema = new mongoose.Schema(
       type: Number,
       required: true,
       default: 15000,
+    },
+    // Salary payment type
+    paymentType: {
+      type: String,
+      enum: ["monthly", "daily"],
+      default: "monthly",
+    },
+    perDayRate: {
+      type: Number,
+      default: 0,
     },
     advancePayments: [advanceSchema],
     salarySlips: [salarySlipSchema],

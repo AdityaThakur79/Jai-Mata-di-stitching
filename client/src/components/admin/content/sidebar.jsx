@@ -3,6 +3,7 @@ import { Link, Outlet } from "react-router-dom";
 import {
   BadgeAlert,
   BadgeCheck,
+  CalendarCheck,
   ContactRound,
   FilePlus,
   FileText,
@@ -29,6 +30,7 @@ import {
   TruckIcon,
   User,
   User2Icon,
+  UserCheck,
   Warehouse,
 } from "lucide-react";
 import { useSelector } from "react-redux";
@@ -300,6 +302,35 @@ const Sidebar = () => {
                 <Package size={22} />
                 <h2 className="text-sm">Order Details</h2>
               </Link>
+            </AccordionItem>
+
+            <AccordionItem value="item-attendance">
+              <AccordionTrigger className="hover:no-underline">
+                <div className="flex items-center gap-2">
+                  <UserCheck size={22} />
+                  <span>Attendance</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <Link
+                  to="/employee/attendance/mark"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <CalendarCheck size={22} />
+                  <h2>Mark Attendance</h2>
+                </Link>
+              </AccordionContent>
+              <AccordionContent>
+                <Link
+                  to="/employee/attendance"
+                  className="flex items-center gap-2 hover:text-[#EB811F]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <CiCircleList size={22} />
+                  <h2>Attendance Records</h2>
+                </Link>
+              </AccordionContent>
             </AccordionItem>
 
             <AccordionItem value="item-7">

@@ -215,6 +215,15 @@ export const employeeApi = createApi({
             invalidatesTags: ["Employee"],
         }),
 
+        generateDetailedSalarySlip: builder.mutation({
+            query: (data) => ({
+                url: "/generate-detailed-salary-slip",
+                method: "POST",
+                body: data,
+            }),
+            invalidatesTags: ["Employee"],
+        }),
+
         sendSalarySlipEmail: builder.mutation({
             query: (data) => ({
                 url: "/send-salary-slip-email",
@@ -242,6 +251,7 @@ export const {
     useGetAllEmployeeAdvancesQuery,
     useDeleteEmployeeAdvanceMutation,
     useGenerateSalarySlipMutation,
+    useGenerateDetailedSalarySlipMutation,
     useSendSalarySlipEmailMutation,
     useResignEmployeeMutation,
 } = employeeApi;

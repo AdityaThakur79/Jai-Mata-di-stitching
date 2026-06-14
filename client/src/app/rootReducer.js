@@ -18,6 +18,7 @@ import { categoriesApi } from "@/features/api/categoriesApi.js";
 import { clientApi } from "@/features/api/clientApi.js";
 import { orderApi } from "@/features/api/orderApi.js";
 import { catalogueApi } from "@/features/api/catalogueApi.js";
+import { attendanceApi } from "@/features/api/attendanceApi.js";
 
 const rootReducer = combineReducers({
   [authApi.reducerPath]: authApi.reducer,
@@ -38,6 +39,7 @@ const rootReducer = combineReducers({
   [clientApi.reducerPath]: clientApi.reducer,
   [orderApi.reducerPath]: orderApi.reducer,
   [catalogueApi.reducerPath]: catalogueApi.reducer,
+  [attendanceApi.reducerPath]: attendanceApi.reducer,
   auth: authReducer,
 });
 

@@ -47,6 +47,7 @@ import UpdateEmployee from "./components/admin/content/Employee/UpdateEmployee.j
 import Employee from "./components/admin/content/Employee/Employee.jsx";
 import EmployeeAdvance from "./components/admin/content/Employee/EmployeeAdvance.jsx";
 import EmployeeDetail from "./components/admin/content/Employee/EmployeeDetail.jsx";
+import GenerateSalarySlipDetail from "./components/admin/content/Employee/GenerateSalarySlipDetail.jsx";
 import BarcodeScanPage from "./components/admin/content/Employee/BarcodeScanPage.jsx";
 import Branches from "./components/admin/content/Branch/Branches.jsx";
 
@@ -119,6 +120,11 @@ import BookAppointment from "./components/user/BookAppointment.jsx";
 import CataloguesUserView from "./components/user/Catalogues.jsx";
 import CataloguesPage from "./components/user/pages/Catalogues.jsx";
 import TrackOrder from "./components/user/TrackOrder.jsx";
+
+// Attendance Components
+import MarkAttendance from "./components/admin/content/Attendance/MarkAttendance.jsx";
+import AttendanceList from "./components/admin/content/Attendance/AttendanceList.jsx";
+import EmployeeAttendanceDetail from "./components/admin/content/Attendance/EmployeeAttendanceDetail.jsx";
 
 const appRouter = createBrowserRouter([
   //Homepage Routes
@@ -410,6 +416,23 @@ const appRouter = createBrowserRouter([
       {
         path: "employee-detail",
         element: <EmployeeDetail />,
+      },
+      {
+        path: "generate-salary-slip-detail",
+        element: <GenerateSalarySlipDetail />,
+      },
+      // Attendance Routes
+      {
+        path: "attendance/mark",
+        element: <MarkAttendance />,
+      },
+      {
+        path: "attendance",
+        element: <AttendanceList />,
+      },
+      {
+        path: "attendance/employee/:employeeId",
+        element: <EmployeeAttendanceDetail />,
       },
       // Branch CRUD
       {

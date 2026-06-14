@@ -10,6 +10,7 @@ import {
   getAllEmployeeAdvances,
   deleteEmployeeAdvance,
   generateSalarySlip,
+  generateDetailedSalarySlip,
   sendSalarySlipEmailController,
   employeeLogin,
   getEmployeeProfile,
@@ -53,6 +54,7 @@ router.post("/get-advance", isAuthenticated, getEmployeeAdvances);
 router.get("/advances", isAuthenticated, getAllEmployeeAdvances);
 router.delete("/delete-advance", isAuthenticated, deleteEmployeeAdvance);
 router.post("/generate-salary-slip", isAuthenticated, generateSalarySlip);
+router.post("/generate-detailed-salary-slip", isAuthenticated, generateDetailedSalarySlip);
 router.post("/send-salary-slip-email", isAuthenticated, sendSalarySlipEmailController);
 
 // Filtered Employee Details Route

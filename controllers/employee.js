@@ -776,6 +776,10 @@ export const generateSalarySlip = async (req, res) => {
     const totalAdvances = monthAdvances.reduce((sum, advance) => sum + advance.amount, 0);
     const netPay = Math.max(0, baseSalary - totalAdvances);
 
+    // Calculate total earnings and deductions for the schema
+    const totalEarnings = baseSalary;
+    const totalDeductions = totalAdvances;
+
     // Create salary slip
     const salarySlip = {
       monthKey,
@@ -783,6 +787,8 @@ export const generateSalarySlip = async (req, res) => {
       year: yearNum,
       basicSalary: baseSalary,        // Required field by Employee model
       finalPayable: netPay,           // Required field by Employee model
+      totalEarnings,                  // Required field
+      totalDeductions,                // Required field
       baseSalary,                     // Keep for backward compatibility
       advances: monthAdvances,
       totalAdvances,
@@ -803,6 +809,154 @@ export const generateSalarySlip = async (req, res) => {
     });
   } catch (err) {
     console.error("Error generating salary slip:", err);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
+// Generate Detailed Salary Slip with all fields
+export const generateDetailedSalarySlip = async (req, res) => {
+  try {
+    const {
+      employeeId,
+      month,
+      year,
+      // Earnings
+      basicSalary,
+      hra = 0,
+      da = 0,
+      conveyanceAllowance = 0,
+      medicalAllowance = 0,
+      specialAllowance = 0,
+      otherEarnings = 0,
+      bonus = 0,
+      incentive = 0,
+      // Deductions
+      advancesDeducted = 0,
+      pf = 0,
+      esi = 0,
+      tds = 0,
+      professionalTax = 0,
+      loanDeduction = 0,
+      otherDeductions = 0,
+      // Attendance
+      totalDays = 0,
+      presentDays = 0,
+      absentDays = 0,
+      leaveDays = 0,
+      halfDays = 0,
+      paidDays = 0,
+      // Per-day
+      perDayRate = 0,
+      dailyWages = [],
+      // Summary
+      totalEarnings,
+      totalDeductions,
+      finalPayable,
+      notes = "",
+    } = req.body;
+
+    if (employeeId === undefined || month === undefined || year === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: "Employee ID, month, and year are required",
+      });
+    }
+
+    const employee = await Employee.findOne({ employeeId });
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    // Ensure month and year are numbers
+    const monthIndex = typeof month === 'number' ? month : parseInt(month);
+    const yearNum = typeof year === 'number' ? year : parseInt(year);
+
+    const monthKey = `${yearNum}-${String(monthIndex + 1).padStart(2, '0')}`;
+    const monthName = new Date(yearNum, monthIndex).toLocaleDateString('en-US', { month: 'long' });
+
+    // Check if salary slip already exists for this month
+    const existingSlip = employee.salarySlips.find(slip =>
+      slip.monthKey === monthKey ||
+      slip.month === `${monthName} ${yearNum}` ||
+      (slip.month === monthName && slip.year === yearNum)
+    );
+    
+    if (existingSlip) {
+      return res.status(400).json({
+        success: false,
+        message: "Salary slip already generated for this month",
+      });
+    }
+
+    // Get advances for this month
+    const monthAdvances = employee.advancePayments.filter(advance => {
+      const advanceDate = new Date(advance.date);
+      return advanceDate.getMonth() === monthIndex && advanceDate.getFullYear() === yearNum;
+    });
+
+    // Create detailed salary slip
+    const salarySlip = {
+      monthKey,
+      month: `${monthName} ${yearNum}`,
+      year: yearNum,
+      // Earnings
+      basicSalary,
+      hra,
+      da,
+      conveyanceAllowance,
+      medicalAllowance,
+      specialAllowance,
+      otherEarnings,
+      bonus,
+      incentive,
+      // Deductions
+      advancesDeducted,
+      pf,
+      esi,
+      tds,
+      professionalTax,
+      loanDeduction,
+      otherDeductions,
+      // Attendance
+      totalDays,
+      presentDays,
+      absentDays,
+      leaveDays,
+      halfDays,
+      paidDays,
+      // Per-day
+      perDayRate,
+      dailyWages,
+      // Summary
+      totalEarnings,
+      totalDeductions,
+      finalPayable,
+      netPay: finalPayable,
+      baseSalary: basicSalary,
+      advances: monthAdvances,
+      totalAdvances: advancesDeducted,
+      notes: notes || `Salary slip generated for ${monthName} ${yearNum}.`,
+      generatedAt: new Date(),
+    };
+
+    // Add to employee's salary slips
+    employee.salarySlips.push(salarySlip);
+    await employee.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Detailed salary slip generated successfully",
+      salarySlip,
+    });
+  } catch (err) {
+    console.error("Error generating detailed salary slip:", err);
     res.status(500).json({
       success: false,
       message: "Internal server error",

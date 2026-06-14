@@ -1477,21 +1477,40 @@ const EmployeeDetail = () => {
                           </Button>
                         </>
                       ) : (
-                        <Button
-                          size="sm"
-                          className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold shadow-xl rounded-xl px-4 py-3 hover:from-orange-600 hover:to-orange-700 hover:scale-105 transition-all duration-300 border-0"
-                          onClick={() =>
-                            handleGenerateSalarySlip(month.monthKey)
-                          }
-                          disabled={generatingSlipMonthKey === month.monthKey}
-                        >
-                          {generatingSlipMonthKey === month.monthKey ? (
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          ) : (
-                            <FileText className="w-4 h-4 mr-2" />
-                          )}
-                          Generate Salary Slip
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold shadow-xl rounded-xl px-4 py-3 hover:from-orange-600 hover:to-orange-700 hover:scale-105 transition-all duration-300 border-0"
+                            onClick={() =>
+                              handleGenerateSalarySlip(month.monthKey)
+                            }
+                            disabled={generatingSlipMonthKey === month.monthKey}
+                          >
+                            {generatingSlipMonthKey === month.monthKey ? (
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            ) : (
+                              <FileText className="w-4 h-4 mr-2" />
+                            )}
+                            Quick Generate
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="px-4 py-3 rounded-xl border-2 border-orange-500 text-orange-600 font-semibold hover:bg-orange-50"
+                            onClick={() => {
+                              navigate('/employee/generate-salary-slip-detail', {
+                                state: {
+                                  employee: employeeData,
+                                  month: month.monthIndex,
+                                  year: month.year,
+                                }
+                              });
+                            }}
+                          >
+                            <DollarSign className="w-4 h-4 mr-2" />
+                            Detailed
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </div>
