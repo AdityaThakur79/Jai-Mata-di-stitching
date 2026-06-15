@@ -774,10 +774,38 @@ export const generateSalarySlip = async (req, res) => {
     });
 
     const totalAdvances = monthAdvances.reduce((sum, advance) => sum + advance.amount, 0);
-    const netPay = Math.max(0, baseSalary - totalAdvances);
+    
+    // Calculate attendance-based salary
+    // Get attendance data for the month
+    const Attendance = (await import("../models/attendance.js")).default;
+    const daysInMonth = new Date(yearNum, monthIndex + 1, 0).getDate();
+    
+    const attendance = await Attendance.find({
+      employeeId,
+      date: {
+        $gte: new Date(yearNum, monthIndex, 1),
+        $lte: new Date(yearNum, monthIndex + 1, 0, 23, 59, 59, 999),
+      },
+    });
+
+    const presentDays = attendance.filter((a) => a.status === "present").length;
+    const leaveDays = attendance.filter((a) => a.status === "leave").length;
+    const halfDays = attendance.filter((a) => a.status === "half-day").length;
+    const paidDays = presentDays + leaveDays + (halfDays * 0.5);
+
+    // If present days is 0, set basic salary to 0
+    let attendanceBasedSalary = baseSalary;
+    if (presentDays === 0) {
+      attendanceBasedSalary = 0;
+    } else {
+      // Calculate proportional salary based on attendance
+      attendanceBasedSalary = Math.round((baseSalary * paidDays) / daysInMonth);
+    }
+
+    const netPay = Math.max(0, attendanceBasedSalary - totalAdvances);
 
     // Calculate total earnings and deductions for the schema
-    const totalEarnings = baseSalary;
+    const totalEarnings = attendanceBasedSalary;
     const totalDeductions = totalAdvances;
 
     // Create salary slip
@@ -785,16 +813,24 @@ export const generateSalarySlip = async (req, res) => {
       monthKey,
       month: `${monthName} ${yearNum}`, // Store month name with year
       year: yearNum,
-      basicSalary: baseSalary,        // Required field by Employee model
-      finalPayable: netPay,           // Required field by Employee model
-      totalEarnings,                  // Required field
-      totalDeductions,                // Required field
-      baseSalary,                     // Keep for backward compatibility
+      basicSalary: attendanceBasedSalary, // Required field by Employee model (attendance-based)
+      finalPayable: netPay,               // Required field by Employee model
+      totalEarnings,                      // Required field
+      totalDeductions,                    // Required field
+      baseSalary: employee.baseSalary,    // Store original base salary
+      totalDays: daysInMonth,
+      presentDays,
+      absentDays: attendance.filter((a) => a.status === "absent").length,
+      leaveDays,
+      halfDays,
+      paidDays,
       advances: monthAdvances,
       totalAdvances,
-      netPay,                         // Keep for backward compatibility
-      advancesDeducted: totalAdvances, // Required by email template
-      notes: `Salary slip generated for ${monthName} ${yearNum}. Total advances: ₹${totalAdvances.toLocaleString('en-IN')}.`, // Required by email template
+      netPay,                             // Keep for backward compatibility
+      advancesDeducted: totalAdvances,    // Required by email template
+      notes: presentDays === 0 
+        ? `Salary slip for ${monthName} ${yearNum}. No attendance recorded - salary set to ₹0. Total advances: ₹${totalAdvances.toLocaleString('en-IN')}.`
+        : `Salary slip for ${monthName} ${yearNum}. Attendance: ${presentDays}/${daysInMonth} days. Total advances: ₹${totalAdvances.toLocaleString('en-IN')}.`,
       generatedAt: new Date(),
     };
 

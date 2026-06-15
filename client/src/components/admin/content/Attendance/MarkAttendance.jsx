@@ -313,65 +313,138 @@ const MarkAttendance = () => {
               return (
                 <div
                   key={employee.employeeId}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  className="flex flex-col p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors space-y-3"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold">
-                      {employee.name.charAt(0).toUpperCase()}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold">
+                        {employee.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {employee.name}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {employee.employeeId} • {employee.role}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {employee.name}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {employee.employeeId} • {employee.role}
-                      </p>
+
+                    <div className="flex items-center gap-3">
+                      {attendance?.status && (
+                        <Badge
+                          variant={isPresent ? "success" : "destructive"}
+                          className={
+                            isPresent
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
+                          }
+                        >
+                          {attendance.status.toUpperCase()}
+                        </Badge>
+                      )}
+
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant={isPresent ? "default" : "outline"}
+                          onClick={() => markEmployee(employee.employeeId, "present")}
+                          className={
+                            isPresent
+                              ? "bg-green-600 hover:bg-green-700"
+                              : "border-green-300 text-green-700 hover:bg-green-50"
+                          }
+                        >
+                          <CheckCircle className="w-4 h-4 mr-1" />
+                          Present
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={isAbsent ? "default" : "outline"}
+                          onClick={() => markEmployee(employee.employeeId, "absent")}
+                          className={
+                            isAbsent
+                              ? "bg-red-600 hover:bg-red-700"
+                              : "border-red-300 text-red-700 hover:bg-red-50"
+                          }
+                        >
+                          <XCircle className="w-4 h-4 mr-1" />
+                          Absent
+                        </Button>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    {attendance?.status && (
-                      <Badge
-                        variant={isPresent ? "success" : "destructive"}
-                        className={
-                          isPresent
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }
-                      >
-                        {attendance.status.toUpperCase()}
-                      </Badge>
-                    )}
+                  {/* Check-in, Check-out, and Notes - shown when marked */}
+                  {attendance?.status && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pl-16">
+                      {/* Check-in Time */}
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                          Check In
+                        </label>
+                        <Input
+                          type="time"
+                          value={attendance.checkInTime}
+                          onChange={(e) =>
+                            setAttendanceData((prev) => ({
+                              ...prev,
+                              [employee.employeeId]: {
+                                ...prev[employee.employeeId],
+                                checkInTime: e.target.value,
+                              },
+                            }))
+                          }
+                          className="h-9 text-sm"
+                          disabled={attendance.status === "absent"}
+                        />
+                      </div>
 
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant={isPresent ? "default" : "outline"}
-                        onClick={() => markEmployee(employee.employeeId, "present")}
-                        className={
-                          isPresent
-                            ? "bg-green-600 hover:bg-green-700"
-                            : "border-green-300 text-green-700 hover:bg-green-50"
-                        }
-                      >
-                        <CheckCircle className="w-4 h-4 mr-1" />
-                        Present
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant={isAbsent ? "default" : "outline"}
-                        onClick={() => markEmployee(employee.employeeId, "absent")}
-                        className={
-                          isAbsent
-                            ? "bg-red-600 hover:bg-red-700"
-                            : "border-red-300 text-red-700 hover:bg-red-50"
-                        }
-                      >
-                        <XCircle className="w-4 h-4 mr-1" />
-                        Absent
-                      </Button>
+                      {/* Check-out Time */}
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                          Check Out
+                        </label>
+                        <Input
+                          type="time"
+                          value={attendance.checkOutTime}
+                          onChange={(e) =>
+                            setAttendanceData((prev) => ({
+                              ...prev,
+                              [employee.employeeId]: {
+                                ...prev[employee.employeeId],
+                                checkOutTime: e.target.value,
+                              },
+                            }))
+                          }
+                          className="h-9 text-sm"
+                          disabled={attendance.status === "absent"}
+                        />
+                      </div>
+
+                      {/* Notes */}
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                          Notes
+                        </label>
+                        <Input
+                          type="text"
+                          placeholder="Optional notes..."
+                          value={attendance.notes}
+                          onChange={(e) =>
+                            setAttendanceData((prev) => ({
+                              ...prev,
+                              [employee.employeeId]: {
+                                ...prev[employee.employeeId],
+                                notes: e.target.value,
+                              },
+                            }))
+                          }
+                          className="h-9 text-sm"
+                        />
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               );
             })}

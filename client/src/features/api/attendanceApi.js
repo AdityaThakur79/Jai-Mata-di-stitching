@@ -69,6 +69,26 @@ export const attendanceApi = createApi({
       }),
       invalidatesTags: ["Attendance"],
     }),
+
+    // Update attendance by date (for superadmin/director)
+    updateAttendanceByDate: builder.mutation({
+      query: (data) => ({
+        url: "/update-by-date",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Attendance"],
+    }),
+
+    // Auto-mark absent
+    autoMarkAbsent: builder.mutation({
+      query: (data) => ({
+        url: "/auto-mark-absent",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Attendance"],
+    }),
   }),
 });
 
@@ -79,4 +99,6 @@ export const {
   useGetAllEmployeesAttendanceSummaryQuery,
   useUpdateAttendanceMutation,
   useDeleteAttendanceMutation,
+  useUpdateAttendanceByDateMutation,
+  useAutoMarkAbsentMutation,
 } = attendanceApi;

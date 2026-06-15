@@ -387,3 +387,138 @@ export const updateAttendance = async (req, res) => {
     });
   }
 };
+
+// Auto-mark absent for employees not marked present on a specific date
+export const autoMarkAbsent = async (req, res) => {
+  try {
+    const { date } = req.body;
+    const markedBy = req.employeeId || req.id;
+
+    if (!date) {
+      return res.status(400).json({
+        success: false,
+        message: "Date is required",
+      });
+    }
+
+    const attendanceDate = new Date(date);
+    attendanceDate.setHours(0, 0, 0, 0);
+
+    // Get all active employees
+    const allEmployees = await Employee.find({ status: "active" }).select("employeeId name");
+
+    // Get employees who already have attendance marked for this date
+    const markedAttendance = await Attendance.find({
+      date: attendanceDate,
+    });
+
+    const markedEmployeeIds = markedAttendance.map((a) => a.employeeId);
+
+    // Find employees not marked
+    const unmarkedEmployees = allEmployees.filter(
+      (emp) => !markedEmployeeIds.includes(emp.employeeId)
+    );
+
+    // Create absent records for unmarked employees
+    const absentRecords = unmarkedEmployees.map((emp) => ({
+      employeeId: emp.employeeId,
+      employeeName: emp.name,
+      date: attendanceDate,
+      status: "absent",
+      notes: "Auto-marked absent",
+      markedBy,
+    }));
+
+    if (absentRecords.length > 0) {
+      await Attendance.insertMany(absentRecords);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Auto-marked ${absentRecords.length} employees as absent`,
+      data: {
+        markedAbsent: absentRecords.length,
+        employees: unmarkedEmployees.map((e) => ({
+          employeeId: e.employeeId,
+          name: e.name,
+        })),
+      },
+    });
+  } catch (error) {
+    console.error("Error auto-marking absent:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+// Update attendance for any employee by date (for superadmin/director)
+export const updateAttendanceByDate = async (req, res) => {
+  try {
+    const { employeeId, date, status, checkInTime, checkOutTime, notes } = req.body;
+    const markedBy = req.employeeId || req.id;
+
+    if (!employeeId || !date || !status) {
+      return res.status(400).json({
+        success: false,
+        message: "Employee ID, date, and status are required",
+      });
+    }
+
+    const attendanceDate = new Date(date);
+    attendanceDate.setHours(0, 0, 0, 0);
+
+    // Find employee
+    const employee = await Employee.findOne({ employeeId });
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    // Find or create attendance record
+    let attendance = await Attendance.findOne({
+      employeeId,
+      date: attendanceDate,
+    });
+
+    if (attendance) {
+      // Update existing record
+      attendance.status = status;
+      attendance.checkInTime = checkInTime || attendance.checkInTime;
+      attendance.checkOutTime = checkOutTime || attendance.checkOutTime;
+      attendance.notes = notes || attendance.notes;
+      attendance.markedBy = markedBy;
+      await attendance.save();
+    } else {
+      // Create new record
+      attendance = new Attendance({
+        employeeId,
+        employeeName: employee.name,
+        date: attendanceDate,
+        status,
+        checkInTime,
+        checkOutTime,
+        notes,
+        markedBy,
+      });
+      await attendance.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Attendance updated successfully",
+      data: attendance,
+    });
+  } catch (error) {
+    console.error("Error updating attendance by date:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};

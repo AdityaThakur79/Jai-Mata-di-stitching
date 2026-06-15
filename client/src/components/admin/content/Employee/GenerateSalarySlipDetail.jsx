@@ -104,8 +104,16 @@ const GenerateSalarySlipDetail = () => {
       // Auto-calculate salary based on attendance
       if (employee?.baseSalary) {
         const paidDays = stats.present + stats.leave + (stats.halfDay * 0.5);
-        const workingDaysRatio = daysInMonth > 0 ? paidDays / daysInMonth : 1;
-        const attendanceBasedSalary = Math.round(employee.baseSalary * workingDaysRatio);
+        
+        // If present days is 0, set basic salary to 0
+        let attendanceBasedSalary = 0;
+        if (stats.present === 0) {
+          attendanceBasedSalary = 0;
+        } else {
+          // Calculate proportional salary
+          const workingDaysRatio = daysInMonth > 0 ? paidDays / daysInMonth : 1;
+          attendanceBasedSalary = Math.round(employee.baseSalary * workingDaysRatio);
+        }
         
         setFormData(prev => ({
           ...prev,
