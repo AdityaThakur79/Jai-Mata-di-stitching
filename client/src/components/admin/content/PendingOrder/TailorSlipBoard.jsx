@@ -81,8 +81,8 @@ const TailorSlipBoard = ({ statusFilter = "all", title = "Tailor Slips" }) => {
         position: "fixed",
         left: "-9999px",
         top: "0",
-        width: "210mm",
-        height: "297mm",
+        width: "384px",
+        height: "384px",
         border: "0",
         visibility: "hidden",
       });
@@ -100,147 +100,225 @@ const TailorSlipBoard = ({ statusFilter = "all", title = "Tailor Slips" }) => {
         .join("");
 
       printDocument.write(`
+        <!DOCTYPE html>
         <html>
           <head>
+            <meta charset="UTF-8">
             <title>${slip.slipNumber}</title>
             <style>
-              * { box-sizing: border-box; }
-              body {
-                font-family: Arial, sans-serif;
-                padding: 18px;
-                color: #111827;
+              @page {
+                size: 101.6mm 101.6mm;
                 margin: 0;
               }
+              * { 
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+              }
+              html, body {
+                width: 101.6mm;
+                height: 101.6mm;
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+              }
+              body {
+                font-family: Arial, sans-serif;
+                color: #000;
+                background: white;
+                font-size: 7pt;
+              }
+              .page-container {
+                width: 101.6mm;
+                height: 101.6mm;
+                padding: 3mm;
+                overflow: hidden;
+              }
               .slip {
-                border: 2px solid #ea580c;
-                border-radius: 10px;
-                padding: 14px;
+                width: 100%;
+                height: 100%;
+                border: 1.5px solid #ea580c;
+                border-radius: 2mm;
+                padding: 2.5mm;
+                display: flex;
+                flex-direction: column;
               }
               .top {
                 display: flex;
                 justify-content: space-between;
-                align-items: center;
+                align-items: flex-start;
                 border-bottom: 1px dashed #fb923c;
-                padding-bottom: 10px;
-                margin-bottom: 10px;
+                padding-bottom: 1.5mm;
+                margin-bottom: 1.5mm;
               }
               .brand {
-                font-size: 28px;
+                font-size: 11pt;
                 font-weight: 800;
                 color: #c2410c;
-                margin: 0;
+                line-height: 1;
               }
               .meta-small {
-                font-size: 12px;
+                font-size: 5.5pt;
                 color: #4b5563;
+                text-align: right;
+                line-height: 1.2;
               }
               .dup {
                 color: #b91c1c;
-                font-size: 18px;
+                font-size: 7pt;
                 font-weight: 800;
-                margin: 4px 0 10px;
+                margin-bottom: 1.5mm;
                 border: 1px solid #fecaca;
                 background: #fee2e2;
-                border-radius: 6px;
+                border-radius: 1mm;
                 display: inline-block;
-                padding: 4px 8px;
+                padding: 0.5mm 1.5mm;
               }
               .meta {
                 border: 1px solid #fed7aa;
                 background: #fff7ed;
-                border-radius: 8px;
-                padding: 10px;
-                margin-bottom: 12px;
-                line-height: 1.5;
+                border-radius: 1.5mm;
+                padding: 2mm;
+                margin-bottom: 2mm;
+                font-size: 6pt;
+                line-height: 1.2;
               }
-              .meta p { margin: 0; }
+              .meta p { 
+                margin-bottom: 0.8mm;
+                display: flex;
+                align-items: flex-start;
+              }
+              .meta p:last-child {
+                margin-bottom: 0;
+              }
+              .meta strong { 
+                min-width: 12mm;
+                flex-shrink: 0;
+                font-weight: 700;
+              }
+              .meta span {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                flex: 1;
+              }
               .barcode-wrap {
                 border: 1px solid #d1d5db;
-                border-radius: 8px;
-                padding: 10px;
-                margin-bottom: 12px;
+                border-radius: 1.5mm;
+                padding: 1.5mm;
+                margin-bottom: 2mm;
                 text-align: center;
-                background: #ffffff;
+                background: #fff;
+                flex-shrink: 0;
               }
               .barcode-title {
-                font-size: 13px;
+                font-size: 5pt;
                 color: #374151;
-                margin-bottom: 6px;
+                margin-bottom: 1mm;
                 font-weight: 600;
               }
-              .barcode-number {
-                margin-top: 6px;
-                font-size: 14px;
-                font-weight: 700;
-                letter-spacing: 1px;
-                color: #111827;
-                border-top: 1px dashed #d1d5db;
-                padding-top: 6px;
-              }
-              table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-              th {
-                border: 1px solid #d1d5db;
-                padding: 8px;
-                text-align: left;
-                background: #fff7ed;
-              }
-              td { border: 1px solid #d1d5db; padding: 8px; text-align: left; }
-              h2 {
-                margin: 0 0 8px;
-                color: #c2410c;
-                font-size: 22px;
-              }
-              img {
+              .barcode-img {
                 max-width: 100%;
+                max-height: 14mm;
+                width: auto;
                 height: auto;
                 display: block;
-                margin-left: auto;
-                margin-right: auto;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
+                margin: 0 auto;
+              }
+              .barcode-number {
+                margin-top: 1mm;
+                font-size: 6.5pt;
+                font-weight: 700;
+                letter-spacing: 0.3px;
+                color: #000;
+                border-top: 1px dashed #d1d5db;
+                padding-top: 1mm;
+              }
+              h2 {
+                margin: 0 0 1mm;
+                color: #c2410c;
+                font-size: 8pt;
+                font-weight: 700;
+              }
+              table { 
+                width: 100%; 
+                border-collapse: collapse; 
+                font-size: 6pt;
+                table-layout: fixed;
+              }
+              th {
+                border: 0.5px solid #d1d5db;
+                padding: 1mm;
+                text-align: left;
+                background: #fff7ed;
+                font-size: 6pt;
+                font-weight: 600;
+              }
+              td { 
+                border: 0.5px solid #d1d5db; 
+                padding: 1mm; 
+                text-align: left;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                word-wrap: break-word;
+              }
+              td:first-child {
+                width: 40%;
+                font-weight: 600;
               }
               @media print {
-                body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                .barcode-wrap {
-                  break-inside: avoid;
-                  page-break-inside: avoid;
+                @page {
+                  size: 101.6mm 101.6mm;
+                  margin: 0;
                 }
-                img {
+                html, body {
+                  width: 101.6mm !important;
+                  height: 101.6mm !important;
+                  margin: 0 !important;
+                  padding: 0 !important;
+                }
+                .page-container {
+                  width: 101.6mm !important;
+                  height: 101.6mm !important;
+                }
+                * {
                   -webkit-print-color-adjust: exact !important;
                   print-color-adjust: exact !important;
+                  color-adjust: exact !important;
                 }
               }
             </style>
           </head>
           <body>
-            <div class="slip">
-              <div class="top">
-                <h1 class="brand">JMD Tailor Slip</h1>
-                <div class="meta-small">
-                  <div><strong>Date:</strong> ${new Date().toLocaleString("en-IN")}</div>
-                  <div><strong>Slip #:</strong> ${slip.slipNumber}</div>
+            <div class="page-container">
+              <div class="slip">
+                <div class="top">
+                  <h1 class="brand">JMD Tailor</h1>
+                  <div class="meta-small">
+                    <div>${new Date().toLocaleDateString("en-IN", { day: '2-digit', month: '2-digit', year: '2-digit' })}</div>
+                    <div>${slip.slipNumber}</div>
+                  </div>
                 </div>
+                ${printMeta?.isDuplicate ? '<div class="dup">DUPLICATE COPY</div>' : ""}
+                <div class="meta">
+                  <p><strong>Token:</strong> <span>${slip.tokenNumber}</span></p>
+                  <p><strong>Code:</strong> <span>${slip.itemCode}</span></p>
+                  <p><strong>Customer:</strong> <span>${(slip.customer?.name || slip.customerName || "-").substring(0, 20)}</span></p>
+                  <p><strong>Item:</strong> <span>${slip.itemType?.name || slip.itemTypeName || "-"}</span></p>
+                  <p><strong>Style:</strong> <span>${slip.style?.name || slip.styleName || "-"}</span></p>
+                  <p><strong>Qty:</strong> <span>${slip.quantity || 1}</span></p>
+                </div>
+                <div class="barcode-wrap">
+                  <div class="barcode-title">Scan to assign</div>
+                  <img id="slip-barcode" class="barcode-img" src="${barcodeImage}" alt="Barcode" />
+                  <div class="barcode-number">${slip.barcodeValue || slip.slipNumber}</div>
+                </div>
+                <h2>Measurements</h2>
+                <table>
+                  <thead><tr><th>Field</th><th>Value</th></tr></thead>
+                  <tbody>${measurementRows || "<tr><td colspan='2'>No measurements</td></tr>"}</tbody>
+                </table>
               </div>
-              ${printMeta?.isDuplicate ? '<div class="dup">DUPLICATE COPY</div>' : ""}
-              <div class="meta">
-                <p><strong>Token:</strong> ${slip.tokenNumber}</p>
-                <p><strong>Item Code:</strong> ${slip.itemCode}</p>
-                <p><strong>Customer:</strong> ${slip.customer?.name || slip.customerName || "-"}</p>
-                <p><strong>Item:</strong> ${slip.itemType?.name || slip.itemTypeName || "-"}</p>
-                <p><strong>Style:</strong> ${slip.style?.name || slip.styleName || "-"}</p>
-                <p><strong>Qty:</strong> ${slip.quantity || 1}</p>
-                <p><strong>Instruction:</strong> ${slip.specialInstructions || slip.notes || "-"}</p>
-              </div>
-              <div class="barcode-wrap">
-                <div class="barcode-title">Scan this barcode to assign slip</div>
-                <img id="slip-barcode" src="${barcodeImage}" alt="" />
-                <div class="barcode-number">${slip.barcodeValue || slip.slipNumber}</div>
-              </div>
-              <h2>Measurements</h2>
-              <table>
-                <thead><tr><th>Field</th><th>Value</th></tr></thead>
-                <tbody>${measurementRows || "<tr><td colspan='2'>No measurements</td></tr>"}</tbody>
-              </table>
             </div>
           </body>
         </html>

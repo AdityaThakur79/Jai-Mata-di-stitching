@@ -75,7 +75,7 @@ const GenerateSalarySlipDetail = () => {
     notes: "",
   });
 
-  const [showAttendance, setShowAttendance] = useState(false);
+  const [showAttendance, setShowAttendance] = useState(false);  
 
   const { data: attendanceData, isLoading: loadingAttendance } = useGetEmployeeAttendanceQuery({
     employeeId: employee?.employeeId,

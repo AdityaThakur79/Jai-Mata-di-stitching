@@ -55,6 +55,15 @@ export const fabricApi = createApi({
       }),
       invalidatesTags: ["Fabric"],
     }),
+
+    printFabricBarcode: builder.mutation({
+      query: (fabricId) => ({
+        url: "/print-barcode",
+        method: "POST",
+        body: { fabricId },
+      }),
+      invalidatesTags: ["Fabric"],
+    }),
   }),
 });
 
@@ -64,4 +73,5 @@ export const {
   useGetFabricByIdMutation,
   useUpdateFabricMutation,
   useDeleteFabricMutation,
+  usePrintFabricBarcodeMutation,
 } = fabricApi;

@@ -5,6 +5,7 @@ import {
   getFabricById,
   updateFabric,
   deleteFabric,
+  printFabricBarcode,
 } from "../controllers/fabric.js";
 import isAuthenticated from "../middlewares/isAuthenticated.js";
 import upload from "../utils/common/Uploads.js";
@@ -25,5 +26,8 @@ router.put("/update", isAuthenticated,upload, updateFabric);
 
 // Delete fabric
 router.delete("/delete", isAuthenticated, deleteFabric);
+
+// Print fabric barcode
+router.post("/print-barcode", isAuthenticated, printFabricBarcode);
 
 export default router;
