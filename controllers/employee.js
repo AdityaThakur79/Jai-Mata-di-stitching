@@ -273,13 +273,42 @@ export const updateEmployee = async (req, res) => {
       existingAadhaarPublicId,
     } = req.body;
     
+    // Log the branchId to debug
+    console.log("Received branchId:", branchId, "Type:", typeof branchId);
+    
     const employee = await Employee.findOne({ employeeId });
     if (!employee) {
       return res.status(404).json({ success: false, message: "Employee not found" });
     }
     
     // Update fields - use more specific checks for fields that can be empty
-    if (branchId !== undefined) employee.branchId = branchId;
+    // Handle branchId - extract _id if it's an object, otherwise use as is
+    if (branchId !== undefined && branchId !== null && branchId !== '') {
+      // Parse if it's a JSON string
+      let parsedBranchId = branchId;
+      if (typeof branchId === 'string') {
+        try {
+          // Try to parse if it's a JSON string
+          const parsed = JSON.parse(branchId);
+          parsedBranchId = parsed._id || parsed;
+        } catch (e) {
+          // If parsing fails, check if it's already an ID or the stringified "[object Object]"
+          if (branchId === '[object Object]') {
+            console.error("branchId is stringified [object Object], skipping update");
+            // Don't update branchId if it's malformed
+          } else {
+            parsedBranchId = branchId;
+          }
+        }
+      } else if (typeof branchId === 'object' && branchId._id) {
+        parsedBranchId = branchId._id;
+      }
+      
+      // Only update if parsedBranchId is valid
+      if (parsedBranchId && parsedBranchId !== '[object Object]') {
+        employee.branchId = parsedBranchId;
+      }
+    }
     if (name !== undefined) employee.name = name;
     if (mobile !== undefined) employee.mobile = mobile;
     if (email !== undefined) employee.email = email;

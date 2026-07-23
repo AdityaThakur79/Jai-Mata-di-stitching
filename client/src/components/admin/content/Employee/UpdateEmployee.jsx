@@ -155,9 +155,9 @@ const UpdateEmployee = () => {
         secondaryRoles: Array.isArray(employee.secondaryRoles) ? employee.secondaryRoles : [],
       });
       
-      // Set branch ID if available
+      // Set branch ID if available - extract _id if it's an object
       if (employee.branchId) {
-        setBranchId(employee.branchId);
+        setBranchId(typeof employee.branchId === 'object' ? employee.branchId._id : employee.branchId);
       }
       
       // Set profile image preview
@@ -198,9 +198,9 @@ const UpdateEmployee = () => {
         secondaryRoles: Array.isArray(employee.secondaryRoles) ? employee.secondaryRoles : [],
       });
       
-      // Set branch ID if available
+      // Set branch ID if available - extract _id if it's an object
       if (employee.branchId) {
-        setBranchId(employee.branchId);
+        setBranchId(typeof employee.branchId === 'object' ? employee.branchId._id : employee.branchId);
       }
       
       // Set profile image preview
