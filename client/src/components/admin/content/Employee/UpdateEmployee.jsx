@@ -44,6 +44,7 @@ const roleOptions = [
   "tailor",
   "peon",
   "handwork designer",
+  "fashion designer",
   "handwork person",
   "social media",
   "technical team",
