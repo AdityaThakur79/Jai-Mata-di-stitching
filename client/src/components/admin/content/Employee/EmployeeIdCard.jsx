@@ -39,7 +39,11 @@ const EmployeeIdCard = ({ employee, logoDataUrl, profileImageDataUrl = null, bar
 
   const companyName = "JMD Stitching PVT LTD";
   const companyFullName = "JMD STITCHING PVT LTD";
-  const companyAddress = "108,1st floor, A-115 Vijay Infinity Business Park, MIDC Phase - 1, Behind Pendharkar College, Dombivali(E), Thane - 421203, Maharashtra, India";
+  
+  // Use branch address if available, otherwise fall back to default company address
+  const defaultCompanyAddress = "108,1st floor, A-115 Vijay Infinity Business Park, MIDC Phase - 1, Behind Pendharkar College, Dombivali(E), Thane - 421203, Maharashtra, India";
+  const companyAddress = emp.branchId?.address || emp.branch?.address || defaultCompanyAddress;
+  
   const companyEmail = "info@jmdstithing.com";
   const companyPhone = "9082150556";
 

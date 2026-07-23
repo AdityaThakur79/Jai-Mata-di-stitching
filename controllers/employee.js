@@ -222,11 +222,15 @@ export const getEmployeeById = async (req, res) => {
     const { employeeId } = req.body;
     
     // Try to find by employeeId field first (string ID like "JMD-202509-0001")
-    let employee = await Employee.findOne({ employeeId }).select("-password");
+    let employee = await Employee.findOne({ employeeId })
+      .select("-password")
+      .populate('branchId', 'branchName address phone email');
     
     // If not found and employeeId looks like a MongoDB ObjectId, try searching by _id
     if (!employee && employeeId && employeeId.match(/^[0-9a-fA-F]{24}$/)) {
-      employee = await Employee.findById(employeeId).select("-password");
+      employee = await Employee.findById(employeeId)
+        .select("-password")
+        .populate('branchId', 'branchName address phone email');
     }
     
     if (!employee) {
